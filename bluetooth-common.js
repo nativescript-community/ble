@@ -1,3 +1,3 @@
-var BLE = {};
+var Bluetooth = {};
 
-module.exports = BLE;
+module.exports = Bluetooth;

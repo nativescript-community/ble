@@ -1,4 +1,4 @@
-var BLE = require("./ble-common");
+var Bluetooth = require("./bluetooth-common");
 
 var manager,
     delegate,
@@ -21,14 +21,14 @@ var CBCentralManagerDelegateImpl = (function (_super) {
   CBCentralManagerDelegateImpl.prototype.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI = function(central, peripheral, advData, rssi) {
     console.log("----- delegate centralManagerDidDiscoverPeripheralAdvertisementDataRSSI");
     peripherals.addObject(peripheral);
-    BLE._findPeripheral(peripheral.identifier.UUIDString);
+    Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
     if (onDeviceDiscovered) {
       onDeviceDiscovered({
         UUID: peripheral.identifier.UUIDString,
         name: peripheral.name,
         RSSI: rssi,
-        state: BLE._getState(peripheral.state)
-      })
+        state: Bluetooth._getState(peripheral.state)
+      });
     }
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidUpdateState = function(central) {
@@ -60,52 +60,52 @@ var CBCentralManagerDelegateImpl = (function (_super) {
   manager = CBCentralManager.alloc().initWithDelegateQueue(delegate, null);
 })();
 
-BLE._isEnabled = function (arg) {
+Bluetooth._isEnabled = function (arg) {
   var bluetoothState = manager.state;
   return bluetoothState == CBCentralManagerStatePoweredOn;
 };
 
-BLE._getState = function(stateId) {
+Bluetooth._getState = function(stateId) {
   if (stateId == 1) {
     return 'connecting';
   } else if (stateId == 2) {
     return 'connected';
   } else if (stateId == 3) {
-    return 'disconnecting'
+    return 'disconnecting';
   } else {
     return 'disconnected';
   }
 };
 
-BLE.isBluetoothEnabled = function (arg) {
+Bluetooth.isBluetoothEnabled = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
-      resolve(BLE._isEnabled());
+      resolve(Bluetooth._isEnabled());
     } catch (ex) {
-      console.log("Error in BLE.isBluetoothEnabled: " + ex);
+      console.log("Error in Bluetooth.isBluetoothEnabled: " + ex);
       reject(ex);
     }
   });
 };
 
-BLE.scan = function (arg) {
+Bluetooth.scan = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
       onDeviceDiscovered = arg.onDeviceDiscovered;
-      var serviceUUIDs = [];
+      var serviceUUIDs = []; // TODO pass in
       manager.scanForPeripheralsWithServicesOptions(serviceUUIDs, null);
       setTimeout(function() {
         manager.stopScan();
         resolve();
       }, arg.seconds * 1000);
     } catch (ex) {
-      console.log("Error in BLE.scan: " + ex);
+      console.log("Error in Bluetooth.scan: " + ex);
       reject(ex);
     }
   });
 };
 
-BLE._findPeripheral = function(UUID) {
+Bluetooth._findPeripheral = function(UUID) {
   console.log("---- pppp 0y: " + typeof peripherals);
   console.log("---- pppp 00: " + peripherals);
   console.log("---- pppp 000: " + peripherals.allObjects);
@@ -124,15 +124,15 @@ BLE._findPeripheral = function(UUID) {
 };
 
 // note that this doesn't make much sense without scanning first
-BLE.connect = function (arg) {
+Bluetooth.connect = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
       if (!arg.UUID) {
         reject("No UUID was passed");
         return;
       }
-      var peripheral = BLE._findPeripheral(arg.UUID);
-      if (peripheral == null) {
+      var peripheral = Bluetooth._findPeripheral(arg.UUID);
+      if (peripheral === null) {
         reject("Could not find device with UUID " + arg.UUID);
       } else {
         console.log("Connecting to device with UUID: " + arg.UUID);
@@ -142,10 +142,10 @@ BLE.connect = function (arg) {
         // TODO don't resolve here, but wait for callback
       }
     } catch (ex) {
-      console.log("Error in BLE.connect: " + ex);
+      console.log("Error in Bluetooth.connect: " + ex);
       reject(ex);
     }
   });
 };
 
-module.exports = BLE;
+module.exports = Bluetooth;
