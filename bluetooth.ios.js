@@ -1,13 +1,15 @@
 var Bluetooth = require("./bluetooth-common");
 
 // if this happens, we can't retain the delegates..
-console.log("-------------^^^ INIT BLUETOOH MODULE");
+console.log("-------------^^^ INIT BLUETOOTH MODULE");
 
-var manager,
-    delegate,
-    connectCallbacks = {},
-    peripheralArray = NSMutableArray.new(),
-    onDeviceDiscovered;
+Bluetooth._state = { 
+  manager: null,
+  centralDelegate: null,
+  peripheralArray: null,
+  connectCallbacks: {},
+  onDeviceDiscovered: null
+};
 
 var CBPeripheralDelegateImpl = (function (_super) {
   __extends(CBPeripheralDelegateImpl, _super);
@@ -24,6 +26,8 @@ var CBPeripheralDelegateImpl = (function (_super) {
     return this;
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidDiscoverServices = function(peripheral, error) {
+    console.log("----- delegate peripheralDidDiscoverServices");
+
     // map native services to a JS object
     this._services = [];
     for (var i = 0; i < peripheral.services.count; i++) {
@@ -62,6 +66,19 @@ var CBPeripheralDelegateImpl = (function (_super) {
       indicateEncryptionRequired: (props & CBCharacteristicPropertyIndicateEncryptionRequired) == CBCharacteristicPropertyIndicateEncryptionRequired
     };
   };
+  CBPeripheralDelegateImpl.prototype._getDescriptors = function(characteristic) {
+    var descs = characteristic.descriptors;
+    var descsJs = [];
+    for (var i = 0; i < descs.count; i++) {
+      var desc = descs.objectAtIndex(i);
+      console.log("--------- descriptor value: " + desc.value);
+      descsJs.push({
+        UUID: desc.UUID.UUIDString,
+        value: desc.value
+      });
+    }
+    return descsJs;
+  };
   CBPeripheralDelegateImpl.prototype.peripheralDidDiscoverCharacteristicsForServiceError = function(peripheral, service, error) {
     if (error) {
       // TODO invoke reject and stop processing
@@ -76,9 +93,9 @@ var CBPeripheralDelegateImpl = (function (_super) {
         // see serviceAndCharacteristicInfo in CBPer+Ext of Cordova plugin
         value: characteristic.value ? characteristic.value.base64EncodedStringWithOptions(0) : null,
         properties: this._getProperties(characteristic),
+        // descriptors: this._getDescriptors(characteristic), // TODO we're not currently discovering these
         isNotifying: characteristic.isNotifying,
-        permissions: characteristic.permissions,
-        descriptors: characteristic.descriptors // TODO extract a JSON object, see https://github.com/don/cordova-plugin-ble-central/blob/master/src/ios/CBPeripheral%2BExtensions.m#L186
+        permissions: characteristic.permissions // prolly not too useful
       };
       characteristics.push(result);
 
@@ -112,15 +129,17 @@ var CBPeripheralDelegateImpl = (function (_super) {
  };
   // this is called when a value is read from a peripheral
   CBPeripheralDelegateImpl.prototype.peripheralDidUpdateValueForCharacteristicError = function(peripheral, characteristic, error) {
+    console.log("^^^^^^^^ peripheralDidUpdateValueForCharacteristicError");
+    
     if (error !== null) {
       // TODO handle.. pass in sep callback?
       console.log("------------ error @ peripheralDidUpdateValueForCharacteristicError!");
       return;
     }
 
-    console.log("^^^^^^^^ peripheralDidUpdateValueForCharacteristicError");
-
     try {
+/*
+      // DIT LIJKT HET KAPOT TE MAKEN (deze regel) -- CFRetain(characteristic) proberen?
       var value = characteristic.value;
       if (!value) {
         console.log("^^^^^^^^ NO VALUE!");
@@ -138,19 +157,24 @@ var CBPeripheralDelegateImpl = (function (_super) {
         console.log("^^^^^^^^ NO DATA!");
         return;
       }
+*/
+      // var decodedvalue = data[1];
+      // console.log("^^^^^^^^ decodedvalue: " + decodedvalue);
 
-      var decodedvalue = data[1];
+/*
+
       if (!decodedvalue) {
         console.log("^^^^^^^^ NO DECODEDVALUE!");
         return;
       }
-    
       if (this._onNotifyCallback) {
-        this._onNotifyCallback({decodedvalue: decodedvalue});
+        // this._onNotifyCallback({decodedvalue: decodedvalue});
       } else {
-        console.log("^^^^^^^^ CALLBACK IS GONE!");
+        // console.log("^^^^^^^^ CALLBACK IS GONE!");
       }
+    */
     } catch (ex) {
+      alert("EXC: " + ex);
       console.log("^^^^^^^^ EXCEPTION!");      
       console.log("^^^^^^^^ EXCEPTION! + " + ex);      
     }
@@ -187,13 +211,14 @@ var CBPeripheralDelegateImpl = (function (_super) {
     */
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidWriteValueForCharacteristicError = function(peripheral, characteristic, error) {
-    console.log("----- delegate peripheral:didWriteValueForCharacteristic:error characteristic: " + characteristic);
+    console.log("----- delegate peripheral:didWriteValueForCharacteristic:error");
     // TODO this should resolve() -- kept from the 'write' function
   };
   
   // The peripheral letting us know whether our subscribe/unsubscribe happened or not
   CBPeripheralDelegateImpl.prototype.peripheralDidUpdateNotificationStateForCharacteristicError = function(peripheral, characteristic, error) {
     console.log("----- delegate peripheral:didUpdateNotificationStateForCharacteristic:error, error: " + error);
+    alert("peripheralDidUpdateNotificationStateForCharacteristicError");
     if (error) {
       console.log("----- delegate peripheral:didUpdateNotificationStateForCharacteristic:error.localizedDescription, " + error.localizedDescription);      
     } else {
@@ -201,7 +226,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
         console.log("------ Notification began on " + characteristic);
       } else {
         console.log("------ Notification stopped on " + characteristic + ", diconnecting");
-        manager.cancelPeripheralConnection(peripheral);
+        Bluetooth._state.manager.cancelPeripheralConnection(peripheral);
       }
     }
   };
@@ -209,7 +234,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
     
     // NOTE that this cb won't be invoked bc we curr don't discover descriptors
     
-    console.log("----- delegate peripheral:didDiscoverDescriptorsForCharacteristic:error characteristic: " + characteristic);
+    console.log("----- delegate peripheral:didDiscoverDescriptorsForCharacteristic:error");
     console.log("----- delegate peripheral:didDiscoverDescriptorsForCharacteristic:error characteristic.value: " + characteristic.value);
 
     // TODO extract details, see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/ios/BluetoothLePlugin.m#L1844
@@ -235,6 +260,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidUpdateValueForDescriptorError = function(peripheral, descriptor, error) {
     console.log("----- delegate peripheral:didUpdateValueForDescriptor:error");
+    alert("peripheralDidUpdateValueForDescriptorError");
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidWriteValueForDescriptorError = function(peripheral, descriptor, error) {
     console.log("----- delegate peripheral:didWriteValueForDescriptor:error");
@@ -259,23 +285,28 @@ var CBCentralManagerDelegateImpl = (function (_super) {
   // fires when a device is discovered after executing the 'scan' function
   CBCentralManagerDelegateImpl.prototype.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI = function(central, peripheral, advData, RSSI) {
     console.log("----- delegate centralManager:didDiscoverPeripheral: " + peripheral.name + " @ " + RSSI);
-    peripheralArray.addObject(peripheral);
-    if (onDeviceDiscovered) {
-      onDeviceDiscovered({
-        UUID: peripheral.identifier.UUIDString,
-        name: peripheral.name,
-        RSSI: RSSI,
-        state: Bluetooth._getState(peripheral.state)
-      });
+    var peri = Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
+    if (!peri) {
+      Bluetooth._state.peripheralArray.addObject(peripheral);
+      if (Bluetooth._state.onDeviceDiscovered) {
+        Bluetooth._state.onDeviceDiscovered({
+          UUID: peripheral.identifier.UUIDString,
+          name: peripheral.name,
+          RSSI: RSSI,
+          state: Bluetooth._getState(peripheral.state)
+        });
+      }
     }
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidUpdateState = function(central) {
+    alert("centralManagerDidUpdateState");
     console.log("----- delegate centralManagerDidUpdateState: " + central.state);
     if (central.state == CBCentralManagerStateUnsupported) {
       console.log("WARNING: This hardware does not support Bluetooth Low Energy.");
     }
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerWillRestoreState = function(central, dict) {
+    alert("centralManagerWillRestoreState");
     console.log("----- delegate centralManager:willRestoreState");
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidConnectPeripheral = function(central, peripheral) {
@@ -283,18 +314,31 @@ var CBCentralManagerDelegateImpl = (function (_super) {
     // console.log("----- delegate centralManager:didConnectPeripheral, delegate: " + peripheral.delegate);
     // NOTE: it's inefficient to discover all services
     
-    var cb = connectCallbacks[peripheral.identifier.UUIDString];
-    peripheral.delegate = CBPeripheralDelegateImpl.new().initWithCallback(cb);
+    // find the peri in the array and attach the delegate to that
+    var peri = Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
+    console.log("----- delegate centralManager:didConnectPeripheral: cached perio: " + peri);
     
-    peripheral.discoverServices(null);	
+    var cb = Bluetooth._state.connectCallbacks[peripheral.identifier.UUIDString];
+    Bluetooth._periDelegate = CBPeripheralDelegateImpl.new().initWithCallback(cb);
+    // var delegate = CBPeripheralDelegateImpl.new().initWithCallback(cb);
+    peri.delegate = Bluetooth._periDelegate;
+    
+    console.log("----- delegate centralManager:didConnectPeripheral, let's discover service");
+    peri.discoverServices(null);
+    
     // console.log("----- delegate centralManager:didConnectPeripheral call peripheral.discoverServices(null)");
     // NOTE: not invoking callback until characteristics are discovered (OR send back a 'type' and notify the caller? Perhaps that's nicer..)
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidDisconnectPeripheralError = function(central, peripheral, error) {
-    console.log("----- delegate centralManager:didDisconnectPeripheral:error: " + peripheral);
-    // TODO send this event..
+    alert("centralManagerDidDisconnectPeripheralError");
+    console.log("----- !!! delegate centralManager:didDisconnectPeripheral:error: " + peripheral);
+    // TODO send this event.. any action afterwards crashes the app!
+    
+    var foundAt = Bluetooth._state.peripheralArray.indexOfObject(peripheral);
+    Bluetooth._state.peripheralArray.removeObject(foundAt);
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidFailToConnectPeripheralError = function(central, peripheral, error) {
+    alert("centralManagerDidFailToConnectPeripheralError");
     console.log("----- delegate centralManager:didFailToConnectPeripheral:error");
     // this._callback(error);
   };
@@ -305,14 +349,15 @@ var CBCentralManagerDelegateImpl = (function (_super) {
 // check for bluetooth being enabled as soon as the app starts
 (function () {
   // TODO have the dev pass in a callback when 'scan' is called
-  delegate = CBCentralManagerDelegateImpl.new().initWithCallback(function (obj) {
-    console.log("----- delegate obj: " + obj);
+  Bluetooth._state.centralDelegate = CBCentralManagerDelegateImpl.new().initWithCallback(function (obj) {
+    console.log("----- centralDelegate obj: " + obj);
   });
-  manager = CBCentralManager.alloc().initWithDelegateQueue(delegate, null);
+  // TODO options? https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/ios/BluetoothLePlugin.m#L187
+  Bluetooth._state.manager = CBCentralManager.alloc().initWithDelegateQueue(Bluetooth._state.centralDelegate, null);
 })();
 
 Bluetooth._isEnabled = function (arg) {
-  return manager.state == CBCentralManagerStatePoweredOn;
+  return Bluetooth._state.manager.state == CBCentralManagerStatePoweredOn;
 };
 
 Bluetooth._getState = function(stateId) {
@@ -348,14 +393,16 @@ Bluetooth.startScanning = function (arg) {
         reject("Bluetooth is not enabled");
         return;
       }
+      Bluetooth._state.peripheralArray = NSMutableArray.new();
+
       // TODO actualy, should init the delegate here with this as the callback (see 'onDeviceConnected') --> but first test if that works
-      onDeviceDiscovered = arg.onDeviceDiscovered;
-      var serviceUUIDs = [];
-      manager.scanForPeripheralsWithServicesOptions(serviceUUIDs, null);
+      Bluetooth._state.onDeviceDiscovered = arg.onDeviceDiscovered;
+      var serviceUUIDs = []; // TODO enable this (not perse for v1)
+      Bluetooth._state.manager.scanForPeripheralsWithServicesOptions(serviceUUIDs, null);
       if (arg.seconds) {
         setTimeout(function() {
           // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
-          manager.stopScan();
+          Bluetooth._state.manager.stopScan();
           resolve();
         }, arg.seconds * 1000);
       } else {
@@ -375,7 +422,7 @@ Bluetooth.stopScanning = function (arg) {
         reject("Bluetooth is not enabled");
         return;
       }
-      manager.stopScan();
+      Bluetooth._state.manager.stopScan();
       resolve();
     } catch (ex) {
       console.log("Error in Bluetooth.stopScanning: " + ex);
@@ -385,8 +432,8 @@ Bluetooth.stopScanning = function (arg) {
 };
 
 Bluetooth._findPeripheral = function(UUID) {
-  for (var i = 0; i < peripheralArray.count; i++) {
-    var peripheral = peripheralArray.objectAtIndex(i);
+  for (var i = 0; i < Bluetooth._state.peripheralArray.count; i++) {
+    var peripheral = Bluetooth._state.peripheralArray.objectAtIndex(i);
     if (UUID == peripheral.identifier.UUIDString) {
       return peripheral;
     }
@@ -411,8 +458,8 @@ Bluetooth.connect = function (arg) {
         reject("Could not find device with UUID " + arg.UUID);
       } else {
         console.log("Connecting to device with UUID: " + arg.UUID);
-        connectCallbacks[arg.UUID] = arg.onDeviceConnected;
-        manager.connectPeripheralOptions(peripheral, null);
+        Bluetooth._state.connectCallbacks[arg.UUID] = arg.onDeviceConnected;
+        Bluetooth._state.manager.connectPeripheralOptions(peripheral, null);
         resolve();
       }
     } catch (ex) {
@@ -440,7 +487,7 @@ Bluetooth.disconnect = function (arg) {
         console.log("Disconnecting device with UUID: " + arg.UUID);
         // no need to send an error when already disconnected, but it's wise to check it
         if (peripheral.state != CBPeripheralStateDisconnected) {
-          manager.cancelPeripheralConnection(peripheral);
+          Bluetooth._state.manager.cancelPeripheralConnection(peripheral);
           peripheral.delegate = null;
           // TODO remove from the peripheralArray as well
         }
@@ -516,7 +563,11 @@ Bluetooth._findCharacteristic = function (UUID, service, property) {
   return null;
 };
 
-Bluetooth._getData = function (arg, property, reject) {
+Bluetooth._getWrapper = function (arg, property, reject) {
+  if (!Bluetooth._isEnabled()) {
+    reject("Bluetooth is not enabled");
+    return;
+  }
   if (!arg.deviceUUID) {
     reject("No deviceUUID was passed");
     return null;
@@ -537,7 +588,7 @@ Bluetooth._getData = function (arg, property, reject) {
   }
 
   if (peripheral.state != CBPeripheralStateConnected) {
-    reject("The device is not connected, so interaction is not possible");
+    reject("The device is disconnect");
     return null;
   }
 
@@ -578,25 +629,27 @@ Bluetooth._getData = function (arg, property, reject) {
 Bluetooth.read = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
-      if (!Bluetooth._isEnabled()) {
-        reject("Bluetooth is not enabled");
+      var wrapper = Bluetooth._getWrapper(arg, CBCharacteristicPropertyRead, reject);
+      if (wrapper === null) {
+        // no need to reject, this has already been done
         return;
       }
-      var wrapper = Bluetooth._getData(arg, CBCharacteristicPropertyRead, reject);
-      if (wrapper !== null) {
-        // TODO callback should send the value.. would be nicest if that's in the 'resolve' so the caller can have the result in '.then()'
-        // --- but that won't work for notify..
-        
-        console.log("------ calling readValueForCharacteristic");
-        
-        var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
-        peripheral.delegate = CBPeripheralDelegateImpl.new().initWithCallback(null);
 
-        peripheral.delegate._onReadPromise = resolve;
-        peripheral.readValueForCharacteristic(wrapper.characteristic);
-      } else {
-        // no need to reject, this has already been done
-      }
+      // TODO callback should send the value.. would be nicest if that's in the 'resolve' so the caller can have the result in '.then()'
+      // --- but that won't work for notify..
+        
+      console.log("------ calling readValueForCharacteristic");
+        
+      // var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
+      // var delegate = CBPeripheralDelegateImpl.new().initWithCallback(null);
+      // peripheral.delegate = delegate;
+
+      console.log("--------- DELEGATE A: " + wrapper.peripheral);
+      console.log("--------- DELEGATE B: " + wrapper.peripheral.delegate);
+      console.log("--------- DELEGATE._servicesWithCharacteristics: " + wrapper.peripheral.delegate._servicesWithCharacteristics);
+
+      wrapper.peripheral.delegate._onReadPromise = resolve;
+      wrapper.peripheral.readValueForCharacteristic(wrapper.characteristic);
     } catch (ex) {
       console.log("Error in Bluetooth.read: " + ex);
       reject(ex);
@@ -607,29 +660,27 @@ Bluetooth.read = function (arg) {
 Bluetooth.startNotifying = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
-      if (!Bluetooth._isEnabled()) {
-        reject("Bluetooth is not enabled");
+      var wrapper = Bluetooth._getWrapper(arg, CBCharacteristicPropertyNotify, reject);
+      console.log("--------- startNotifying wrapper: " + wrapper);
+
+      if (wrapper === null) {
+        // no need to reject, this has already been done
         return;
       }
-      var wrapper = Bluetooth._getData(arg, CBCharacteristicPropertyNotify, reject);
-      console.log("--------- startNotifying wrapper: " + wrapper);
-      if (wrapper !== null) {
-        var cb = arg.onNotify || function(result) { console.log("No 'onNotify' callback function specified for 'startNotifying'"); };
+      var cb = arg.onNotify || function(result) { console.log("No 'onNotify' callback function specified for 'startNotifying'"); };
 
-        var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
-        peripheral.delegate = CBPeripheralDelegateImpl.new().initWithCallback(null);
+      // var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
+      // Bluetooth._notifyDelegate = CBPeripheralDelegateImpl.new().initWithCallback(null);
+      // peripheral.delegate = Bluetooth._notifyDelegate;
 
-        // TODO prolly set a new delegate for methods like this..
-        // console.log("--------- DELEGATE 1: " + wrapper.peripheral);
-        // console.log("--------- DELEGATE 2: " + wrapper.peripheral.delegate);
-        // console.log("--------- DELEGATE._servicesWithCharacteristics: " + wrapper.peripheral.delegate._servicesWithCharacteristics);
+      // TODO prolly set a new delegate for methods like this..
+      console.log("--------- DELEGATE 1: " + wrapper.peripheral);
+      console.log("--------- DELEGATE 2: " + wrapper.peripheral.delegate);
+      // console.log("--------- DELEGATE._servicesWithCharacteristics: " + wrapper.peripheral.delegate._servicesWithCharacteristics);
         
-        // wrapper.peripheral.delegate = 
-        peripheral.delegate._onNotifyCallback = cb; // TODO might as well move to constructor above
-        peripheral.setNotifyValueForCharacteristic(true, wrapper.characteristic);
-      } else {
-        // no need to reject, this has already been done
-      }
+      // wrapper.peripheral.delegate = 
+      // wrapper.peripheral.delegate._onNotifyCallback = cb; // TODO might as well move to constructor above
+      wrapper.peripheral.setNotifyValueForCharacteristic(true, wrapper.characteristic);
       resolve();
     } catch (ex) {
       console.log("Error in Bluetooth.startNotifying: " + ex);
@@ -641,19 +692,17 @@ Bluetooth.startNotifying = function (arg) {
 Bluetooth.stopNotifying = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
-      if (!Bluetooth._isEnabled()) {
-        reject("Bluetooth is not enabled");
+      var wrapper = Bluetooth._getWrapper(arg, CBCharacteristicPropertyNotify, reject);
+      console.log("--------- stopNotifying wrapper: " + wrapper);
+
+      if (wrapper === null) {
+        // no need to reject, this has already been done
         return;
       }
-      var wrapper = Bluetooth._getData(arg, CBCharacteristicPropertyNotify, reject);
-      console.log("--------- stopNotifying wrapper: " + wrapper);
-      if (wrapper !== null) {
-        var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
-        peripheral.delegate = null;
-        peripheral.setNotifyValueForCharacteristic(false, wrapper.characteristic);
-      } else {
-        // no need to reject, this has already been done
-      }
+
+      var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
+      // peripheral.delegate = null;
+      peripheral.setNotifyValueForCharacteristic(false, wrapper.characteristic);
       resolve();
     } catch (ex) {
       console.log("Error in Bluetooth.stopNotifying: " + ex);
@@ -665,24 +714,23 @@ Bluetooth.stopNotifying = function (arg) {
 Bluetooth.write = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
-      if (!Bluetooth._isEnabled()) {
-        reject("Bluetooth is not enabled");
-        return;
-      }
       if (!arg.value) {
         reject("You need to provide some data to write in the 'value' property");
         return;
       }
-      var wrapper = Bluetooth._getData(arg, CBCharacteristicPropertyWrite, reject);
-      if (wrapper !== null) {
-        wrapper.peripheral.writeValueForCharacteristicType(
-            arg.value,
-            wrapper.characteristic,
-            CBCharacteristicWriteWithResponse);
-        // TODO send resolve from 'didWriteValueForCharacteristic'
-      } else {
+      var wrapper = Bluetooth._getWrapper(arg, CBCharacteristicPropertyWrite, reject);
+      if (wrapper === null) {
         // no need to reject, this has already been done
+        return;
       }
+
+      wrapper.peripheral.writeValueForCharacteristicType(
+        arg.value,
+        wrapper.characteristic,
+        CBCharacteristicWriteWithResponse);
+
+      // TODO send resolve from 'didWriteValueForCharacteristic'
+      resolve();
     } catch (ex) {
       console.log("Error in Bluetooth.write: " + ex);
       reject(ex);
@@ -693,24 +741,22 @@ Bluetooth.write = function (arg) {
 Bluetooth.writeWithoutResponse = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
-      if (!Bluetooth._isEnabled()) {
-        reject("Bluetooth is not enabled");
-        return;
-      }
       if (!arg.value) {
         reject("You need to provide some data to write in the 'value' property");
         return;
       }
-      var wrapper = Bluetooth._getData(arg, CBCharacteristicPropertyWrite, reject);
-      if (wrapper !== null) {
-        wrapper.peripheral.writeValueForCharacteristicType(
-            arg.value,
-            wrapper.characteristic,
-            CBCharacteristicWriteWithoutResponse);
-        resolve();
-      } else {
+      var wrapper = Bluetooth._getWrapper(arg, CBCharacteristicPropertyWrite, reject);
+      if (wrapper === null) {
         // no need to reject, this has already been done
+        return;
       }
+
+      wrapper.peripheral.writeValueForCharacteristicType(
+        arg.value,
+        wrapper.characteristic,
+        CBCharacteristicWriteWithoutResponse);
+
+      resolve();
     } catch (ex) {
       console.log("Error in Bluetooth.writeWithoutResponse: " + ex);
       reject(ex);
