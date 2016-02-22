@@ -1,12 +1,12 @@
 {
   "name": "nativescript-bluetooth",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description" : "TODO",
   "main" : "bluetooth.js",
   "nativescript": {
     "platforms": {
-      "android": "1.4.0",
-      "ios": "1.4.0"
+      "android": "1.6.0",
+      "ios": "1.6.0"
     }
   },
   "repository": {
@@ -15,8 +15,9 @@
   },
   "keywords": [
     "NativeScript",
-    "Bluetooth",
     "BLE",
+    "Bluetooth",
+    "Bluetooth LE",
     "Bluetooth Low Energy"
   ],
   "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com>",

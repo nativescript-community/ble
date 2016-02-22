@@ -195,9 +195,9 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
       var value = bluetoothGattCharacteristic.getValue();
       var data = new Uint8Array(value);
       stateObject.onNotifyCallback({
-        // TODO it makes sense to include device, service, char uuid's here
+        // TODO it may make sense to include device, service, char uuid's here
         value: value,
-        decodedvalue: data[1]
+        valueDecoded: data[1]
       });
     }
   },
@@ -500,7 +500,7 @@ Bluetooth._getWrapper = function (arg, reject) {
 
   var stateObject = Bluetooth._connections[arg.deviceUUID];
   if (!stateObject) {
-    reject("The device is disconnect");
+    reject("The device is disconnected");
     return;
   }
 

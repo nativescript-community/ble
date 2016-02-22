@@ -1,4 +1,5 @@
 var Bluetooth = require("./bluetooth-common");
+require('./base64');
 
 // if this happens, we can't retain the delegates..
 console.log("-------------^^^ INIT BLUETOOTH MODULE");
@@ -126,10 +127,25 @@ var CBPeripheralDelegateImpl = (function (_super) {
         this._callback = null;
       }
     }
- };
+  };
+ 
+  CBPeripheralDelegateImpl.prototype._decodeValue = function(value) {
+    var v = atob(value.base64EncodedStringWithOptions(0));
+    var l = v.length;
+    var ret = new Uint8Array(l);
+    for (var i = 0; i < l; i++) {
+      ret[i] = v.charCodeAt(i);
+    }
+    var data = new Uint8Array(ret.buffer);
+    return data[1];
+  };
+
   // this is called when a value is read from a peripheral
   CBPeripheralDelegateImpl.prototype.peripheralDidUpdateValueForCharacteristicError = function(peripheral, characteristic, error) {
-    console.log("^^^^^^^^ peripheralDidUpdateValueForCharacteristicError");
+    if (!characteristic) {
+      console.log("^^^^^^^^ NO peripheralDidUpdateValueForCharacteristicError");
+      return;
+    }
     
     if (error !== null) {
       // TODO handle.. pass in sep callback?
@@ -137,78 +153,30 @@ var CBPeripheralDelegateImpl = (function (_super) {
       return;
     }
 
-    try {
-/*
-      // DIT LIJKT HET KAPOT TE MAKEN (deze regel) -- CFRetain(characteristic) proberen?
-      var value = characteristic.value;
-      if (!value) {
-        console.log("^^^^^^^^ NO VALUE!");
-        return;
-      }
-
-      var buffer = interop.bufferFromData(characteristic.value);
-      if (!buffer) {
-        console.log("^^^^^^^^ NO BUFFER!");
-        return;
-      }
-
-      var data = new Uint8Array(buffer);
-      if (!data) {
-        console.log("^^^^^^^^ NO DATA!");
-        return;
-      }
-*/
-      // var decodedvalue = data[1];
-      // console.log("^^^^^^^^ decodedvalue: " + decodedvalue);
-
-/*
-
-      if (!decodedvalue) {
-        console.log("^^^^^^^^ NO DECODEDVALUE!");
-        return;
-      }
-      if (this._onNotifyCallback) {
-        // this._onNotifyCallback({decodedvalue: decodedvalue});
-      } else {
-        // console.log("^^^^^^^^ CALLBACK IS GONE!");
-      }
-    */
-    } catch (ex) {
-      alert("EXC: " + ex);
-      console.log("^^^^^^^^ EXCEPTION!");      
-      console.log("^^^^^^^^ EXCEPTION! + " + ex);      
-    }
-
-    /*
     var value = characteristic.value;
-    var buffer = interop.bufferFromData(characteristic.value);
-    var data = new Uint8Array(buffer);
-    var decodedvalue = data[1];
+    var valueDecoded = this._decodeValue(value);
+    console.log("value received from device: " + value + ", decoded: " + valueDecoded);
 
-    // console.log("^^^^^^^^^^^^^^ 1: " + decodedvalue);
-    // console.log("^^^^^^^^^^^^^^ 2: " + String.fromCharCode.apply(null, buffer));
-
-    ///////// kies: MBPr Eddy > 180A > 2A24 //////
-    
-    
-    // TODO invoke callback with:
     var result = {
       type: characteristic.isNotifying ? "notification" : "read",
       characteristicUUID: characteristic.UUID.UUIDString,
       value: value,
-      decodedvalue: decodedvalue
+      valueDecoded: valueDecoded
     };
 
     if (result.type === "read") {
       if (this._onReadPromise) {
         this._onReadPromise(result);
+      } else {
+        console.log("^^^^^^^^ NO PROMISE!");
       }
     } else {
       if (this._onNotifyCallback) {
         this._onNotifyCallback(result);
+      } else {
+        console.log("^^^^^^^^ CALLBACK IS GONE!");
       }
     }
-    */
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidWriteValueForCharacteristicError = function(peripheral, characteristic, error) {
     console.log("----- delegate peripheral:didWriteValueForCharacteristic:error");
@@ -218,15 +186,15 @@ var CBPeripheralDelegateImpl = (function (_super) {
   // The peripheral letting us know whether our subscribe/unsubscribe happened or not
   CBPeripheralDelegateImpl.prototype.peripheralDidUpdateNotificationStateForCharacteristicError = function(peripheral, characteristic, error) {
     console.log("----- delegate peripheral:didUpdateNotificationStateForCharacteristic:error, error: " + error);
-    alert("peripheralDidUpdateNotificationStateForCharacteristicError");
+    // alert("peripheralDidUpdateNotificationStateForCharacteristicError");
     if (error) {
       console.log("----- delegate peripheral:didUpdateNotificationStateForCharacteristic:error.localizedDescription, " + error.localizedDescription);      
     } else {
       if (characteristic.isNotifying) {
         console.log("------ Notification began on " + characteristic);
       } else {
-        console.log("------ Notification stopped on " + characteristic + ", diconnecting");
-        Bluetooth._state.manager.cancelPeripheralConnection(peripheral);
+        console.log("------ Notification stopped on " + characteristic + ", consider diconnecting");
+        // Bluetooth._state.manager.cancelPeripheralConnection(peripheral);
       }
     }
   };
@@ -260,7 +228,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidUpdateValueForDescriptorError = function(peripheral, descriptor, error) {
     console.log("----- delegate peripheral:didUpdateValueForDescriptor:error");
-    alert("peripheralDidUpdateValueForDescriptorError");
+    // alert("peripheralDidUpdateValueForDescriptorError");
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidWriteValueForDescriptorError = function(peripheral, descriptor, error) {
     console.log("----- delegate peripheral:didWriteValueForDescriptor:error");
@@ -299,14 +267,12 @@ var CBCentralManagerDelegateImpl = (function (_super) {
     }
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidUpdateState = function(central) {
-    alert("centralManagerDidUpdateState");
     console.log("----- delegate centralManagerDidUpdateState: " + central.state);
     if (central.state == CBCentralManagerStateUnsupported) {
       console.log("WARNING: This hardware does not support Bluetooth Low Energy.");
     }
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerWillRestoreState = function(central, dict) {
-    alert("centralManagerWillRestoreState");
     console.log("----- delegate centralManager:willRestoreState");
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidConnectPeripheral = function(central, peripheral) {
@@ -330,15 +296,15 @@ var CBCentralManagerDelegateImpl = (function (_super) {
     // NOTE: not invoking callback until characteristics are discovered (OR send back a 'type' and notify the caller? Perhaps that's nicer..)
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidDisconnectPeripheralError = function(central, peripheral, error) {
-    alert("centralManagerDidDisconnectPeripheralError");
-    console.log("----- !!! delegate centralManager:didDisconnectPeripheral:error: " + peripheral);
     // TODO send this event.. any action afterwards crashes the app!
+    alert("Peripheral was disconnected, please reconnect");
+    console.log("----- !!! delegate centralManager:didDisconnectPeripheral:error: " + peripheral);
     
     var foundAt = Bluetooth._state.peripheralArray.indexOfObject(peripheral);
     Bluetooth._state.peripheralArray.removeObject(foundAt);
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidFailToConnectPeripheralError = function(central, peripheral, error) {
-    alert("centralManagerDidFailToConnectPeripheralError");
+    // TODO send event to JS
     console.log("----- delegate centralManager:didFailToConnectPeripheral:error");
     // this._callback(error);
   };
@@ -588,7 +554,7 @@ Bluetooth._getWrapper = function (arg, property, reject) {
   }
 
   if (peripheral.state != CBPeripheralStateConnected) {
-    reject("The device is disconnect");
+    reject("The device is disconnected");
     return null;
   }
 
@@ -679,7 +645,7 @@ Bluetooth.startNotifying = function (arg) {
       // console.log("--------- DELEGATE._servicesWithCharacteristics: " + wrapper.peripheral.delegate._servicesWithCharacteristics);
         
       // wrapper.peripheral.delegate = 
-      // wrapper.peripheral.delegate._onNotifyCallback = cb; // TODO might as well move to constructor above
+      wrapper.peripheral.delegate._onNotifyCallback = cb; // TODO might as well move to constructor above
       wrapper.peripheral.setNotifyValueForCharacteristic(true, wrapper.characteristic);
       resolve();
     } catch (ex) {
