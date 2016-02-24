@@ -363,8 +363,13 @@ Bluetooth.startScanning = function (arg) {
 
       // TODO actualy, should init the delegate here with this as the callback (see 'onDeviceConnected') --> but first test if that works
       Bluetooth._state.onDeviceDiscovered = arg.onDeviceDiscovered;
-      var serviceUUIDs = []; // TODO enable this (not perse for v1)
-      Bluetooth._state.manager.scanForPeripheralsWithServicesOptions(serviceUUIDs, null);
+      var serviceUUIDs = arg.serviceUUIDs || [];
+     
+      var services = [];
+      for (var s in serviceUUIDs) {
+        services.push(CBUUID.UUIDWithString(serviceUUIDs[s]));
+      }
+      Bluetooth._state.manager.scanForPeripheralsWithServicesOptions(services, null);
       if (arg.seconds) {
         setTimeout(function() {
           // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
@@ -601,19 +606,7 @@ Bluetooth.read = function (arg) {
         return;
       }
 
-      // TODO callback should send the value.. would be nicest if that's in the 'resolve' so the caller can have the result in '.then()'
-      // --- but that won't work for notify..
-        
-      console.log("------ calling readValueForCharacteristic");
-        
-      // var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
-      // var delegate = CBPeripheralDelegateImpl.new().initWithCallback(null);
-      // peripheral.delegate = delegate;
-
-      console.log("--------- DELEGATE A: " + wrapper.peripheral);
-      console.log("--------- DELEGATE B: " + wrapper.peripheral.delegate);
-      console.log("--------- DELEGATE._servicesWithCharacteristics: " + wrapper.peripheral.delegate._servicesWithCharacteristics);
-
+      // TODO we could (should?) make this characteristic-specific
       wrapper.peripheral.delegate._onReadPromise = resolve;
       wrapper.peripheral.readValueForCharacteristic(wrapper.characteristic);
     } catch (ex) {
@@ -635,17 +628,8 @@ Bluetooth.startNotifying = function (arg) {
       }
       var cb = arg.onNotify || function(result) { console.log("No 'onNotify' callback function specified for 'startNotifying'"); };
 
-      // var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
-      // Bluetooth._notifyDelegate = CBPeripheralDelegateImpl.new().initWithCallback(null);
-      // peripheral.delegate = Bluetooth._notifyDelegate;
-
-      // TODO prolly set a new delegate for methods like this..
-      console.log("--------- DELEGATE 1: " + wrapper.peripheral);
-      console.log("--------- DELEGATE 2: " + wrapper.peripheral.delegate);
-      // console.log("--------- DELEGATE._servicesWithCharacteristics: " + wrapper.peripheral.delegate._servicesWithCharacteristics);
-        
-      // wrapper.peripheral.delegate = 
-      wrapper.peripheral.delegate._onNotifyCallback = cb; // TODO might as well move to constructor above
+      // TODO we could (should?) make this characteristic-specific
+      wrapper.peripheral.delegate._onNotifyCallback = cb;
       wrapper.peripheral.setNotifyValueForCharacteristic(true, wrapper.characteristic);
       resolve();
     } catch (ex) {

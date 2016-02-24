@@ -1,3 +1,9 @@
+
+
+// TODO don't detect duplicate devices, see iOS
+// TODO implement write()
+
+
 var application = require("application");
 var utils = require("utils/utils");
 var Bluetooth = require("./bluetooth-common");
@@ -11,12 +17,24 @@ var adapter,
   
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
     var MyScanCallback = android.bluetooth.le.ScanCallback.extend({
-      // TODO https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L2222
       onBatchScanResults: function(results) {
         console.log("------- scanCallback.onBatchScanResults");
       },
       onScanFailed: function(errorCode) {
         console.log("------- scanCallback.onScanFailed errorCode: " + errorCode);
+        var errorMessage;
+        if (errorCode == android.bluetooth.le.ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
+          errorMessage = "Scan already started";
+        } else if (errorCode == android.bluetooth.le.ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
+          errorMessage = "Application registration failed";
+        } else if (errorCode == android.bluetooth.le.ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED) {
+          errorMessage = "Feature unsupported";
+        } else if (errorCode == android.bluetooth.le.ScanCallback.SCAN_FAILED_INTERNAL_ERROR) {
+          errorMessage = "Internal error";
+        } else {
+          errorMessage = "Scan failed to start";          
+        }
+        console.log("------- scanCallback.onScanFailed errorMessage: " + errorMessage);
       },
       onScanResult: function(callbackType, result) {
         // TODO sync with iOS
@@ -30,6 +48,7 @@ var adapter,
           advertisement: android.util.Base64.encodeToString(result.getScanRecord().getBytes(), android.util.Base64.NO_WRAP)
         };
         console.log("---- Lollipop+ scanCallback result: " + JSON.stringify(payload));
+        onDeviceDiscovered(payload);
       }
     });
     Bluetooth._scanCallback = new MyScanCallback();
@@ -174,9 +193,9 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
       var value = bluetoothGattCharacteristic.getValue();
       var data = new Uint8Array(value);
       stateObject.onReadPromise({
-        // TODO it makes sense to include device, service, char uuid's here
         value: value,
-        decodedvalue: data[1]
+        valueDecoded: data[1],
+        characteristicUUID: bluetoothGattCharacteristic.getUuid()
       });
     }
   },
@@ -194,10 +213,11 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
     if (stateObject.onNotifyCallback) {
       var value = bluetoothGattCharacteristic.getValue();
       var data = new Uint8Array(value);
+      console.log("------- _MyGattCallback.onCharacteristicChanged, decodedvalue: " + data[1]);
       stateObject.onNotifyCallback({
-        // TODO it may make sense to include device, service, char uuid's here
         value: value,
-        valueDecoded: data[1]
+        valueDecoded: data[1],
+        characteristicUUID: bluetoothGattCharacteristic.getUuid()
       });
     }
   },
@@ -264,12 +284,12 @@ Bluetooth.startScanning = function (arg) {
         // return;
       // }
 
-      var serviceUUIDs = []; // TODO pass in
+      var serviceUUIDs = arg.serviceUUIDs || [];
       var uuids = [];
       for (var s in serviceUUIDs) {
         uuids.push(Bluetooth._stringToUuid(serviceUUIDs[s]));
       }
-
+      
       if (android.os.Build.VERSION.SDK_INT < 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
         var didStart = uuids.length === 0 ?
             adapter.startLeScan(Bluetooth._scanCallback) :
@@ -304,7 +324,6 @@ Bluetooth.startScanning = function (arg) {
           var callbackType = arg.keyCallbackType || android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
           scanSettings.setCallbackType(callbackType);
         }
-
         adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), Bluetooth._scanCallback);
       }
 
@@ -331,7 +350,7 @@ Bluetooth.startScanning = function (arg) {
 };
 
 // TODO check iOS - I seem to be missing stop/start scanning stuff in iOS... check the BigMac!
-Bluetooth.stopScanning = function (arg) {
+Bluetooth.stopScanning = function () {
   return new Promise(function (resolve, reject) {
     try {
       if (android.os.Build.VERSION.SDK_INT < 21 /* android.os.Build.VERSION_CODES.LOLLIPOP */) {
@@ -546,6 +565,18 @@ Bluetooth.read = function (arg) {
       }
     } catch (ex) {
       console.log("Error in Bluetooth.read: " + ex);
+      reject(ex);
+    }
+  });
+};
+
+Bluetooth.write = function (arg) {
+  return new Promise(function (resolve, reject) {
+    try {
+      // TODO implement
+      reject("write is not yet implemented for Android");
+    } catch (ex) {
+      console.log("Error in Bluetooth.write: " + ex);
       reject(ex);
     }
   });
