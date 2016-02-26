@@ -6,7 +6,7 @@ Bluetooth._state = {
   centralDelegate: null,
   peripheralArray: null,
   connectCallbacks: {},
-  onDeviceDiscovered: null
+  onDiscovered: null
 };
 
 var CBPeripheralDelegateImpl = (function (_super) {
@@ -253,8 +253,8 @@ var CBCentralManagerDelegateImpl = (function (_super) {
     var peri = Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
     if (!peri) {
       Bluetooth._state.peripheralArray.addObject(peripheral);
-      if (Bluetooth._state.onDeviceDiscovered) {
-        Bluetooth._state.onDeviceDiscovered({
+      if (Bluetooth._state.onDiscovered) {
+        Bluetooth._state.onDiscovered({
           UUID: peripheral.identifier.UUIDString,
           name: peripheral.name,
           RSSI: RSSI,
@@ -358,8 +358,8 @@ Bluetooth.startScanning = function (arg) {
       }
       Bluetooth._state.peripheralArray = NSMutableArray.new();
 
-      // TODO actualy, should init the delegate here with this as the callback (see 'onDeviceConnected') --> but first test if that works
-      Bluetooth._state.onDeviceDiscovered = arg.onDeviceDiscovered;
+      // TODO actualy, should init the delegate here with this as the callback (see 'onConnected') --> but first test if that works
+      Bluetooth._state.onDiscovered = arg.onDiscovered;
       var serviceUUIDs = arg.serviceUUIDs || [];
      
       var services = [];
@@ -426,7 +426,7 @@ Bluetooth.connect = function (arg) {
         reject("Could not find device with UUID " + arg.UUID);
       } else {
         console.log("Connecting to device with UUID: " + arg.UUID);
-        Bluetooth._state.connectCallbacks[arg.UUID] = arg.onDeviceConnected;
+        Bluetooth._state.connectCallbacks[arg.UUID] = arg.onConnected;
         Bluetooth._state.manager.connectPeripheralOptions(peripheral, null);
         resolve();
       }

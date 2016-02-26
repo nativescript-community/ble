@@ -18,7 +18,7 @@ declare module "nativescript-bluetooth" {
       /**
        * TODO
        */
-      onDeviceDiscovered: (data: Peripheral) => void;
+      onDiscover: (data: Peripheral) => void;
     }
 
     /**
@@ -43,7 +43,12 @@ declare module "nativescript-bluetooth" {
       /**
        * Once the device is connected this callback function is invoked.
        */
-      onDeviceConnected: (data: Peripheral) => void;
+      onConnected: (data: Peripheral) => void;
+
+      /**
+       * Once the device is disconnected this callback function is invoked.
+       */
+      onDisconnected: (data: Peripheral) => void;
     }
 
     /**

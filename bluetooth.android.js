@@ -2,7 +2,7 @@ var utils = require("utils/utils");
 var Bluetooth = require("./bluetooth-common");
 
 var adapter,
-    onDeviceDiscovered;
+    onDiscovered;
 
 // connections are stored as key-val pairs of UUID-Connection
 /**
@@ -58,7 +58,7 @@ Bluetooth._connections = {};
             advertisement: android.util.Base64.encodeToString(result.getScanRecord().getBytes(), android.util.Base64.NO_WRAP)
           };
           console.log("---- Lollipop+ scanCallback result: " + JSON.stringify(payload));
-          onDeviceDiscovered(payload);
+          onDiscovered(payload);
         }
       }
     });
@@ -72,7 +72,7 @@ Bluetooth._connections = {};
           Bluetooth._connections[device.getAddress()] = {
             state: 'disconnected'
           };
-          onDeviceDiscovered({
+          onDiscovered({
             type: 'scanResult', // TODO or use different callback functions?
             UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
             name: device.getName(),
@@ -159,7 +159,7 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
               indicate: (props & btChar.PROPERTY_INDICATE) !== 0,
               broadcast: (props & btChar.PROPERTY_BROADCAST) !== 0,
               authenticatedSignedWrites: (props & btChar.PROPERTY_SIGNED_WRITE) !== 0,
-              extendedProperties: (props & btChar.PROPERTY_EXTENDED_PROPS) !== 0,
+              extendedProperties: (props & btChar.PROPERTY_EXTENDED_PROPS) !== 0
             },
             descriptors: descriptorsJs
           };
@@ -187,7 +187,7 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
       }
       var device = bluetoothGatt.getDevice();
       var stateObject = Bluetooth._connections[device.getAddress()];
-      stateObject.onDeviceConnected({
+      stateObject.onConnected({
         UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
         name: device.getName(),
         state: 'connected', // Bluetooth._getState(peripheral.state),
@@ -258,7 +258,7 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
 
   onMtuChanged: function(bluetoothGatt, mtu, status) {
     console.log("------- _MyGattCallback.onMtuChanged");
-  },
+  }
 });
 
 Bluetooth._isEnabled = function (arg) {
@@ -295,7 +295,7 @@ Bluetooth._stringToUuid = function(uuidStr) {
 Bluetooth.startScanning = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
-      // if (onDeviceDiscovered) {
+      // if (onDiscovered) {
         // TODO clear this callback when stopping scanning :)
         // reject("Already scanning");
         // return;
@@ -346,7 +346,7 @@ Bluetooth.startScanning = function (arg) {
         adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), Bluetooth._scanCallback);
       }
 
-      onDeviceDiscovered = arg.onDeviceDiscovered;
+      onDiscovered = arg.onDiscovered;
 
       if (arg.seconds) {
         setTimeout(function() {
@@ -413,7 +413,7 @@ Bluetooth.connect = function (arg) {
         // TODO (fill, and use this object in disconnect() as well)
         Bluetooth._connections[arg.UUID] = {
           state: 'connecting',
-          onDeviceConnected: arg.onDeviceConnected,
+          onConnected: arg.onConnected,
           device: bluetoothGatt // TODO rename device to gatt?
         };
       }
