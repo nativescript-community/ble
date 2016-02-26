@@ -1,9 +1,6 @@
 var Bluetooth = require("./bluetooth-common");
 require('./base64');
 
-// if this happens, we can't retain the delegates..
-console.log("-------------^^^ INIT BLUETOOTH MODULE");
-
 Bluetooth._state = { 
   manager: null,
   centralDelegate: null,

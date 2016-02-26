@@ -1,15 +1,25 @@
-
-
-// TODO don't detect duplicate devices, see iOS
-// TODO implement write()
-
-
-var application = require("application");
 var utils = require("utils/utils");
 var Bluetooth = require("./bluetooth-common");
 
 var adapter,
     onDeviceDiscovered;
+
+// connections are stored as key-val pairs of UUID-Connection
+/**
+ * So something like this:
+ * [{
+ *   34343-2434-5454: {
+ *     state: 'connected',
+ *     discoveredState: '',
+ *     operationConnect: someCallbackFunction
+ *   },
+ *   1323213-21321323: {
+ *     ..
+ *   }
+ * }, ..]
+ */
+// TODO rename to peripherals, also see iOS' peripheralArray
+Bluetooth._connections = {};
 
 (function () {
   var bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
@@ -37,18 +47,19 @@ var adapter,
         console.log("------- scanCallback.onScanFailed errorMessage: " + errorMessage);
       },
       onScanResult: function(callbackType, result) {
-        // TODO sync with iOS
-        var payload = {
-          type: 'scanResult', // TODO or use different callback functions?
-          RSSI: result.getRssi(),
-          device: {
-            name: result.getDevice().getName(),
-            address: result.getDevice().getAddress()
-          },
-          advertisement: android.util.Base64.encodeToString(result.getScanRecord().getBytes(), android.util.Base64.NO_WRAP)
-        };
-        console.log("---- Lollipop+ scanCallback result: " + JSON.stringify(payload));
-        onDeviceDiscovered(payload);
+        if (!Bluetooth._findPeripheral(result.getDevice().getAddress())) {
+          var payload = {
+            type: 'scanResult', // TODO or use different callback functions?
+            RSSI: result.getRssi(),
+            device: {
+              name: result.getDevice().getName(),
+              address: result.getDevice().getAddress()
+            },
+            advertisement: android.util.Base64.encodeToString(result.getScanRecord().getBytes(), android.util.Base64.NO_WRAP)
+          };
+          console.log("---- Lollipop+ scanCallback result: " + JSON.stringify(payload));
+          onDeviceDiscovered(payload);
+        }
       }
     });
     Bluetooth._scanCallback = new MyScanCallback();
@@ -56,13 +67,19 @@ var adapter,
     Bluetooth._scanCallback = new android.bluetooth.BluetoothAdapter.LeScanCallback({
       // see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L2181
       onLeScan: function(device, rssi, scanRecord) {
-        onDeviceDiscovered({
-          type: 'scanResult', // TODO or use different callback functions?
-          UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
-          name: device.getName(),
-          RSSI: rssi,
-          state: null
-        });
+        var stateObject = Bluetooth._connections[device.getAddress()];
+        if (!stateObject) {
+          Bluetooth._connections[device.getAddress()] = {
+            state: 'disconnected'
+          };
+          onDeviceDiscovered({
+            type: 'scanResult', // TODO or use different callback functions?
+            UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
+            name: device.getName(),
+            RSSI: rssi,
+            state: 'disconnected'
+          });
+        }
       }
     });
   }
@@ -284,6 +301,8 @@ Bluetooth.startScanning = function (arg) {
         // return;
       // }
 
+      Bluetooth._connections = {};
+
       var serviceUUIDs = arg.serviceUUIDs || [];
       var uuids = [];
       for (var s in serviceUUIDs) {
@@ -405,23 +424,6 @@ Bluetooth.connect = function (arg) {
     }
   });
 };
-
-// connections are stored as key-val pairs of UUID-Connection
-// (not sure we can use ES6's Map here..)
-/**
- * So something like this:
- * {
- *   34343-2434-5454: {
- *     state: 'connected',
- *     discoveredState: '',
- *     operationConnect: someCallbackFunction
- *   },
- *   1323213-21321323: {
- *     ..
- *   }
- * }
- */
-Bluetooth._connections = {};
 
 Bluetooth.disconnect = function (arg) {
   return new Promise(function (resolve, reject) {
@@ -626,6 +628,7 @@ Bluetooth.startNotifying = function (arg) {
         var cb = arg.onNotify || function(result) { console.log("No 'onNotify' callback function specified for 'startNotifying'"); };
         var stateObject = Bluetooth._connections[arg.deviceUUID];
         stateObject.onNotifyCallback = cb;
+        console.log("--- notifying");
         resolve();
       } else {
         reject("Failed to set client characteristic notification for " + characteristicUUID);
