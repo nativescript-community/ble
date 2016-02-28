@@ -127,6 +127,16 @@ var CBPeripheralDelegateImpl = (function (_super) {
     }
   };
  
+  CBPeripheralDelegateImpl.prototype._encodeValue = function(val) {
+    // note that this must be binary or the app will crash
+    // .. not sure yet though if this conversion to NSData is ok..
+    var array = new Uint8Array(val.length);
+    for (var i = 0, l = val.length; i < l; i++) {
+      array[i] = val.charCodeAt(i);
+    }
+    val = array.buffer;
+  };
+
   CBPeripheralDelegateImpl.prototype._decodeValue = function(value) {
     var v = atob(value.base64EncodedStringWithOptions(0));
     var l = v.length;
@@ -520,7 +530,7 @@ Bluetooth._findService = function (UUID, peripheral) {
 Bluetooth._findCharacteristic = function (UUID, service, property) {
   // console.log("--- _findCharacteristic UUID: " + UUID);
   // console.log("--- _findCharacteristic service: " + service);
-  // console.log("--- _findCharacteristic characteristics: " + service.characteristics);
+  console.log("--- _findCharacteristic characteristics: " + service.characteristics);
   // console.log("--- _findCharacteristic characteristics.count: " + service.characteristics.count);
   for (var i = 0; i < service.characteristics.count; i++) {
     var characteristic = service.characteristics.objectAtIndex(i);
@@ -571,7 +581,6 @@ Bluetooth._getWrapper = function (arg, property, reject) {
   }
 
   var serviceUUID = CBUUID.UUIDWithString(arg.serviceUUID);
-  console.log("--- getData. Will try to find a service with UUID " + serviceUUID);
   var service = Bluetooth._findService(serviceUUID, peripheral);
   if (!service) {
     reject("Could not find service with UUID " + arg.serviceUUID + " on device with UUID " + arg.deviceUUID);
@@ -681,8 +690,11 @@ Bluetooth.write = function (arg) {
         return;
       }
 
+      var valueEncoded = this._encodeValue(arg.value);
+      console.log("Attempting to write (encoded): " + valueEncoded);
+
       wrapper.peripheral.writeValueForCharacteristicType(
-        arg.value,
+        valueEncoded,
         wrapper.characteristic,
         CBCharacteristicWriteWithResponse);
 
@@ -702,14 +714,17 @@ Bluetooth.writeWithoutResponse = function (arg) {
         reject("You need to provide some data to write in the 'value' property");
         return;
       }
-      var wrapper = Bluetooth._getWrapper(arg, CBCharacteristicPropertyWrite, reject);
+      var wrapper = Bluetooth._getWrapper(arg, CBCharacteristicPropertyWriteWithoutResponse, reject);
       if (wrapper === null) {
         // no need to reject, this has already been done
         return;
       }
 
+      var valueEncoded = this._encodeValue(arg.value);
+      console.log("Attempting to write (encoded): " + valueEncoded);
+      
       wrapper.peripheral.writeValueForCharacteristicType(
-        arg.value,
+        valueEncoded,
         wrapper.characteristic,
         CBCharacteristicWriteWithoutResponse);
 

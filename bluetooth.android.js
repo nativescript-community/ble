@@ -593,6 +593,18 @@ Bluetooth.write = function (arg) {
   });
 };
 
+Bluetooth.writeWithoutResponse = function (arg) {
+  return new Promise(function (resolve, reject) {
+    try {
+      // TODO implement
+      reject("writeWithoutResponse not yet implemented for Android");
+    } catch (ex) {
+      console.log("Error in Bluetooth.writeWithoutResponse: " + ex);
+      reject(ex);
+    }
+  });
+};
+
 Bluetooth.startNotifying = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
