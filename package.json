@@ -1,7 +1,7 @@
 {
   "name": "nativescript-bluetooth",
-  "version": "0.0.7",
-  "description" : "TODO",
+  "version": "0.0.8",
+  "description" : "Connect to and interact with Bluetooth LE devices",
   "main" : "bluetooth.js",
   "nativescript": {
     "platforms": {
@@ -18,6 +18,7 @@
     "BLE",
     "Bluetooth",
     "Bluetooth LE",
+    "Bluetooth Smart",
     "Bluetooth Low Energy"
   ],
   "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com>",

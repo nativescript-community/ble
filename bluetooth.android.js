@@ -387,6 +387,18 @@ Bluetooth.stopScanning = function () {
 
 Bluetooth._disconnect = function(gatt) {
   if (gatt !== null) {
+    var device = gatt.getDevice();
+    var stateObject = Bluetooth._connections[device.getAddress()];
+    console.log("----- invoking disc cb");
+    if (stateObject && stateObject.onDisconnected) {
+      stateObject.onDisconnected({
+        UUID: device.getAddress(),
+        name: device.getName()
+      });
+    } else {
+      console.log("----- !!! no disconnect callback found");      
+    }
+    Bluetooth._connections[device.getAddress()] = null;
     gatt.close();
   }
 };
@@ -414,6 +426,7 @@ Bluetooth.connect = function (arg) {
         Bluetooth._connections[arg.UUID] = {
           state: 'connecting',
           onConnected: arg.onConnected,
+          onDisconnected: arg.onDisconnected,
           device: bluetoothGatt // TODO rename device to gatt?
         };
       }
@@ -438,11 +451,7 @@ Bluetooth.disconnect = function (arg) {
         return;
       }
       
-      // TODO 
-      var bluetoothGatt = connection.device;
-      bluetoothGatt.close();
-      Bluetooth._connections[arg.UUID] = null;
-
+      Bluetooth._disconnect(connection.device);
       resolve();
     } catch (ex) {
       console.log("Error in Bluetooth.disconnect: " + ex);

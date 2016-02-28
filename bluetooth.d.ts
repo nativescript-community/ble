@@ -16,9 +16,9 @@ declare module "nativescript-bluetooth" {
       seconds?: number;
 
       /**
-       * TODO
+       * This callback is invoked when a device if found.
        */
-      onDiscover: (data: Peripheral) => void;
+      onDiscovered: (data: Peripheral) => void;
     }
 
     /**

@@ -6,6 +6,7 @@ Bluetooth._state = {
   centralDelegate: null,
   peripheralArray: null,
   connectCallbacks: {},
+  disconnectCallbacks: {},
   onDiscovered: null
 };
 
@@ -260,6 +261,8 @@ var CBCentralManagerDelegateImpl = (function (_super) {
           RSSI: RSSI,
           state: Bluetooth._getState(peripheral.state)
         });
+      } else {
+        console.log("----- !!! No onDiscovered callback specified");
       }
     }
   };
@@ -293,10 +296,16 @@ var CBCentralManagerDelegateImpl = (function (_super) {
     // NOTE: not invoking callback until characteristics are discovered (OR send back a 'type' and notify the caller? Perhaps that's nicer..)
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidDisconnectPeripheralError = function(central, peripheral, error) {
-    // TODO send this event.. any action afterwards crashes the app!
-    alert("Peripheral was disconnected, please reconnect");
-    console.log("----- !!! delegate centralManager:didDisconnectPeripheral:error: " + peripheral);
-    
+    // this event needs to be honored by the client as any action afterwards crashes the app
+    var cb = Bluetooth._state.disconnectCallbacks[peripheral.identifier.UUIDString];
+    if (cb) {
+      cb({
+        UUID: peripheral.identifier.UUIDString,
+        name: peripheral.name
+      });
+    } else {
+      console.log("----- !!! no disconnect callback found");      
+    }
     var foundAt = Bluetooth._state.peripheralArray.indexOfObject(peripheral);
     Bluetooth._state.peripheralArray.removeObject(foundAt);
   };
@@ -427,6 +436,7 @@ Bluetooth.connect = function (arg) {
       } else {
         console.log("Connecting to device with UUID: " + arg.UUID);
         Bluetooth._state.connectCallbacks[arg.UUID] = arg.onConnected;
+        Bluetooth._state.disconnectCallbacks[arg.UUID] = arg.onDisconnected;
         Bluetooth._state.manager.connectPeripheralOptions(peripheral, null);
         resolve();
       }
