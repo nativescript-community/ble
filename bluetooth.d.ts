@@ -157,6 +157,16 @@ declare module "nativescript-bluetooth" {
 
     export function isBluetoothEnabled(): Promise<boolean>;
 
+    /**
+     * Required for Android 6+ to be able to scan for devices in the background.
+     */
+    export function hasCoarseLocationPermission(): Promise<boolean>;
+
+    /**
+     * Required for Android 6+ to be able to scan for devices in the background.
+     */
+    export function requestCoarseLocationPermission(): Promise<any>;
+
     export function startScanning(options: StartScanningOptions): Promise<any>;
     export function stopScanning(): Promise<any>;
 
