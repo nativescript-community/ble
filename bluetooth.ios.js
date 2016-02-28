@@ -127,16 +127,6 @@ var CBPeripheralDelegateImpl = (function (_super) {
     }
   };
  
-  CBPeripheralDelegateImpl.prototype._encodeValue = function(val) {
-    // note that this must be binary or the app will crash
-    // .. not sure yet though if this conversion to NSData is ok..
-    var array = new Uint8Array(val.length);
-    for (var i = 0, l = val.length; i < l; i++) {
-      array[i] = val.charCodeAt(i);
-    }
-    val = array.buffer;
-  };
-
   CBPeripheralDelegateImpl.prototype._decodeValue = function(value) {
     var v = atob(value.base64EncodedStringWithOptions(0));
     var l = v.length;
@@ -677,6 +667,16 @@ Bluetooth.stopNotifying = function (arg) {
   });
 };
 
+Bluetooth._encodeValue = function(val) {
+  // note that this must be binary or the app will crash
+  // .. not sure yet though if this conversion to NSData is ok..
+  var array = new Uint8Array(val.length);
+  for (var i = 0, l = val.length; i < l; i++) {
+    array[i] = val.charCodeAt(i);
+  }
+  return array.buffer;
+};
+
 Bluetooth.write = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
@@ -690,7 +690,7 @@ Bluetooth.write = function (arg) {
         return;
       }
 
-      var valueEncoded = this._encodeValue(arg.value);
+      var valueEncoded = Bluetooth._encodeValue(arg.value);
       console.log("Attempting to write (encoded): " + valueEncoded);
 
       wrapper.peripheral.writeValueForCharacteristicType(
@@ -720,7 +720,7 @@ Bluetooth.writeWithoutResponse = function (arg) {
         return;
       }
 
-      var valueEncoded = this._encodeValue(arg.value);
+      var valueEncoded = Bluetooth._encodeValue(arg.value);
       console.log("Attempting to write (encoded): " + valueEncoded);
       
       wrapper.peripheral.writeValueForCharacteristicType(
