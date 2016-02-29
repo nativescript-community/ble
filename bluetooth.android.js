@@ -78,7 +78,11 @@ Bluetooth._connections = {};
         console.log("------- scanCallback.onScanFailed errorMessage: " + errorMessage);
       },
       onScanResult: function(callbackType, result) {
-        if (!Bluetooth._findPeripheral(result.getDevice().getAddress())) {
+        var stateObject = Bluetooth._connections[result.getDevice().getAddress()];
+        if (!stateObject) {
+          Bluetooth._connections[result.getDevice().getAddress()] = {
+            state: 'disconnected'
+          };
           var payload = {
             type: 'scanResult', // TODO or use different callback functions?
             RSSI: result.getRssi(),
@@ -496,16 +500,6 @@ Bluetooth.disconnect = function (arg) {
       reject(ex);
     }
   });
-};
-
-Bluetooth._findPeripheral = function(UUID) {
-  for (var i = 0; i < Bluetooth._state.peripheralArray.count; i++) {
-    var peripheral = Bluetooth._state.peripheralArray.objectAtIndex(i);
-    if (UUID == peripheral.identifier.UUIDString) {
-      return peripheral;
-    }
-  }
-  return null;
 };
 
 // This guards against devices reusing char UUID's. We prefer notify.
