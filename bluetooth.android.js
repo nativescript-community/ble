@@ -332,7 +332,7 @@ Bluetooth.startScanning = function (arg) {
         return;
       }
       // log a warning when on Android M and no permission has been granted (it's up to the dev to implement that flow though)
-      if (Bluetooth._coarseLocationPermissionGranted()) {
+      if (!Bluetooth._coarseLocationPermissionGranted()) {
         console.warn("Coarse location permission has not been granted; scanning for devices may fail.");
       }
       
