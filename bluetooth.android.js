@@ -85,11 +85,10 @@ Bluetooth._connections = {};
           };
           var payload = {
             type: 'scanResult', // TODO or use different callback functions?
+            UUID: result.getDevice().getAddress(),
+            name: result.getDevice().getName(),
             RSSI: result.getRssi(),
-            device: {
-              name: result.getDevice().getName(),
-              address: result.getDevice().getAddress()
-            },
+            state: 'disconnected',
             advertisement: android.util.Base64.encodeToString(result.getScanRecord().getBytes(), android.util.Base64.NO_WRAP)
           };
           console.log("---- Lollipop+ scanCallback result: " + JSON.stringify(payload));
