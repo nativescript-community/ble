@@ -35,15 +35,9 @@ var CBPeripheralDelegateImpl = (function (_super) {
         UUID: service.UUID.UUIDString,
         name: service.UUID
       });
-      // NOTE: discover all is slow -- also, see todo 10 lines down
+      // NOTE: discover all is slow
       peripheral.discoverCharacteristicsForService(null, service);
     }
-    /*
-    for (var i = 0; i < peripheral.services.count; i++) {
-      var service = peripheral.services.objectAtIndex(i);
-      peripheral.discoverCharacteristicsForService(null, service);
-    }
-    */
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidDiscoverIncludedServicesForServiceError = function(peripheral, service, error) {
     console.log("----- delegate peripheral:didDiscoverIncludedServicesForService:error");
@@ -109,12 +103,11 @@ var CBPeripheralDelegateImpl = (function (_super) {
         }
       }
 
-      // TODO add this one day.. Rand's has it, Don's doesn't
-      // get details about the characteristic
+      // Could add this one day: get details about the characteristic
       // peripheral.discoverDescriptorsForCharacteristic(characteristic);
     }
    
-    if (this._services.length === 0) { // this._servicesWithCharacteristics.length) {
+    if (this._services.length === 0) {
       if (this._callback) {
         this._callback({
           UUID: peripheral.identifier.UUIDString,
@@ -226,7 +219,6 @@ var CBPeripheralDelegateImpl = (function (_super) {
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidUpdateValueForDescriptorError = function(peripheral, descriptor, error) {
     console.log("----- delegate peripheral:didUpdateValueForDescriptor:error");
-    // alert("peripheralDidUpdateValueForDescriptorError");
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidWriteValueForDescriptorError = function(peripheral, descriptor, error) {
     console.log("----- delegate peripheral:didWriteValueForDescriptor:error");
@@ -277,23 +269,18 @@ var CBCentralManagerDelegateImpl = (function (_super) {
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidConnectPeripheral = function(central, peripheral) {
     console.log("----- delegate centralManager:didConnectPeripheral: " + peripheral);
-    // console.log("----- delegate centralManager:didConnectPeripheral, delegate: " + peripheral.delegate);
-    // NOTE: it's inefficient to discover all services
     
     // find the peri in the array and attach the delegate to that
     var peri = Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
     console.log("----- delegate centralManager:didConnectPeripheral: cached perio: " + peri);
     
     var cb = Bluetooth._state.connectCallbacks[peripheral.identifier.UUIDString];
-    Bluetooth._periDelegate = CBPeripheralDelegateImpl.new().initWithCallback(cb);
-    // var delegate = CBPeripheralDelegateImpl.new().initWithCallback(cb);
-    peri.delegate = Bluetooth._periDelegate;
+    var delegate = CBPeripheralDelegateImpl.new().initWithCallback(cb);
+    CFRetain(delegate);
+    peri.delegate = delegate;
     
     console.log("----- delegate centralManager:didConnectPeripheral, let's discover service");
     peri.discoverServices(null);
-    
-    // console.log("----- delegate centralManager:didConnectPeripheral call peripheral.discoverServices(null)");
-    // NOTE: not invoking callback until characteristics are discovered (OR send back a 'type' and notify the caller? Perhaps that's nicer..)
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidDisconnectPeripheralError = function(central, peripheral, error) {
     // this event needs to be honored by the client as any action afterwards crashes the app
@@ -320,7 +307,6 @@ var CBCentralManagerDelegateImpl = (function (_super) {
 
 // check for bluetooth being enabled as soon as the app starts
 (function () {
-  // TODO have the dev pass in a callback when 'scan' is called
   Bluetooth._state.centralDelegate = CBCentralManagerDelegateImpl.new().initWithCallback(function (obj) {
     console.log("----- centralDelegate obj: " + obj);
   });

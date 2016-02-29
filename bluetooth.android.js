@@ -329,16 +329,15 @@ Bluetooth._stringToUuid = function(uuidStr) {
 Bluetooth.startScanning = function (arg) {
   return new Promise(function (resolve, reject) {
     try {
-      // f.i. a simulator doesn't have a relevant device, so make sure to check this
-      if (adapter === null) {
-        reject("This device doesn't have a Bluetooth adapter.");
+      if (!Bluetooth._isEnabled()) {
+        reject("Bluetooth is not enabled");
         return;
       }
       // log a warning when on Android M and no permission has been granted (it's up to the dev to implement that flow though)
       if (!Bluetooth._coarseLocationPermissionGranted()) {
         console.warn("Coarse location permission has not been granted; scanning for devices may fail.");
       }
-      
+
       Bluetooth._connections = {};
 
       var serviceUUIDs = arg.serviceUUIDs || [];
@@ -409,10 +408,13 @@ Bluetooth.startScanning = function (arg) {
   });
 };
 
-// TODO check iOS - I seem to be missing stop/start scanning stuff in iOS... check the BigMac!
 Bluetooth.stopScanning = function () {
   return new Promise(function (resolve, reject) {
     try {
+      if (!Bluetooth._isEnabled()) {
+        reject("Bluetooth is not enabled");
+        return;
+      }
       if (android.os.Build.VERSION.SDK_INT < 21 /* android.os.Build.VERSION_CODES.LOLLIPOP */) {
         adapter.stopLeScan(Bluetooth._scanCallback);
       } else {
