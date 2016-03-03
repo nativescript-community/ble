@@ -121,6 +121,9 @@ var CBPeripheralDelegateImpl = (function (_super) {
   };
  
   CBPeripheralDelegateImpl.prototype._decodeValue = function(value) {
+    if (value === null) {
+      return null;
+    }
     var v = atob(value.base64EncodedStringWithOptions(0));
     var l = v.length;
     var ret = new Uint8Array(l);
@@ -128,7 +131,12 @@ var CBPeripheralDelegateImpl = (function (_super) {
       ret[i] = v.charCodeAt(i);
     }
     var data = new Uint8Array(ret.buffer);
-    return data[1];
+    for (var d in data) {
+      if (data[d] !== undefined) {
+        return data[d];
+      }
+    }
+    return value;
   };
 
   // this is called when a value is read from a peripheral
@@ -159,7 +167,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
       if (this._onReadPromise) {
         this._onReadPromise(result);
       } else {
-        console.log("^^^^^^^^ NO PROMISE!");
+      console.log("No _onReadPromise found!");
       }
     } else {
       if (this._onNotifyCallback) {
@@ -171,7 +179,13 @@ var CBPeripheralDelegateImpl = (function (_super) {
   };
   CBPeripheralDelegateImpl.prototype.peripheralDidWriteValueForCharacteristicError = function(peripheral, characteristic, error) {
     console.log("----- delegate peripheral:didWriteValueForCharacteristic:error");
-    // TODO this should resolve() -- kept from the 'write' function
+    if (this._onWritePromise) {
+      this._onWritePromise({
+        characteristicUUID: characteristic.UUID.UUIDString
+      });
+    } else {
+      console.log("No _onWritePromise found!");
+    }
   };
   
   // The peripheral letting us know whether our subscribe/unsubscribe happened or not
@@ -653,14 +667,27 @@ Bluetooth.stopNotifying = function (arg) {
   });
 };
 
+// val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
 Bluetooth._encodeValue = function(val) {
-  // note that this must be binary or the app will crash
-  // .. not sure yet though if this conversion to NSData is ok..
-  var array = new Uint8Array(val.length);
-  for (var i = 0, l = val.length; i < l; i++) {
-    array[i] = val.charCodeAt(i);
+  // if it's not a string assume it's a UintXArray
+  if (typeof val != 'string') {
+    return val.buffer;
   }
-  return array.buffer;
+  var parts = val.split(',');
+  if (parts[0].indexOf('x') == -1) {
+    return null;
+  }
+  var result;
+  if (parts[0].length == 4) { // eg. 0x01
+    result = new Uint8Array(parts.length);
+  } else {
+    // assuming eg. 0x007F
+    result = new Uint16Array(parts.length);
+  }
+  for (var i=0; i<parts.length; i++) {
+    result[i] = parts[i];
+  }
+  return result.buffer;
 };
 
 Bluetooth.write = function (arg) {
@@ -677,15 +704,20 @@ Bluetooth.write = function (arg) {
       }
 
       var valueEncoded = Bluetooth._encodeValue(arg.value);
-      console.log("Attempting to write (encoded): " + valueEncoded);
+      if (valueEncoded === null) {
+        reject("Invalid value: " + arg.value);
+        return;
+      }
+
+      // the promise will be resolved from 'didWriteValueForCharacteristic',
+      // but we should make this characteristic-specific (see .read)
+      wrapper.peripheral.delegate._onWritePromise = resolve;
 
       wrapper.peripheral.writeValueForCharacteristicType(
         valueEncoded,
         wrapper.characteristic,
         CBCharacteristicWriteWithResponse);
 
-      // TODO send resolve from 'didWriteValueForCharacteristic'
-      resolve();
     } catch (ex) {
       console.log("Error in Bluetooth.write: " + ex);
       reject(ex);
