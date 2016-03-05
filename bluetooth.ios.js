@@ -337,8 +337,6 @@ Bluetooth._getState = function(stateId) {
     return 'connecting';
   } else if (stateId == CBPeripheralStateConnected) {
     return 'connected';
-  } else if (stateId == CBPeripheralStateDisconnecting) {
-    return 'disconnecting';
   } else if (stateId == CBPeripheralStateDisconnected) {
     return 'disconnected';
   } else {
