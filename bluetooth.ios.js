@@ -154,7 +154,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
 
     var value = characteristic.value;
     var valueDecoded = this._decodeValue(value);
-    console.log("value received from device: " + value + ", decoded: " + valueDecoded);
+    console.log("value received from peripheral: " + value + ", decoded: " + valueDecoded);
 
     var result = {
       type: characteristic.isNotifying ? "notification" : "read",
@@ -254,7 +254,7 @@ var CBCentralManagerDelegateImpl = (function (_super) {
     this._callback = callback;
     return this;
   };
-  // fires when a device is discovered after executing the 'scan' function
+  // fires when a peripheral is discovered after executing the 'scan' function
   CBCentralManagerDelegateImpl.prototype.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI = function(central, peripheral, advData, RSSI) {
     console.log("----- delegate centralManager:didDiscoverPeripheral: " + peripheral.name + " @ " + RSSI);
     var peri = Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
@@ -432,9 +432,9 @@ Bluetooth.connect = function (arg) {
       }
       var peripheral = Bluetooth._findPeripheral(arg.UUID);
       if (peripheral === null) {
-        reject("Could not find device with UUID " + arg.UUID);
+        reject("Could not find peripheral with UUID " + arg.UUID);
       } else {
-        console.log("Connecting to device with UUID: " + arg.UUID);
+        console.log("Connecting to peripheral with UUID: " + arg.UUID);
         Bluetooth._state.connectCallbacks[arg.UUID] = arg.onConnected;
         Bluetooth._state.disconnectCallbacks[arg.UUID] = arg.onDisconnected;
         Bluetooth._state.manager.connectPeripheralOptions(peripheral, null);
@@ -460,9 +460,9 @@ Bluetooth.disconnect = function (arg) {
       }
       var peripheral = Bluetooth._findPeripheral(arg.UUID);
       if (peripheral === null) {
-        reject("Could not find device with UUID " + arg.UUID);
+        reject("Could not find peripheral with UUID " + arg.UUID);
       } else {
-        console.log("Disconnecting device with UUID: " + arg.UUID);
+        console.log("Disconnecting peripheral with UUID: " + arg.UUID);
         // no need to send an error when already disconnected, but it's wise to check it
         if (peripheral.state != CBPeripheralStateDisconnected) {
           Bluetooth._state.manager.cancelPeripheralConnection(peripheral);
@@ -491,9 +491,9 @@ Bluetooth.isConnected = function (arg) {
       }
       var peripheral = Bluetooth._findPeripheral(arg.UUID);
       if (peripheral === null) {
-        reject("Could not find device with UUID " + arg.UUID);
+        reject("Could not find peripheral with UUID " + arg.UUID);
       } else {
-        console.log("checking connection with device UUID: " + arg.UUID);
+        console.log("checking connection with peripheral UUID: " + arg.UUID);
         resolve(peripheral.state == CBPeripheralStateConnected);
       }
     } catch (ex) {
@@ -546,8 +546,8 @@ Bluetooth._getWrapper = function (arg, property, reject) {
     reject("Bluetooth is not enabled");
     return;
   }
-  if (!arg.deviceUUID) {
-    reject("No deviceUUID was passed");
+  if (!arg.peripheralUUID) {
+    reject("No peripheralUUID was passed");
     return null;
   }
   if (!arg.serviceUUID) {
@@ -559,21 +559,21 @@ Bluetooth._getWrapper = function (arg, property, reject) {
     return null;
   }
 
-  var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
+  var peripheral = Bluetooth._findPeripheral(arg.peripheralUUID);
   if (!peripheral) {
-    reject("Could not find device with UUID " + arg.deviceUUID);
+    reject("Could not find peripheral with UUID " + arg.peripheralUUID);
     return null;
   }
 
   if (peripheral.state != CBPeripheralStateConnected) {
-    reject("The device is disconnected");
+    reject("The peripheral is disconnected");
     return null;
   }
 
   var serviceUUID = CBUUID.UUIDWithString(arg.serviceUUID);
   var service = Bluetooth._findService(serviceUUID, peripheral);
   if (!service) {
-    reject("Could not find service with UUID " + arg.serviceUUID + " on device with UUID " + arg.deviceUUID);
+    reject("Could not find service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
     return null;
   }
 
@@ -591,7 +591,7 @@ Bluetooth._getWrapper = function (arg, property, reject) {
   }
 
   if (!characteristic) {
-    reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on device with UUID " + arg.deviceUUID);
+    reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
     return null;
   }
 
@@ -656,7 +656,7 @@ Bluetooth.stopNotifying = function (arg) {
         return;
       }
 
-      var peripheral = Bluetooth._findPeripheral(arg.deviceUUID);
+      var peripheral = Bluetooth._findPeripheral(arg.peripheralUUID);
       // peripheral.delegate = null;
       peripheral.setNotifyValueForCharacteristic(false, wrapper.characteristic);
       resolve();

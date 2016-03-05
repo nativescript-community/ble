@@ -16,7 +16,7 @@ declare module "nativescript-bluetooth" {
       seconds?: number;
 
       /**
-       * This callback is invoked when a device if found.
+       * This callback is invoked when a peripheral is found.
        */
       onDiscovered: (data: Peripheral) => void;
     }
@@ -41,12 +41,12 @@ declare module "nativescript-bluetooth" {
       UUID: string;
 
       /**
-       * Once the device is connected this callback function is invoked.
+       * Once the peripheral is connected this callback function is invoked.
        */
       onConnected: (data: Peripheral) => void;
 
       /**
-       * Once the device is disconnected this callback function is invoked.
+       * Once the peripheral is disconnected this callback function is invoked.
        */
       onDisconnected: (data: Peripheral) => void;
     }
@@ -60,16 +60,18 @@ declare module "nativescript-bluetooth" {
        */
       UUID: string;
       /**
-       * A friendly description of the device as provided by the manufactorer.
+       * A friendly description of the peripheral as provided by the manufacturer.
        */
       name: string;
+
       // state: string; // TODO not sure we'll keep this, so not adding it here for now
+
       /**
-       * The relative signal strength which more or less can be used to determine how far away the device is.
+       * The relative signal strength which more or less can be used to determine how far away the peripheral is.
        */
       RSSI: number;
       /**
-       * Once connected to the device a list of services will be set.
+       * Once connected to the peripheral a list of services will be set.
        */
       services: Service[];
     }
@@ -120,21 +122,21 @@ declare module "nativescript-bluetooth" {
       };
 
       /**
-       * TODO
+       * ignored for now
        */
       descriptors: any;
 
       /**
-       * TODO
+       * ignored for now
        */
       permissions: any;
     }
 
     /**
-     * TODO
+     * Base properties for all CRUD actions
      */
     interface CRUDOptions {
-      deviceUUID: string;
+      peripheralUUID: string;
       serviceUUID: string;
       characteristicUUID: string;
     }
@@ -147,7 +149,7 @@ declare module "nativescript-bluetooth" {
     }
 
     /**
-     * TODO
+     * Response object for the read function
      */
     export interface ReadResult {
       value: any;
@@ -158,12 +160,12 @@ declare module "nativescript-bluetooth" {
     export function isBluetoothEnabled(): Promise<boolean>;
 
     /**
-     * Required for Android 6+ to be able to scan for devices in the background.
+     * Required for Android 6+ to be able to scan for peripherals in the background.
      */
     export function hasCoarseLocationPermission(): Promise<boolean>;
 
     /**
-     * Required for Android 6+ to be able to scan for devices in the background.
+     * Required for Android 6+ to be able to scan for peripherals in the background.
      */
     export function requestCoarseLocationPermission(): Promise<any>;
 

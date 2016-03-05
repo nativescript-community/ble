@@ -362,7 +362,7 @@ Bluetooth.startScanning = function (arg) {
       }
       // log a warning when on Android M and no permission has been granted (it's up to the dev to implement that flow though)
       if (!Bluetooth._coarseLocationPermissionGranted()) {
-        console.warn("Coarse location permission has not been granted; scanning for devices may fail.");
+        console.warn("Coarse location permission has not been granted; scanning for peripherals may fail.");
       }
 
       Bluetooth._connections = {};
@@ -484,9 +484,9 @@ Bluetooth.connect = function (arg) {
       }
       var bluetoothDevice = adapter.getRemoteDevice(arg.UUID);
       if (bluetoothDevice === null) {
-        reject("Could not find device with UUID " + arg.UUID);
+        reject("Could not find peripheral with UUID " + arg.UUID);
       } else {
-        console.log("Connecting to device with UUID: " + arg.UUID);
+        console.log("Connecting to peripheral with UUID: " + arg.UUID);
         var bluetoothGatt = bluetoothDevice.connectGatt(
             utils.ad.getApplicationContext(), // context
             false, // autoconnect
@@ -517,7 +517,7 @@ Bluetooth.disconnect = function (arg) {
       }
       var connection = Bluetooth._connections[arg.UUID];
       if (!connection) {
-        reject("Device wasn't connected");
+        reject("Peripheral wasn't connected");
         return;
       }
 
@@ -530,7 +530,7 @@ Bluetooth.disconnect = function (arg) {
   });
 };
 
-// This guards against devices reusing char UUID's. We prefer notify.
+// This guards against peripherals reusing char UUID's. We prefer notify.
 Bluetooth._findNotifyCharacteristic = function(bluetoothGattService, characteristicUUID) {
   // Check for Notify first
   var characteristics = bluetoothGattService.getCharacteristics();
@@ -553,7 +553,7 @@ Bluetooth._findNotifyCharacteristic = function(bluetoothGattService, characteris
   return bluetoothGattService.getCharacteristic(characteristicUUID);
 };
 
-// This guards against devices reusing char UUID's.
+// This guards against peripherals reusing char UUID's.
 Bluetooth._findCharacteristicOfType = function(bluetoothGattService, characteristicUUID, charType) {
   var characteristics = bluetoothGattService.getCharacteristics();
   for (var i = 0; i < characteristics.size(); i++) {
@@ -571,8 +571,8 @@ Bluetooth._getWrapper = function (arg, reject) {
     reject("Bluetooth is not enabled");
     return;
   }
-  if (!arg.deviceUUID) {
-    reject("No deviceUUID was passed");
+  if (!arg.peripheralUUID) {
+    reject("No peripheralUUID was passed");
     return;
   }
   if (!arg.serviceUUID) {
@@ -586,9 +586,9 @@ Bluetooth._getWrapper = function (arg, reject) {
 
   var serviceUUID = Bluetooth._stringToUuid(arg.serviceUUID);
 
-  var stateObject = Bluetooth._connections[arg.deviceUUID];
+  var stateObject = Bluetooth._connections[arg.peripheralUUID];
   if (!stateObject) {
-    reject("The device is disconnected");
+    reject("The peripheral is disconnected");
     return;
   }
 
@@ -596,7 +596,7 @@ Bluetooth._getWrapper = function (arg, reject) {
   var bluetoothGattService = gatt.getService(serviceUUID);
 
   if (!bluetoothGattService) {
-    reject("Could not find service with UUID " + arg.serviceUUID + " on device with UUID " + arg.deviceUUID);
+    reject("Could not find service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
     return;
   }
 
@@ -622,11 +622,11 @@ Bluetooth.read = function (arg) {
 
       var bluetoothGattCharacteristic = Bluetooth._findCharacteristicOfType(bluetoothGattService, characteristicUUID, android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ);
       if (!bluetoothGattCharacteristic) {
-        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on device with UUID " + arg.deviceUUID);
+        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
         return;
       }
 
-      var stateObject = Bluetooth._connections[arg.deviceUUID];
+      var stateObject = Bluetooth._connections[arg.peripheralUUID];
       stateObject.onReadPromise = resolve;
       if (!gatt.readCharacteristic(bluetoothGattCharacteristic)) {
         reject("Failed to set client characteristic read for " + characteristicUUID);
@@ -671,7 +671,7 @@ Bluetooth.write = function (arg) {
 
       var bluetoothGattCharacteristic = Bluetooth._findCharacteristicOfType(wrapper.bluetoothGattService, Bluetooth._stringToUuid(arg.characteristicUUID), android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE);
       if (!bluetoothGattCharacteristic) {
-        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on device with UUID " + arg.deviceUUID);
+        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
         return;
       }
 
@@ -684,7 +684,7 @@ Bluetooth.write = function (arg) {
       bluetoothGattCharacteristic.setValue(val);
       bluetoothGattCharacteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
 
-      Bluetooth._connections[arg.deviceUUID].onWritePromise = resolve;
+      Bluetooth._connections[arg.peripheralUUID].onWritePromise = resolve;
       if (!wrapper.gatt.writeCharacteristic(bluetoothGattCharacteristic)) {
         reject("Failed to write to characteristic " + arg.characteristicUUID);
       }
@@ -710,7 +710,7 @@ Bluetooth.writeWithoutResponse = function (arg) {
 
       var bluetoothGattCharacteristic = Bluetooth._findCharacteristicOfType(wrapper.bluetoothGattService, Bluetooth._stringToUuid(arg.characteristicUUID), android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE);
       if (!bluetoothGattCharacteristic) {
-        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on device with UUID " + arg.deviceUUID);
+        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
         return;
       }
 
@@ -750,7 +750,7 @@ Bluetooth.startNotifying = function (arg) {
 
       var bluetoothGattCharacteristic = Bluetooth._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
       if (!bluetoothGattCharacteristic) {
-        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on device with UUID " + arg.deviceUUID);
+        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
         return;
       }
 
@@ -777,7 +777,7 @@ Bluetooth.startNotifying = function (arg) {
 
       if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
         var cb = arg.onNotify || function(result) { console.log("No 'onNotify' callback function specified for 'startNotifying'"); };
-        var stateObject = Bluetooth._connections[arg.deviceUUID];
+        var stateObject = Bluetooth._connections[arg.peripheralUUID];
         stateObject.onNotifyCallback = cb;
         console.log("--- notifying");
         resolve();
@@ -809,11 +809,11 @@ Bluetooth.stopNotifying = function (arg) {
       console.log("---- got gatt service char: " + bluetoothGattCharacteristic);
 
       if (!bluetoothGattCharacteristic) {
-        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on device with UUID " + arg.deviceUUID);
+        reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
         return;
       }
 
-      var stateObject = Bluetooth._connections[arg.deviceUUID];
+      var stateObject = Bluetooth._connections[arg.peripheralUUID];
       stateObject.onNotifyCallback = null;
 
       if (gatt.setCharacteristicNotification(bluetoothGattCharacteristic, false)) {
