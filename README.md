@@ -278,6 +278,5 @@ bluetooth.stopNotifying({
 ## Future work
 * Find a more convenient way (and document it) to read/write values.
 * Support other properties of a characteristic.
-* Report advertising data broadcasted by peripherals.
-* Support interacting with ultiple characteristics of the same peripheral at the same time.
-
+* Report advertising data peripherals broadcast.
+* Support interacting with multiple characteristics of the same peripheral at the same time.
