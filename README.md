@@ -100,7 +100,10 @@ Scanning for peripherals drains the battery quickly, so you better not scan any 
 
 #### serviceUUIDs
 It's inefficient to scan for all available Bluetooth peripheral and have them report all services they offer.
+
 If you're only interested in finding a heartrate peripheral for instance, pass in service UUID `'180d'` like this: serviceUUIDs: ['180d']. If you add 2 or more (comma separated) services then only peripherals supporting ALL those services will match.
+
+Note that UUID's are ALWAYS strings; don't pass integers.
 
 #### onDiscovered
 While scanning the plugin will immediately report back uniquely discovered peripherals. This function will receive an object representing the peripheral which contains the properties `UUID`, `name` and `RSSI` (relative signal strength).
@@ -192,14 +195,89 @@ bluetooth.disconnect({
 ```
 
 ### read
-So you're connected? Then finally we can have some fun!
+If a peripheral has a service that has a characteristic where `properties.read` is `true` then you can call the `read` function to retrieve the current state (value) of the characteristic.
 
+The promise will receive an object like this:
+
+```js
+{
+  value: <72>, // the platform-specific binary value of the characteristic
+  valueDecoded: 65, // the plugin's best effort of auto-decoding the value (for testing purposes mostly)
+  characteristicUUID: '434234-234234-234234-434'
+}
+```
+
+Armed with this knowledge, let's invoke the `read` function:
+
+```js
 bluetooth.read({
-  UUID: '34234-5453-4453-54545'
-}).then(function() {
-  console.log("disconnected successfully");
+  peripheralUUID: '34234-5453-4453-54545',
+  serviceUUID: '180d',
+  characteristicUUID: '3434-45234-34324-2343'
+}).then(function(result) {
+  console.log("read: " + JSON.stringify(result));
 }).then(function(err) {
-  // in this case you're probably best off treating this as a disconnected peripheral though
-  console.log("disconnection error: " + err);
+  console.log("read error: " + err);
 });
+```
+
+### write
+If a peripheral has a service that has a characteristic where `properties.write` is `true` then you can call the `write` function to update the current state (value) of the characteristic.
+
+The value must be hexadecimal, so if you want to send a `1`, send `0x01`. If you want to send multiple bytes add a comma: `"0x007F,0x006E"`.
+
+```js
+bluetooth.write({
+  peripheralUUID: '34134-5453-4453-54545',
+  serviceUUID: '180e',
+  characteristicUUID: '3424-45234-34324-2343',
+  value: '0x01' // a hex 1
+}).then(function(result) {
+  console.log("value written");
+}).then(function(err) {
+  console.log("write error: " + err);
+});
+```
+
+### writeWithoutResponse
+Same API as `write`, except that when the promise is invoked the value has not been written yet; it has only been requested to be written an no response will be received when it has.
+
+### startNotifying
+If a peripheral has a service that has a characteristic where `properties.notify` is `true` then you can call the `startNotifying` function to retrieve the value changes of the characteristic.
+
+Usage is very much like `read`, but the result won't be sent to the promise, but to the `onNotify` callback function you pass in. This is because multiple notifications can be received and a promise can only resolve once. The value of the object sent to `onNotify` is the same as the one you get in the promise of `read`.
+
+```js
+bluetooth.startNotifying({
+  peripheralUUID: '34234-5453-4453-54545',
+  serviceUUID: '180d',
+  characteristicUUID: '3434-45234-34324-2343',
+  onNotify: function (result) {
+	console.log("read: " + JSON.stringify(result));
+  }  
+}).then(function() {
+  console.log("subscribed for notifications");
+});
+```
+
+### stopNotifying
+Enough is enough. When you're no longer interested in the values the peripheral is sending you do this:
+
+```js
+bluetooth.stopNotifying({
+  peripheralUUID: '34234-5453-4453-54545',
+  serviceUUID: '180d',
+  characteristicUUID: '3434-45234-34324-2343'
+}).then(function() {
+  console.log("unsubscribed for notifications");
+}, function (err) {
+  console.log("unsubscribe error: " + err);
+});
+```
+
+## Future work
+* Find a more convenient way (and document it) to read/write values.
+* Support other properties of a characteristic.
+* Report advertising data broadcasted by peripherals.
+* Support interacting with ultiple characteristics of the same peripheral at the same time.
 

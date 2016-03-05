@@ -177,6 +177,7 @@ declare module "nativescript-bluetooth" {
 
     export function read(options: ReadOptions): Promise<ReadResult>;
     export function write(options:WriteOptions): Promise<any>;
+    export function writeWithoutResponse(options:WriteOptions): Promise<any>;
 
     export function startNotifying(options: StartNotifyingOptions): Promise<any>;
     export function stopNotifying(options: StopNotifyingOptions): Promise<any>;
