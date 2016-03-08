@@ -201,8 +201,8 @@ The promise will receive an object like this:
 
 ```js
 {
-  value: <72>, // the platform-specific binary value of the characteristic
-  valueDecoded: 65, // the plugin's best effort of auto-decoding the value (for testing purposes mostly)
+  value: <ArrayBuffer>, // an ArrayBuffer which you can use to decode (see example below)
+  valueRaw: <72>, // the platform-specific binary value of the characteristic: NSData (iOS), byte[] (Android)
   characteristicUUID: '434234-234234-234234-434'
 }
 ```
@@ -215,7 +215,9 @@ bluetooth.read({
   serviceUUID: '180d',
   characteristicUUID: '3434-45234-34324-2343'
 }).then(function(result) {
-  console.log("read: " + JSON.stringify(result));
+  // fi. a heartrate monitor value (Uint8) can be retrieved like this:
+  var data = new Uint8Array(result.value);
+  console.log("Your heartrate is: " + data[1] + " bpm");  
 }).then(function(err) {
   console.log("read error: " + err);
 });
@@ -253,6 +255,7 @@ bluetooth.startNotifying({
   serviceUUID: '180d',
   characteristicUUID: '3434-45234-34324-2343',
   onNotify: function (result) {
+    // see the read example for how to decode ArrayBuffers
 	console.log("read: " + JSON.stringify(result));
   }  
 }).then(function() {
@@ -275,8 +278,12 @@ bluetooth.stopNotifying({
 });
 ```
 
+## Changelog
+* 1.1.0  To be compatible with any Bluetooth device out there, the value returned from `read` and `notify` is now an `ArrayBuffer`.
+* 1.0.0  Initial release
+
 ## Future work
-* Find a more convenient way (and document it) to read/write values.
+* Find an even better way to write values.
 * Support other properties of a characteristic.
 * Report advertising data peripherals broadcast.
 * Support interacting with multiple characteristics of the same peripheral at the same time.

@@ -1,6 +1,7 @@
 var utils = require("utils/utils");
 var application = require("application");
 var Bluetooth = require("./bluetooth-common");
+
 var ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 
 var adapter,
@@ -131,14 +132,14 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
    * 3: disconnecting
    */
   onConnectionStateChange: function(bluetoothGatt, status, newState) {
-    console.log("------- _MyGattCallback.onConnectionStateChange, status: " + status);
-    console.log("------- _MyGattCallback.onConnectionStateChange, newState: " + newState);
+    console.log("------- _MyGattCallback.onConnectionStateChange, status: " + status + ", new state: " + newState);
 
     // https://github.com/don/cordova-plugin-ble-central/blob/master/src/android/Peripheral.java#L191    
     if (newState == 2 /* connected */ && status === 0 /* gatt success */) {
       console.log("---- discovering services..");
       bluetoothGatt.discoverServices();
     } else {
+      // perhaps the device was manually disconnected, or in use by another device
       Bluetooth._disconnect(bluetoothGatt);
     }
   },
@@ -234,14 +235,10 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
     if (value === null) {
       return null;
     }
-    // TODO may be Uint16Array as well
-    var data = new Uint8Array(value);
-    for (var d in data) {
-      if (data[d] !== undefined) {
-        return data[d];
-      }
-    }
-    return value;
+
+    // value is of Java type: byte[]
+    var b = android.util.Base64.encodeToString(value, android.util.Base64.NO_WRAP);
+    return Bluetooth._base64ToArrayBuffer(b);
   },
 
   onCharacteristicRead: function(bluetoothGatt, bluetoothGattCharacteristic, status) {
@@ -257,8 +254,8 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
     if (stateObject.onReadPromise) {
       var value = bluetoothGattCharacteristic.getValue();
       stateObject.onReadPromise({
-        value: value,
-        valueDecoded: this._decodeValue(value),
+        valueRaw: value,
+        value: this._decodeValue(value),
         characteristicUUID: bluetoothGattCharacteristic.getUuid()
       });
     }
@@ -276,11 +273,9 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
 
     if (stateObject.onNotifyCallback) {
       var value = bluetoothGattCharacteristic.getValue();
-      var data = new Uint8Array(value);
-      console.log("------- _MyGattCallback.onCharacteristicChanged, decodedvalue: " + data[1]);
       stateObject.onNotifyCallback({
-        value: value,
-        valueDecoded: data[1],
+        valueRaw: value,
+        value: this._decodeValue(value),
         characteristicUUID: bluetoothGattCharacteristic.getUuid()
       });
     }

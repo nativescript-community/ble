@@ -1,5 +1,4 @@
 var Bluetooth = require("./bluetooth-common");
-require('./base64');
 
 Bluetooth._state = { 
   manager: null,
@@ -120,23 +119,14 @@ var CBPeripheralDelegateImpl = (function (_super) {
     }
   };
  
-  CBPeripheralDelegateImpl.prototype._decodeValue = function(value) {
+  CBPeripheralDelegateImpl.prototype._toArrayBuffer = function(value) {
     if (value === null) {
       return null;
     }
-    var v = atob(value.base64EncodedStringWithOptions(0));
-    var l = v.length;
-    var ret = new Uint8Array(l);
-    for (var i = 0; i < l; i++) {
-      ret[i] = v.charCodeAt(i);
-    }
-    var data = new Uint8Array(ret.buffer);
-    for (var d in data) {
-      if (data[d] !== undefined) {
-        return data[d];
-      }
-    }
-    return value;
+
+    // value is of ObjC type: NSData
+    var b = value.base64EncodedStringWithOptions(0);
+    return Bluetooth._base64ToArrayBuffer(b);
   };
 
   // this is called when a value is read from a peripheral
@@ -152,17 +142,13 @@ var CBPeripheralDelegateImpl = (function (_super) {
       return;
     }
 
-    var value = characteristic.value;
-    var valueDecoded = this._decodeValue(value);
-    console.log("value received from peripheral: " + value + ", decoded: " + valueDecoded);
-
     var result = {
       type: characteristic.isNotifying ? "notification" : "read",
       characteristicUUID: characteristic.UUID.UUIDString,
-      value: value,
-      valueDecoded: valueDecoded
+      valueRaw: characteristic.value,
+      value: this._toArrayBuffer(characteristic.value)
     };
-
+    
     if (result.type === "read") {
       if (this._onReadPromise) {
         this._onReadPromise(result);
