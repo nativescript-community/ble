@@ -2,7 +2,7 @@ To merge plugin-specific permissions with the app's `AndroidManifest.xml` an `.a
 
 Add the correct permissions to [the libraryproject's manifest](libraryproject/bluetoothpermissions/src/main/AndroidManifest.xml) and build it.
 
-Steps to update the `.aar`:
+Steps to update the `.aar` file:
 
 * Clone this repo
 * Start Android Studio and pick 'import existing project' > `{this repo}/platforms/android/libraryproject`
