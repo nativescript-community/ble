@@ -99,7 +99,7 @@ A few of the optional params require a bit of explanation:
 Scanning for peripherals drains the battery quickly, so you better not scan any longer than necessary. If a peripheral is in range and not engaged in another connection it usually pops up in under a second. If you don't pass in a number of seconds you will need to manually call `stopScanning`.
 
 #### serviceUUIDs
-It's inefficient to scan for all available Bluetooth peripheral and have them report all services they offer.
+It's inefficient to scan for all available Bluetooth peripherals and have them report all services they offer.
 
 If you're only interested in finding a heartrate peripheral for instance, pass in service UUID `'180d'` like this: serviceUUIDs: ['180d']. If you add 2 or more (comma separated) services then only peripherals supporting ALL those services will match.
 
