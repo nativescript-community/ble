@@ -471,7 +471,7 @@ Bluetooth._disconnect = function(gatt) {
 // note that this doesn't make much sense without scanning first
 Bluetooth.connect = function (arg) {
   return new Promise(function (resolve, reject) {
-    try {
+    try { 
       // or macaddress..
       if (!arg.UUID) {
         reject("No UUID was passed");
@@ -482,12 +482,23 @@ Bluetooth.connect = function (arg) {
         reject("Could not find peripheral with UUID " + arg.UUID);
       } else {
         console.log("Connecting to peripheral with UUID: " + arg.UUID);
-        var bluetoothGatt = bluetoothDevice.connectGatt(
-            utils.ad.getApplicationContext(), // context
-            false, // autoconnect
-            new Bluetooth._MyGattCallback(/* TODO pass in onWhatever function */)
-        );
-        // TODO (fill, and use this object in disconnect() as well)
+
+        var bluetoothGatt;
+        if (android.os.Build.VERSION.SDK_INT < 23 /*android.os.Build.VERSION_CODES.M */) {
+          bluetoothGatt = bluetoothDevice.connectGatt(
+              utils.ad.getApplicationContext(), // context
+              false, // autoconnect
+              new Bluetooth._MyGattCallback(/* TODO pass in onWhatever function */)
+          );
+        } else {
+          bluetoothGatt = bluetoothDevice.connectGatt(
+              utils.ad.getApplicationContext(), // context
+              false, // autoconnect
+              new Bluetooth._MyGattCallback(/* TODO pass in onWhatever function */),
+              android.bluetooth.BluetoothDevice.TRANSPORT_LE // 2
+          );
+        }
+
         Bluetooth._connections[arg.UUID] = {
           state: 'connecting',
           onConnected: arg.onConnected,
@@ -495,7 +506,6 @@ Bluetooth.connect = function (arg) {
           device: bluetoothGatt // TODO rename device to gatt?
         };
       }
-      // resolve();
     } catch (ex) {
       console.log("Error in Bluetooth.connect: " + ex);
       reject(ex);
