@@ -142,7 +142,9 @@ declare module "nativescript-bluetooth" {
     }
 
     export interface ReadOptions extends CRUDOptions {}
-    export interface WriteOptions extends CRUDOptions {}
+    export interface WriteOptions extends CRUDOptions {
+        value : any;
+    }
     export interface StopNotifyingOptions extends CRUDOptions {}
     export interface StartNotifyingOptions extends CRUDOptions {
       onNotify: (data: ReadResult) => void;
