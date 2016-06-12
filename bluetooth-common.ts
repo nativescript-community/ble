@@ -1,6 +1,6 @@
 require('./base64');
 
-export class Bluetooth {
+export class bluetooth {
 
   requestCoarseLocationPermission() {
     return new Promise(function (resolve) {

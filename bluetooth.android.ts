@@ -2,13 +2,13 @@
 
 import * as utils from "utils/utils"
 import * as application from "application";
-import {Bluetooth} from "./bluetooth-common";
+import {bluetooth} from "./bluetooth-common";
 
 var ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 
 var adapter, onDiscovered;
 
-class bluetooth extends Bluetooth {
+class Bluetooth extends bluetooth {
   _scanCallback;
 
   _coarseLocationPermissionGranted() {
