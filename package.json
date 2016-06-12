@@ -1,8 +1,8 @@
 {
   "name": "nativescript-bluetooth",
   "version": "1.1.2",
-  "description" : "Connect to and interact with Bluetooth LE peripherals",
-  "main" : "bluetooth.js",
+  "description": "Connect to and interact with Bluetooth LE peripherals",
+  "main": "bluetooth.js",
   "nativescript": {
     "platforms": {
       "android": "1.6.0",
@@ -22,9 +22,12 @@
     "Bluetooth Low Energy"
   ],
   "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com>",
-  "license": {
-    "type": "MIT",
-    "url": "https://github.com/eddyverbruggen/nativescript-bluetooth/blob/master/LICENSE"
+  "license": "MIT",
+  "devDependencies": {
+    "tns-core-modules": "1.6.0",
+    "tns-platform-declarations": "^2.0.0",
+    "tslint": "3.9.0",
+    "typescript": "1.8.10"
   },
   "bugs": {
     "url": "https://github.com/eddyverbruggen/nativescript-bluetooth/issues"
