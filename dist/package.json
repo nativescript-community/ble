@@ -1,0 +1,42 @@
+{
+  "name": "nativescript-bluetooth",
+  "version": "1.1.2",
+  "description": "Connect to and interact with Bluetooth LE peripherals",
+  "main": "bluetooth.js",
+  "nativescript": {
+    "platforms": {
+      "android": "1.6.0",
+      "ios": "1.6.0"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eddyverbruggen/nativescript-bluetooth.git"
+  },
+  "keywords": [
+    "NativeScript",
+    "BLE",
+    "Bluetooth",
+    "Bluetooth LE",
+    "Bluetooth Smart",
+    "Bluetooth Low Energy"
+  ],
+  "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-typescript": "^2.13.6",
+    "tns-core-modules": "1.6.0",
+    "tns-platform-declarations": "^2.0.0",
+    "tslint": "3.9.0",
+    "typescript": "1.8.10"
+  },
+  "bugs": {
+    "url": "https://github.com/eddyverbruggen/nativescript-bluetooth/issues"
+  },
+  "homepage": "https://github.com/eddyverbruggen/nativescript-bluetooth",
+  "scripts": {
+    "demo.android": "npm i && gulp && cd sample && npm i && tns platform remove android && tns run android"
+  }
+}

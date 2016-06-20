@@ -1,3 +1,5 @@
 .idea
 node_modules/**
 bluetooth.android.test.*
+sample/platforms/**
+sample/node_modules/**

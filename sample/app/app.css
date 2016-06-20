@@ -1,0 +1,70 @@
+﻿page {
+  background-color: #F4F4F4;
+}
+
+.tab-content {
+  color: #808080;
+  padding: 18;
+}
+
+.title {
+  font-size: 18;
+  margin: 0 0 8 0;
+  color: #3c3c3c;
+  /*horizontal-align: center;*/
+}
+
+label {
+  font-size: 16;
+}
+
+.hint {
+  font-size: 14;
+  margin: 8;
+}
+
+button {
+  /*color: #ffffff;  beware! this sets the color of the actionsheet label on iOS 8+ (#ffffff makes the label invisible on the white background) */
+  background-color: #E0A458;
+  padding: 8;
+  margin: 8;
+  font-size: 14;
+  border-radius: 4;
+}
+
+.button {
+  color: #ffffff;
+}
+
+.button-positive {
+  background-color: #90A959;
+}
+
+.button-danger {
+  background-color: #A63D40;
+}
+
+.button-neutral {
+  background-color: #6494AA;
+}
+
+.padded-label {
+    padding: 0 12;
+}
+
+.padded-label-stack {
+    padding: 12;
+}
+
+.title-label {
+    padding: 0 0 12 0;
+    font-weight: bold;
+}
+
+.uuid-label {
+    font-size: 10;
+}
+
+.rssi-label {
+  font-size: 10;
+}

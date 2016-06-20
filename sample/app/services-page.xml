@@ -1,0 +1,26 @@
+<Page xmlns="http://www.nativescript.org/tns.xsd" loaded="pageLoaded">
+  <StackLayout col="0" orientation="vertical">
+    <StackLayout col="0" orientation="vertical" cssClass="tab-content">
+      <StackLayout orientation="horizontal">
+        <Label text="{{ name }}" cssClass="details-label-title" />
+        <Label text=" services" cssClass="details-label-title details-label-title-postfix" />
+      </StackLayout>
+      <Label text="{{ UUID }}" cssClass="details-services-uuid" />
+      <!--<Label text="{{ state }}" />-->
+      <Button text="disconnect" tap="onDisconnectTap" cssClass="button button-positive" />
+    </StackLayout>
+
+    <ActivityIndicator busy="{{ isLoading }}"/>
+
+    <GridLayout rows="*">
+      <ListView items="{{ services }}" itemTap="onServiceTap" separatorColor="#90c3d4">
+        <ListView.itemTemplate>
+          <StackLayout col="0" cssClass="tab-content">
+            <Label text="{{ name }}" />
+            <Label text="{{ UUID }}" visibility="{{ name != UUID ? 'visible' : 'collapsed' }}" />
+          </StackLayout>
+        </ListView.itemTemplate>
+      </ListView>
+    </GridLayout>
+  </StackLayout>
+</Page>

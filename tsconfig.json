@@ -1,18 +1,15 @@
 {
     "compilerOptions": {
-        "noEmitOnError": true,
+        "noEmitOnError": false,
         "noEmitHelpers": true,
         "noLib": false,
-        "sourceMap": false,
+        "sourceMap": true,
         "target": "es5",
         "module": "commonjs",
-        "outDir": "bin/dist",
-        "rootDir": "./", 
         "removeComments": false
     }, 
     "exclude": [
         "node_modules", 
-        "sample", 
-        "bin"
+        "sample"
     ]
 }

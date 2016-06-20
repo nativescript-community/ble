@@ -61,8 +61,8 @@ class Bluetooth extends bluetooth {
     super();
     var bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
     adapter = bluetoothManager.getAdapter();
-  
-    if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP*/ ) {
+
+    if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP*/) {
       var MyScanCallback = android.bluetooth.le.ScanCallback.extend({
         onBatchScanResults: function (results) {
           console.log("------- scanCallback.onBatchScanResults");
@@ -104,27 +104,29 @@ class Bluetooth extends bluetooth {
       });
       this._scanCallback = new MyScanCallback();
     } else {
-      this._scanCallback = new android.bluetooth.BluetoothAdapter.LeScanCallback({
-        // see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L2181
-        onLeScan: function (device: android.bluetooth.BluetoothDevice, rssi: number, scanRecord: Array<number>) {
-          var stateObject = this._connections[device.getAddress()];
-          if (!stateObject) {
-            this._connections[device.getAddress()] = {
-              state: 'disconnected'
-            };
-            onDiscovered({
-              type: 'scanResult', // TODO or use different callback functions?
-              UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
-              name: device.getName(),
-              RSSI: rssi,
-              state: 'disconnected'
-            });
+      this._scanCallback = new android.bluetooth.BluetoothAdapter.LeScanCallback(
+        {
+          onLeScan: function (device: android.bluetooth.BluetoothDevice, rssi: number, scanRecord: Array<number>) {
+            var stateObject = this._connections[device.getAddress()];
+            if (!stateObject) {
+              this._connections[device.getAddress()] = {
+                state: 'disconnected'
+              };
+              onDiscovered({
+                type: 'scanResult', // TODO or use different callback functions?
+                UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
+                name: device.getName(),
+                RSSI: rssi,
+                state: 'disconnected'
+              });
+            }
           }
         }
-      });
+        // see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L2181
+      );
     }
   }
-
+  
   // callback for connecting and read/write operations
   _MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
     // add constructor which gets a callback

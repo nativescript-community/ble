@@ -1,0 +1,32 @@
+<Page xmlns="http://www.nativescript.org/tns.xsd" loaded="pageLoaded">
+  <StackLayout col="0" orientation="vertical">
+    <StackLayout col="0" orientation="vertical" cssClass="tab-content">
+      <Label text="Service characteristics" cssClass="details-label-title" />
+      <Label text="{{ UUID }}" />
+      <Label text="{{ feedback }}" cssClass="characteristic-feedback" textWrap="true" />                
+      <Label text="{{ feedbackRaw || 'Tap any row below ..' }}" cssClass="characteristic-feedback-raw" textWrap="true" />                
+      <Label text="{{ feedbackTimestamp }}" cssClass="characteristic-feedback-timestamp" />
+    </StackLayout>
+
+    <GridLayout rows="*">
+      <ListView items="{{ characteristics }}" itemTap="onCharacteristicTap" separatorColor="#90c3d4">
+          <ListView.itemTemplate>
+            <StackLayout col="0" orientation="vertical" cssClass="padded-label">
+                <Label text="{{ name }}" />
+                <Label text="{{ UUID }}" visibility="{{ name != UUID ? 'visible' : 'collapsed' }}" />
+                <!--<Label text="{{ value }}" />-->
+                <StackLayout orientation="horizontal" cssClass="characteristic-properties">
+                  <Label text="read" visibility="{{ properties.read ? 'visible' : 'collapsed' }}" cssClass="characteristic-property" />
+                  <Label text="write" visibility="{{ properties.write ? 'visible' : 'collapsed' }}" cssClass="characteristic-property" />
+                  <Label text="writeWithoutResponse" visibility="{{ properties.writeWithoutResponse ? 'visible' : 'collapsed' }}" cssClass="characteristic-property" />
+                  <Label text="notify" visibility="{{ properties.notify ? 'visible' : 'collapsed' }}" cssClass="characteristic-property" />
+                </StackLayout>
+                <!--<StackLayout orientation="horizontal" cssClass="characteristic-properties" visibility="{{ feedback ? 'visible' : 'collapsed' }}">-->
+                  <!--<Label text="Result: " />-->
+                <!--</StackLayout>-->
+            </StackLayout>
+          </ListView.itemTemplate>
+      </ListView>
+    </GridLayout>
+  </StackLayout>
+</Page>

@@ -1,0 +1,28 @@
+{
+  "ProjectName": "Bluetooth",
+  "ProjectGuid": "f03f6a5d-914b-48be-862c-04f88787c3d7",
+  "projectVersion": 1,
+  "AppIdentifier": "com.telerik.plugindemo.nativescript.bluetooth",
+  "DisplayName": "Bluetooth",
+  "Author": "Telerik",
+  "Description": "Bluetooth",
+  "BundleVersion": "1.0.1",
+  "AndroidVersionCode": "1",
+  "iOSDeviceFamily": [
+    "1",
+    "2"
+  ],
+  "iOSBackgroundMode": [],
+  "ProjectTypeGuids": "{F0A65104-D4F4-4012-B799-F612D75820F6}",
+  "AndroidPermissions": [
+    "android.permission.INTERNET"
+  ],
+  "DeviceOrientations": [
+    "Portrait",
+    "Landscape"
+  ],
+  "AndroidHardwareAcceleration": "false",
+  "iOSStatusBarStyle": "Default",
+  "FrameworkVersion": "1.7.1",
+  "Framework": "NativeScript"
+}

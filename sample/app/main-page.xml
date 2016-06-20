@@ -1,0 +1,47 @@
+<Page xmlns="http://www.nativescript.org/tns.xsd" loaded="pageLoaded">
+  <TabView>
+    <TabView.items>
+      <TabViewItem title="Demo">
+        <TabViewItem.view>
+          <StackLayout>
+              <GridLayout columns="*,*" rows="auto, auto, auto, auto" horizontalAlignment="center" cssClass="tab-content">
+                <Button row="0" colSpan="2" text="is bluetooth enabled?" tap="{{ doIsBluetoothEnabled }}" cssClass="button button-positive" />
+                <Label row="1" colSpan="2" text="scan 4 seconds for:" cssClass="hint" textWrap="true" />
+                <Button row="2" col="0" text="any peripheral" tap="{{ doStartScanning }}" cssClass="button button-neutral" />
+                <Button row="2" col="1" text="a heartrate monitor" tap="{{ doScanForHeartrrateMontitor }}" cssClass="button button-neutral" />
+                <Button row="3" colSpan="2" text="stop scan" tap="{{ doStopScanning }}" cssClass="button button-danger" />
+              </GridLayout>
+              <ActivityIndicator busy="{{ isLoading }}" />
+              <GridLayout rows="*">
+                  <ListView items="{{ peripherals }}" itemTap="onPeripheralTap" separatorColor="#90c3d4">
+                      <ListView.itemTemplate>
+                          <StackLayout orientation="horizontal" cssClass="padded-label">
+                              <StackLayout col="0" cssClass="padded-label-stack">
+                                <Image horizontalAlignment="right" width="30" src="~/res/signal-strength.png" />
+                                <Label horizontalAlignment="right" width="30" text="{{ RSSI }}" cssClass="rssi-label" />
+                              </StackLayout>
+                              <StackLayout col="1" cssClass="padded-label-stack">
+                                <Label text="{{ name }}" cssClass="title-label" textWrap="true" />
+                                <Label text="{{ UUID }}" cssClass="uuid-label" textWrap="true" />
+                              </StackLayout>
+                          </StackLayout>
+                      </ListView.itemTemplate>
+                  </ListView>
+              </GridLayout>
+          </StackLayout>
+        </TabViewItem.view>
+      </TabViewItem>
+      <TabViewItem title="About">
+        <TabViewItem.view>
+          <ScrollView>
+            <StackLayout cssClass="tab-content">
+              <Image margin="10" src="~/res/telerik-logo.png" />
+              <Label text="Bluetooth plugin demo" cssClass="title"/>
+              <Label text="The Bluetooth plugin allows your app to scan for Bluetooth LE devices. Once found you can connect to a peripheral and read values. You can also write values and get notified when a value changes." textWrap="true"/>
+            </StackLayout>
+          </ScrollView>
+        </TabViewItem.view>
+      </TabViewItem>
+    </TabView.items>
+  </TabView>
+</Page>

@@ -24,6 +24,9 @@
   "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-typescript": "^2.13.6",
     "tns-core-modules": "1.6.0",
     "tns-platform-declarations": "^2.0.0",
     "tslint": "3.9.0",
@@ -32,5 +35,8 @@
   "bugs": {
     "url": "https://github.com/eddyverbruggen/nativescript-bluetooth/issues"
   },
-  "homepage": "https://github.com/eddyverbruggen/nativescript-bluetooth"
+  "homepage": "https://github.com/eddyverbruggen/nativescript-bluetooth",
+  "scripts": {
+    "demo.android": "npm i && gulp && cd sample && npm i && tns platform remove android && tns run android"
+  }
 }
