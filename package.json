@@ -37,6 +37,6 @@
   },
   "homepage": "https://github.com/eddyverbruggen/nativescript-bluetooth",
   "scripts": {
-    "demo.android": "npm i && gulp && cd sample && npm i && tns platform remove android && tns run android"
+    "demo.android": "npm i && gulp && cd sample && npm uninstall nativescript-bluetooth && npm i && tns platform remove android && tns run android"
   }
 }

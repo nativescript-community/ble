@@ -25,6 +25,16 @@ gulp.task('typescript', function () {
 gulp.task('static', function () {
   gulp.src('package.json')
     .pipe(gulp.dest('./dist'));
+  gulp.src('bluetooth.d.ts')
+    .pipe(gulp.dest('./dist'));
+  gulp.src('base64.js')
+    .pipe(gulp.dest('./dist'));
+  gulp.src('bluetooth.android.ts')
+    .pipe(gulp.dest('./dist'));
+  gulp.src('bluetooth.ios.ts')
+    .pipe(gulp.dest('./dist'));
+  gulp.src('bluetooth-common.ts')
+    .pipe(gulp.dest('./dist'));
 });
 
 

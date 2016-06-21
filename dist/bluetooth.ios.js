@@ -723,6 +723,7 @@ var Bluetooth = (function (_super) {
     };
     ;
     return Bluetooth;
-}(bluetooth_common_1.bluetooth));
+}(bluetooth_common_1.common));
+exports.Bluetooth = Bluetooth;
 
 //# sourceMappingURL=bluetooth.ios.js.map

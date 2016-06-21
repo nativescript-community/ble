@@ -302,9 +302,10 @@ var Bluetooth = (function (_super) {
     };
     ;
     Bluetooth.prototype.isBluetoothEnabled = function (arg) {
+        var that = this;
         return new Promise(function (resolve, reject) {
             try {
-                resolve(this._isEnabled());
+                resolve(that._isEnabled(arg));
             }
             catch (ex) {
                 console.log("Error in Bluetooth.isBluetoothEnabled: " + ex);
@@ -790,6 +791,7 @@ var Bluetooth = (function (_super) {
     };
     ;
     return Bluetooth;
-}(bluetooth_common_1.bluetooth));
+}(bluetooth_common_1.common));
+exports.Bluetooth = Bluetooth;
 
 //# sourceMappingURL=bluetooth.android.js.map
