@@ -14,9 +14,10 @@ var Bluetooth = (function (_super) {
             onDiscovered: null
         };
         this.isBluetoothEnabled = function (arg) {
+            var that = this;
             return new Promise(function (resolve, reject) {
                 try {
-                    resolve(this._isEnabled());
+                    resolve(that._isEnabled());
                 }
                 catch (ex) {
                     console.log("Error in Bluetooth.isBluetoothEnabled: " + ex);
@@ -25,25 +26,26 @@ var Bluetooth = (function (_super) {
             });
         };
         this.startScanning = function (arg) {
+            var that = this;
             return new Promise(function (resolve, reject) {
                 try {
-                    if (!this._isEnabled()) {
+                    if (!that._isEnabled()) {
                         reject("Bluetooth is not enabled");
                         return;
                     }
-                    this._state.peripheralArray = NSMutableArray.new();
+                    that._state.peripheralArray = NSMutableArray.new();
                     // TODO actualy, should init the delegate here with this as the callback (see 'onConnected') --> but first test if that works
-                    this._state.onDiscovered = arg.onDiscovered;
+                    that._state.onDiscovered = arg.onDiscovered;
                     var serviceUUIDs = arg.serviceUUIDs || [];
                     var services = [];
                     for (var s in serviceUUIDs) {
                         services.push(CBUUID.UUIDWithString(serviceUUIDs[s]));
                     }
-                    this._state.manager.scanForPeripheralsWithServicesOptions(services, null);
+                    that._state.manager.scanForPeripheralsWithServicesOptions(services, null);
                     if (arg.seconds) {
                         setTimeout(function () {
                             // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
-                            this._state.manager.stopScan();
+                            that._state.manager.stopScan();
                             resolve();
                         }, arg.seconds * 1000);
                     }
@@ -58,13 +60,14 @@ var Bluetooth = (function (_super) {
             });
         };
         this.stopScanning = function (arg) {
+            var that = this;
             return new Promise(function (resolve, reject) {
                 try {
-                    if (!this._isEnabled()) {
+                    if (!that._isEnabled()) {
                         reject("Bluetooth is not enabled");
                         return;
                     }
-                    this._state.manager.stopScan();
+                    that._state.manager.stopScan();
                     resolve();
                 }
                 catch (ex) {
@@ -84,9 +87,10 @@ var Bluetooth = (function (_super) {
         };
         // note that this doesn't make much sense without scanning first
         this.connect = function (arg) {
+            var that = this;
             return new Promise(function (resolve, reject) {
                 try {
-                    if (!this._isEnabled()) {
+                    if (!that._isEnabled()) {
                         reject("Bluetooth is not enabled");
                         return;
                     }
@@ -94,15 +98,15 @@ var Bluetooth = (function (_super) {
                         reject("No UUID was passed");
                         return;
                     }
-                    var peripheral = this._findPeripheral(arg.UUID);
+                    var peripheral = that._findPeripheral(arg.UUID);
                     if (peripheral === null) {
                         reject("Could not find peripheral with UUID " + arg.UUID);
                     }
                     else {
                         console.log("Connecting to peripheral with UUID: " + arg.UUID);
-                        this._state.connectCallbacks[arg.UUID] = arg.onConnected;
-                        this._state.disconnectCallbacks[arg.UUID] = arg.onDisconnected;
-                        this._state.manager.connectPeripheralOptions(peripheral, null);
+                        that._state.connectCallbacks[arg.UUID] = arg.onConnected;
+                        that._state.disconnectCallbacks[arg.UUID] = arg.onDisconnected;
+                        that._state.manager.connectPeripheralOptions(peripheral, null);
                         resolve();
                     }
                 }
@@ -113,9 +117,10 @@ var Bluetooth = (function (_super) {
             });
         };
         this.disconnect = function (arg) {
+            var that = this;
             return new Promise(function (resolve, reject) {
                 try {
-                    if (!this._isEnabled()) {
+                    if (!that._isEnabled()) {
                         reject("Bluetooth is not enabled");
                         return;
                     }
@@ -123,7 +128,7 @@ var Bluetooth = (function (_super) {
                         reject("No UUID was passed");
                         return;
                     }
-                    var peripheral = this._findPeripheral(arg.UUID);
+                    var peripheral = that._findPeripheral(arg.UUID);
                     if (peripheral === null) {
                         reject("Could not find peripheral with UUID " + arg.UUID);
                     }
@@ -131,7 +136,7 @@ var Bluetooth = (function (_super) {
                         console.log("Disconnecting peripheral with UUID: " + arg.UUID);
                         // no need to send an error when already disconnected, but it's wise to check it
                         if (peripheral.state != CBPeripheralState.CBPeripheralStateDisconnected) {
-                            this._state.manager.cancelPeripheralConnection(peripheral);
+                            that._state.manager.cancelPeripheralConnection(peripheral);
                             peripheral.delegate = null;
                         }
                         resolve();
@@ -144,9 +149,10 @@ var Bluetooth = (function (_super) {
             });
         };
         this.isConnected = function (arg) {
+            var that = this;
             return new Promise(function (resolve, reject) {
                 try {
-                    if (!this._isEnabled()) {
+                    if (!that._isEnabled()) {
                         reject("Bluetooth is not enabled");
                         return;
                     }
@@ -154,7 +160,7 @@ var Bluetooth = (function (_super) {
                         reject("No UUID was passed");
                         return;
                     }
-                    var peripheral = this._findPeripheral(arg.UUID);
+                    var peripheral = that._findPeripheral(arg.UUID);
                     if (peripheral === null) {
                         reject("Could not find peripheral with UUID " + arg.UUID);
                     }
@@ -258,88 +264,6 @@ var Bluetooth = (function (_super) {
                 service: service,
                 characteristic: characteristic
             };
-        };
-        this.read = function (arg) {
-            return new Promise(function (resolve, reject) {
-                try {
-                    var wrapper = this._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyRead, reject);
-                    if (wrapper === null) {
-                        // no need to reject, this has already been done
-                        return;
-                    }
-                    // TODO we could (should?) make this characteristic-specific
-                    wrapper.peripheral.delegate._onReadPromise = resolve;
-                    wrapper.peripheral.readValueForCharacteristic(wrapper.characteristic);
-                }
-                catch (ex) {
-                    console.log("Error in Bluetooth.read: " + ex);
-                    reject(ex);
-                }
-            });
-        };
-        this.startNotifying = function (arg) {
-            return new Promise(function (resolve, reject) {
-                try {
-                    var wrapper = this._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyNotify, reject);
-                    console.log("--------- startNotifying wrapper: " + wrapper);
-                    if (wrapper === null) {
-                        // no need to reject, this has already been done
-                        return;
-                    }
-                    var cb = arg.onNotify || function (result) { console.log("No 'onNotify' callback function specified for 'startNotifying'"); };
-                    // TODO we could (should?) make this characteristic-specific
-                    wrapper.peripheral.delegate._onNotifyCallback = cb;
-                    wrapper.peripheral.setNotifyValueForCharacteristic(true, wrapper.characteristic);
-                    resolve();
-                }
-                catch (ex) {
-                    console.log("Error in Bluetooth.startNotifying: " + ex);
-                    reject(ex);
-                }
-            });
-        };
-        this.stopNotifying = function (arg) {
-            return new Promise(function (resolve, reject) {
-                try {
-                    var wrapper = this._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyNotify, reject);
-                    console.log("--------- stopNotifying wrapper: " + wrapper);
-                    if (wrapper === null) {
-                        // no need to reject, this has already been done
-                        return;
-                    }
-                    var peripheral = this._findPeripheral(arg.peripheralUUID);
-                    // peripheral.delegate = null;
-                    peripheral.setNotifyValueForCharacteristic(false, wrapper.characteristic);
-                    resolve();
-                }
-                catch (ex) {
-                    console.log("Error in Bluetooth.stopNotifying: " + ex);
-                    reject(ex);
-                }
-            });
-        };
-        // val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
-        this._encodeValue = function (val) {
-            // if it's not a string assume it's a UintXArray
-            if (typeof val != 'string') {
-                return val.buffer;
-            }
-            var parts = val.split(',');
-            if (parts[0].indexOf('x') == -1) {
-                return null;
-            }
-            var result;
-            if (parts[0].length == 4) {
-                result = new Uint8Array(parts.length);
-            }
-            else {
-                // assuming eg. 0x007F
-                result = new Uint16Array(parts.length);
-            }
-            for (var i = 0; i < parts.length; i++) {
-                result[i] = parts[i];
-            }
-            return result.buffer;
         };
         //impliment the commented out functionality below
     }
@@ -669,19 +593,109 @@ var Bluetooth = (function (_super) {
         }
     };
     ;
+    Bluetooth.prototype.SCNetworkReachabilityCreateWithAddressPair = function (arg) {
+        var that = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                var wrapper = that._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyRead, reject);
+                if (wrapper === null) {
+                    // no need to reject, this has already been done
+                    return;
+                }
+                // TODO we could (should?) make this characteristic-specific
+                wrapper.peripheral.delegate._onReadPromise = resolve;
+                wrapper.peripheral.readValueForCharacteristic(wrapper.characteristic);
+            }
+            catch (ex) {
+                console.log("Error in Bluetooth.read: " + ex);
+                reject(ex);
+            }
+        });
+    };
+    ;
+    Bluetooth.prototype.startNotifying = function (arg) {
+        var that = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                var wrapper = that._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyNotify, reject);
+                console.log("--------- startNotifying wrapper: " + wrapper);
+                if (wrapper === null) {
+                    // no need to reject, this has already been done
+                    return;
+                }
+                var cb = arg.onNotify || function (result) { console.log("No 'onNotify' callback function specified for 'startNotifying'"); };
+                // TODO we could (should?) make this characteristic-specific
+                wrapper.peripheral.delegate._onNotifyCallback = cb;
+                wrapper.peripheral.setNotifyValueForCharacteristic(true, wrapper.characteristic);
+                resolve();
+            }
+            catch (ex) {
+                console.log("Error in Bluetooth.startNotifying: " + ex);
+                reject(ex);
+            }
+        });
+    };
+    ;
+    Bluetooth.prototype.stopNotifying = function (arg) {
+        var that = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                var wrapper = that._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyNotify, reject);
+                console.log("--------- stopNotifying wrapper: " + wrapper);
+                if (wrapper === null) {
+                    // no need to reject, this has already been done
+                    return;
+                }
+                var peripheral = that._findPeripheral(arg.peripheralUUID);
+                // peripheral.delegate = null;
+                peripheral.setNotifyValueForCharacteristic(false, wrapper.characteristic);
+                resolve();
+            }
+            catch (ex) {
+                console.log("Error in Bluetooth.stopNotifying: " + ex);
+                reject(ex);
+            }
+        });
+    };
+    ;
+    // val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
+    Bluetooth.prototype._encodeValue = function (val) {
+        // if it's not a string assume it's a UintXArray
+        if (typeof val != 'string') {
+            return val.buffer;
+        }
+        var parts = val.split(',');
+        if (parts[0].indexOf('x') == -1) {
+            return null;
+        }
+        var result;
+        if (parts[0].length == 4) {
+            result = new Uint8Array(parts.length);
+        }
+        else {
+            // assuming eg. 0x007F
+            result = new Uint16Array(parts.length);
+        }
+        for (var i = 0; i < parts.length; i++) {
+            result[i] = parts[i];
+        }
+        return result.buffer;
+    };
+    ;
     Bluetooth.prototype.write = function (arg) {
+        var that = this;
         return new Promise(function (resolve, reject) {
             try {
                 if (!arg.value) {
                     reject("You need to provide some data to write in the 'value' property");
                     return;
                 }
-                var wrapper = this._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyWrite, reject);
+                var wrapper = that._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyWrite, reject);
                 if (wrapper === null) {
                     // no need to reject, this has already been done
                     return;
                 }
-                var valueEncoded = this._encodeValue(arg.value);
+                var valueEncoded = that._encodeValue(arg.value);
                 if (valueEncoded === null) {
                     reject("Invalid value: " + arg.value);
                     return;
@@ -699,18 +713,19 @@ var Bluetooth = (function (_super) {
     };
     ;
     Bluetooth.prototype.writeWithoutResponse = function (arg) {
+        var that = this;
         return new Promise(function (resolve, reject) {
             try {
                 if (!arg.value) {
                     reject("You need to provide some data to write in the 'value' property");
                     return;
                 }
-                var wrapper = this._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyWriteWithoutResponse, reject);
+                var wrapper = that._getWrapper(arg, CBCharacteristicProperties.CBCharacteristicPropertyWriteWithoutResponse, reject);
                 if (wrapper === null) {
                     // no need to reject, this has already been done
                     return;
                 }
-                var valueEncoded = this._encodeValue(arg.value);
+                var valueEncoded = that._encodeValue(arg.value);
                 console.log("Attempting to write (encoded): " + valueEncoded);
                 wrapper.peripheral.writeValueForCharacteristicType(valueEncoded, wrapper.characteristic, CBCharacteristicWriteType.CBCharacteristicWriteWithoutResponse);
                 resolve();
