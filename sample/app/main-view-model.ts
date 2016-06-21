@@ -46,7 +46,6 @@ export class HelloWorldModel extends Observable {
 
   doScanForHeartrrateMontitor() {
     var that = this;
-
     this.bluetooth.hasCoarseLocationPermission().then(
       function (granted) {
         if (!granted) {
