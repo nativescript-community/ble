@@ -1,0 +1,24 @@
+language: objective-c
+ 
+os: osx 
+osx_image: xcode7.2
+xcode_sdk: iphonesimulato9.2
+node_js:
+  - 4.4.7
+
+install:
+    - export LANG=en_US.UTF-8
+    - brew update
+    - open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app --args -CurrentDeviceUDID "FEF8DD40-74B7-4B97-90CF-6EC43A4F61F3"
+    - npm install -g gulp-cli
+    - npm install -g nativescript --ignore-scripts
+    - tns usage-reporting disable
+    - tns error-reporting disable
+    - npm install
+    
+script:
+    - gulp
+    - cd sample
+    - npm install
+    - tns test ios --emulator --justlaunch
+    - cd ..

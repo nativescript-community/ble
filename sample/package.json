@@ -1,24 +1,29 @@
 {
-	"nativescript": {
-		"id": "org.nativescript.bluetoothdemo",
-		"tns-ios": {
-			"version": "1.7.0"
-		},
-		"tns-android": {
-			"version": "2.0.0"
-		}
-	},
-	"dependencies": {
-		"nativescript-bluetooth": "file:../dist",
-		"tns-core-modules": "^1.7.0"
-	},
-	"devDependencies": {
-		"babel-traverse": "6.9.0",
-		"babel-types": "6.10.2",
-		"babylon": "6.8.1",
-		"filewalker": "0.1.2",
-		"lazy": "1.0.11",
-		"nativescript-dev-typescript": "^0.3.2",
-		"typescript": "^1.8.10"
-	}
+  "nativescript": {
+    "id": "org.nativescript.bluetoothdemo",
+    "tns-ios": {
+      "version": "1.7.0"
+    },
+    "tns-android": {
+      "version": "2.0.0"
+    }
+  },
+  "dependencies": {
+    "nativescript-bluetooth": "file:../dist",
+    "nativescript-unit-test-runner": "^0.3.3",
+    "tns-core-modules": "^1.7.0"
+  },
+  "devDependencies": {
+    "babel-traverse": "6.9.0",
+    "babel-types": "6.10.2",
+    "babylon": "6.8.1",
+    "filewalker": "0.1.2",
+    "jasmine-core": "^2.4.1",
+    "karma": "^1.1.0",
+    "karma-jasmine": "^1.0.2",
+    "karma-nativescript-launcher": "^0.4.0",
+    "lazy": "1.0.11",
+    "nativescript-dev-typescript": "^0.3.2",
+    "typescript": "^1.8.10"
+  }
 }
