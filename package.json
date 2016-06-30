@@ -5,8 +5,8 @@
   "main": "bluetooth.js",
   "nativescript": {
     "platforms": {
-      "android": "1.6.0",
-      "ios": "1.6.0"
+      "android": "2.1.0",
+      "ios": "2.1.0"
     }
   },
   "repository": {
@@ -24,10 +24,10 @@
   "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "gulp": "^3.9.0",
+    "gulp": "^3.9.1",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-typescript": "^2.13.6",
-    "tns-core-modules": "1.6.0",
+    "tns-core-modules": "2.1.0",
     "tns-platform-declarations": "^2.0.0",
     "tslint": "3.9.0",
     "typescript": "1.8.10"

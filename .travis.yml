@@ -4,7 +4,7 @@ os: osx
 osx_image: xcode7.2
 xcode_sdk: iphonesimulato9.2
 node_js:
-  - 4.4.7
+  - 6.2.2
 
 install:
     - export LANG=en_US.UTF-8
