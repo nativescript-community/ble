@@ -87,3 +87,4 @@
 /// <reference path="node_modules/tns-core-modules/ui/animation/animation.d.ts" />
 /// <reference path="node_modules/tns-core-modules/module.d.ts" />
 /// <reference path="node_modules/tns-core-modules/ui/transition/transition.d.ts" />
+/// <reference path="ios-bluetooth.d.ts" />

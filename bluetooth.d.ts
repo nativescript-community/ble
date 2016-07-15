@@ -1,4 +1,5 @@
 declare module "nativescript-bluetooth" {
+  export module Bluetooth {
     /**
      * The options object passed into the startScanning function.
      */
@@ -141,11 +142,11 @@ declare module "nativescript-bluetooth" {
       characteristicUUID: string;
     }
 
-    export interface ReadOptions extends CRUDOptions {}
+    export interface ReadOptions extends CRUDOptions { }
     export interface WriteOptions extends CRUDOptions {
-        value : any;
+      value: any;
     }
-    export interface StopNotifyingOptions extends CRUDOptions {}
+    export interface StopNotifyingOptions extends CRUDOptions { }
     export interface StartNotifyingOptions extends CRUDOptions {
       onNotify: (data: ReadResult) => void;
     }
@@ -178,9 +179,10 @@ declare module "nativescript-bluetooth" {
     export function disconnect(options: DisconnectOptions): Promise<any>;
 
     export function read(options: ReadOptions): Promise<ReadResult>;
-    export function write(options:WriteOptions): Promise<any>;
-    export function writeWithoutResponse(options:WriteOptions): Promise<any>;
+    export function write(options: WriteOptions): Promise<any>;
+    export function writeWithoutResponse(options: WriteOptions): Promise<any>;
 
     export function startNotifying(options: StartNotifyingOptions): Promise<any>;
     export function stopNotifying(options: StopNotifyingOptions): Promise<any>;
+  }
 }

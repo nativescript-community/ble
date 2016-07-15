@@ -2,208 +2,58 @@
 "use strict";
 var utils = require("utils/utils");
 var application = require("application");
-var bluetooth_common_1 = require("./bluetooth-common");
-var ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
-var adapter, onDiscovered;
-var Bluetooth = (function (_super) {
-    __extends(Bluetooth, _super);
-    function Bluetooth() {
-        _super.call(this);
-        /**
-         * Connections are stored as key-val pairs of UUID-Connection.
-         * So something like this:
-         * [{
-         *   34343-2434-5454: {
-         *     state: 'connected',
-         *     discoveredState: '',
-         *     operationConnect: someCallbackFunction
-         *   },
-         *   1323213-21321323: {
-         *     ..
-         *   }
-         * }, ..]
-         */
-        this._connections = {};
-        // callback for connecting and read/write operations
-        this._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
-            // add constructor which gets a callback
-            /**
-             * newState (BluetoothProfile.state)
-             * 0: disconnected
-             * 1: connecting
-             * 2: connected
-             * 3: disconnecting
-             */
-            onConnectionStateChange: function (bluetoothGatt, status, newState) {
-                console.log("------- _MyGattCallback.onConnectionStateChange, status: " + status + ", new state: " + newState);
-                // https://github.com/don/cordova-plugin-ble-central/blob/master/src/android/Peripheral.java#L191    
-                if (newState == 2 /* connected */ && status === 0 /* gatt success */) {
-                    console.log("---- discovering services..");
-                    bluetoothGatt.discoverServices();
-                }
-                else {
-                    // perhaps the device was manually disconnected, or in use by another device
-                    this._disconnect(bluetoothGatt);
-                }
-            },
-            onServicesDiscovered: function (bluetoothGatt, status) {
-                console.log("------- _MyGattCallback.onServicesDiscovered, status (0=success): " + status);
-                if (status === 0 /* gatt success */) {
-                    // TODO grab from cached object and extend with services data?
-                    var services = bluetoothGatt.getServices();
-                    var servicesJs = [];
-                    var btChar = android.bluetooth.BluetoothGattCharacteristic;
-                    for (var i = 0; i < services.size(); i++) {
-                        var service = services.get(i);
-                        var characteristics = service.getCharacteristics();
-                        var characteristicsJs = [];
-                        for (var j = 0; j < characteristics.size(); j++) {
-                            var characteristic = characteristics.get(j);
-                            var props = characteristic.getProperties();
-                            var descriptors = characteristic.getDescriptors();
-                            var descriptorsJs = [];
-                            for (var k = 0; k < descriptors.size(); k++) {
-                                var descriptor = descriptors.get(k);
-                                var descriptorJs = {
-                                    UUID: this._uuidToString(descriptor.getUuid()),
-                                    value: descriptor.getValue(),
-                                    permissions: null
-                                };
-                                var descPerms = descriptor.getPermissions();
-                                if (descPerms > 0) {
-                                    descriptorJs.permissions = {
-                                        read: (descPerms & btChar.PERMISSION_READ) !== 0,
-                                        readEncrypted: (descPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
-                                        readEncryptedMitm: (descPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
-                                        write: (descPerms & btChar.PERMISSION_WRITE) !== 0,
-                                        writeEncrypted: (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
-                                        writeEncryptedMitm: (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
-                                        writeSigned: (descPerms & btChar.PERMISSION_WRITE_SIGNED) !== 0,
-                                        writeSignedMitm: (descPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
-                                    };
-                                }
-                                descriptorsJs.push(descriptorJs);
-                            }
-                            var characteristicJs = {
-                                UUID: this._uuidToString(characteristic.getUuid()),
-                                name: this._uuidToString(characteristic.getUuid()),
-                                properties: {
-                                    read: (props & btChar.PROPERTY_READ) !== 0,
-                                    write: (props & btChar.PROPERTY_WRITE) !== 0,
-                                    writeWithoutResponse: (props & btChar.PROPERTY_WRITE_NO_RESPONSE) !== 0,
-                                    notify: (props & btChar.PROPERTY_NOTIFY) !== 0,
-                                    indicate: (props & btChar.PROPERTY_INDICATE) !== 0,
-                                    broadcast: (props & btChar.PROPERTY_BROADCAST) !== 0,
-                                    authenticatedSignedWrites: (props & btChar.PROPERTY_SIGNED_WRITE) !== 0,
-                                    extendedProperties: (props & btChar.PROPERTY_EXTENDED_PROPS) !== 0
-                                },
-                                descriptors: descriptorsJs,
-                                permissions: null
-                            };
-                            // permissions are usually not provided, so let's not return them in that case
-                            var charPerms = characteristic.getPermissions();
-                            if (charPerms > 0) {
-                                characteristicJs.permissions = {
-                                    read: (charPerms & btChar.PERMISSION_READ) !== 0,
-                                    readEncrypted: (charPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
-                                    readEncryptedMitm: (charPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
-                                    write: (charPerms & btChar.PERMISSION_WRITE) !== 0,
-                                    writeEncrypted: (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
-                                    writeEncryptedMitm: (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
-                                    writeSigned: (charPerms & btChar.PERMISSION_WRITE_SIGNED) !== 0,
-                                    writeSignedMitm: (charPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
-                                };
-                            }
-                            characteristicsJs.push(characteristicJs);
-                        }
-                        servicesJs.push({
-                            UUID: this._uuidToString(service.getUuid()),
-                            characteristics: characteristicsJs
-                        });
-                    }
-                    var device = bluetoothGatt.getDevice();
-                    var stateObject = this._connections[device.getAddress()];
-                    stateObject.onConnected({
-                        UUID: device.getAddress(),
-                        name: device.getName(),
-                        state: 'connected',
-                        services: servicesJs
-                    });
-                }
-            },
-            _decodeValue: function (value) {
-                if (value === null) {
-                    return null;
-                }
-                // value is of Java type: byte[]
-                var b = android.util.Base64.encodeToString(value, android.util.Base64.NO_WRAP);
-                return this._base64ToArrayBuffer(b);
-            },
-            onCharacteristicRead: function (bluetoothGatt, bluetoothGattCharacteristic, status) {
-                console.log("------- _MyGattCallback.onCharacteristicRead");
-                var device = bluetoothGatt.getDevice();
-                var stateObject = this._connections[device.getAddress()];
-                if (!stateObject) {
-                    this._disconnect(bluetoothGatt);
-                    return;
-                }
-                if (stateObject.onReadPromise) {
-                    var value = bluetoothGattCharacteristic.getValue();
-                    stateObject.onReadPromise({
-                        valueRaw: value,
-                        value: this._decodeValue(value),
-                        characteristicUUID: bluetoothGattCharacteristic.getUuid()
-                    });
-                }
-            },
-            onCharacteristicChanged: function (bluetoothGatt, bluetoothGattCharacteristic) {
-                console.log("------- _MyGattCallback.onCharacteristicChanged");
-                var device = bluetoothGatt.getDevice();
-                var stateObject = this._connections[device.getAddress()];
-                if (!stateObject) {
-                    this._disconnect(bluetoothGatt);
-                    return;
-                }
-                if (stateObject.onNotifyCallback) {
-                    var value = bluetoothGattCharacteristic.getValue();
-                    stateObject.onNotifyCallback({
-                        valueRaw: value,
-                        value: this._decodeValue(value),
-                        characteristicUUID: bluetoothGattCharacteristic.getUuid()
-                    });
-                }
-            },
-            onCharacteristicWrite: function (bluetoothGatt, bluetoothGattCharacteristic, status) {
-                console.log("------- _MyGattCallback.onCharacteristicWrite");
-                var device = bluetoothGatt.getDevice();
-                var stateObject = this._connections[device.getAddress()];
-                if (!stateObject) {
-                    this._disconnect(bluetoothGatt);
-                    return;
-                }
-                console.log(bluetoothGattCharacteristic);
-                if (stateObject.onWritePromise) {
-                    stateObject.onWritePromise({
-                        characteristicUUID: bluetoothGattCharacteristic.getUuid()
-                    });
-                }
-            },
-            onDescriptorRead: function (bluetoothGatt, bluetoothGattDescriptor, status) {
-                console.log("------- _MyGattCallback.onDescriptorRead");
-            },
-            onDescriptorWrite: function (bluetoothGatt, bluetoothGattDescriptor, status) {
-                console.log("------- _MyGattCallback.onDescriptorWrite");
-            },
-            onReadRemoteRssi: function (bluetoothGatt, rssi, status) {
-                console.log("------- _MyGattCallback.onReadRemoteRssi");
-            },
-            onMtuChanged: function (bluetoothGatt, mtu, status) {
-                console.log("------- _MyGattCallback.onMtuChanged");
+var Bluetooth;
+(function (Bluetooth) {
+    var ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
+    var common = new common;
+    var adapter, onDiscovered;
+    function _coarseLocationPermissionGranted() {
+        var hasPermission = android.os.Build.VERSION.SDK_INT < 23; // Android M. (6.0)
+        if (!hasPermission) {
+            hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED ==
+                android.support.v4.content.ContextCompat.checkSelfPermission(application.android.foregroundActivity, android.Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+        return hasPermission;
+    }
+    ;
+    function hasCoarseLocationPermission() {
+        return new Promise(function (resolve) {
+            resolve(_coarseLocationPermissionGranted());
+        });
+    }
+    ;
+    function requestCoarseLocationPermission() {
+        return new Promise(function (resolve) {
+            if (!_coarseLocationPermissionGranted()) {
+                // in a future version we could hook up the callback and change this flow a bit
+                android.support.v4.app.ActivityCompat.requestPermissions(application.android.foregroundActivity, [android.Manifest.permission.ACCESS_COARSE_LOCATION], ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE);
+                // this is not the nicest solution as the user needs to initiate scanning again after granting permission,
+                // so enhance this in a future version, but it's ok for now
+                resolve();
             }
         });
+    }
+    ;
+    /**
+     * Connections are stored as key-val pairs of UUID-Connection.
+     * So something like this:
+     * [{
+     *   34343-2434-5454: {
+     *     state: 'connected',
+     *     discoveredState: '',
+     *     operationConnect: someCallbackFunction
+     *   },
+     *   1323213-21321323: {
+     *     ..
+     *   }
+     * }, ..]
+     */
+    var _connections = {};
+    var _scanCallback;
+    (function () {
         var bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
         adapter = bluetoothManager.getAdapter();
-        if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP*/) {
+        if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
             var MyScanCallback = android.bluetooth.le.ScanCallback.extend({
                 onBatchScanResults: function (results) {
                     console.log("------- scanCallback.onBatchScanResults");
@@ -229,9 +79,9 @@ var Bluetooth = (function (_super) {
                     console.log("------- scanCallback.onScanFailed errorMessage: " + errorMessage);
                 },
                 onScanResult: function (callbackType, result) {
-                    var stateObject = this._connections[result.getDevice().getAddress()];
+                    var stateObject = _connections[result.getDevice().getAddress()];
                     if (!stateObject) {
-                        this._connections[result.getDevice().getAddress()] = {
+                        _connections[result.getDevice().getAddress()] = {
                             state: 'disconnected'
                         };
                         var payload = {
@@ -247,14 +97,15 @@ var Bluetooth = (function (_super) {
                     }
                 }
             });
-            this._scanCallback = new MyScanCallback();
+            var _scanCallback = new MyScanCallback();
         }
         else {
-            this._scanCallback = new android.bluetooth.BluetoothAdapter.LeScanCallback({
+            _scanCallback = new android.bluetooth.BluetoothAdapter.LeScanCallback({
+                // see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L2181
                 onLeScan: function (device, rssi, scanRecord) {
-                    var stateObject = this._connections[device.getAddress()];
+                    var stateObject = _connections[device.getAddress()];
                     if (!stateObject) {
-                        this._connections[device.getAddress()] = {
+                        _connections[device.getAddress()] = {
                             state: 'disconnected'
                         };
                         onDiscovered({
@@ -268,92 +119,237 @@ var Bluetooth = (function (_super) {
                 }
             });
         }
-    }
-    Bluetooth.prototype._coarseLocationPermissionGranted = function () {
-        var hasPermission = android.os.Build.VERSION.SDK_INT < 23; // Android M. (6.0)
-        if (!hasPermission) {
-            hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED ==
-                android.support.v4.content.ContextCompat.checkSelfPermission(application.android.foregroundActivity, android.Manifest.permission.ACCESS_COARSE_LOCATION);
-        }
-        return hasPermission;
-    };
-    ;
-    Bluetooth.prototype.hasCoarseLocationPermission = function () {
-        var that = this;
-        return new Promise(function (resolve) {
-            resolve(that._coarseLocationPermissionGranted());
-        });
-    };
-    ;
-    Bluetooth.prototype.requestCoarseLocationPermission = function () {
-        var that = this;
-        return new Promise(function (resolve) {
-            if (!that._coarseLocationPermissionGranted()) {
-                // in a future version we could hook up the callback and change this flow a bit
-                android.support.v4.app.ActivityCompat.requestPermissions(//https://developer.android.com/reference/android/support/v4/app/package-summary.html ******** Should use OnRequestPermissionsResultCallback ?
-                application.android.foregroundActivity, [android.Manifest.permission.ACCESS_COARSE_LOCATION], ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE);
-                // this is not the nicest solution as the user needs to initiate scanning again after granting permission,
-                // so enhance this in a future version, but it's ok for now
-                resolve();
+    })();
+    // callback for connecting and read/write operations
+    var _MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
+        // add constructor which gets a callback
+        /**
+         * newState (BluetoothProfile.state)
+         * 0: disconnected
+         * 1: connecting
+         * 2: connected
+         * 3: disconnecting
+         */
+        onConnectionStateChange: function (bluetoothGatt, status, newState) {
+            console.log("------- _MyGattCallback.onConnectionStateChange, status: " + status + ", new state: " + newState);
+            // https://github.com/don/cordova-plugin-ble-central/blob/master/src/android/Peripheral.java#L191    
+            if (newState == 2 /* connected */ && status === 0 /* gatt success */) {
+                console.log("---- discovering services..");
+                bluetoothGatt.discoverServices();
             }
-        });
-    };
-    ;
-    Bluetooth.prototype._isEnabled = function (arg) {
+            else {
+                // perhaps the device was manually disconnected, or in use by another device
+                _disconnect(bluetoothGatt);
+            }
+        },
+        onServicesDiscovered: function (bluetoothGatt, status) {
+            console.log("------- _MyGattCallback.onServicesDiscovered, status (0=success): " + status);
+            if (status === 0 /* gatt success */) {
+                // TODO grab from cached object and extend with services data?
+                var services = bluetoothGatt.getServices();
+                var servicesJs = [];
+                var btChar = android.bluetooth.BluetoothGattCharacteristic;
+                for (var i = 0; i < services.size(); i++) {
+                    var service = services.get(i);
+                    var characteristics = service.getCharacteristics();
+                    var characteristicsJs = [];
+                    for (var j = 0; j < characteristics.size(); j++) {
+                        var characteristic = characteristics.get(j);
+                        var props = characteristic.getProperties();
+                        var descriptors = characteristic.getDescriptors();
+                        var descriptorsJs = [];
+                        for (var k = 0; k < descriptors.size(); k++) {
+                            var descriptor = descriptors.get(k);
+                            var descPerms = descriptor.getPermissions();
+                            if (descPerms > 0) {
+                                var _permissions = {
+                                    read: (descPerms & btChar.PERMISSION_READ) !== 0,
+                                    readEncrypted: (descPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
+                                    readEncryptedMitm: (descPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
+                                    write: (descPerms & btChar.PERMISSION_WRITE) !== 0,
+                                    writeEncrypted: (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
+                                    writeEncryptedMitm: (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
+                                    writeSigned: (descPerms & btChar.PERMISSION_WRITE_SIGNED) !== 0,
+                                    writeSignedMitm: (descPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
+                                };
+                                var descriptorJs = {
+                                    UUID: _uuidToString(descriptor.getUuid()),
+                                    value: descriptor.getValue(),
+                                    permissions: _permissions
+                                };
+                            }
+                            descriptorsJs.push(descriptorJs);
+                        }
+                        // permissions are usually not provided, so let's not return them in that case
+                        var charPerms = characteristic.getPermissions();
+                        if (charPerms > 0) {
+                            var _permissions = {
+                                read: (charPerms & btChar.PERMISSION_READ) !== 0,
+                                readEncrypted: (charPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
+                                readEncryptedMitm: (charPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
+                                write: (charPerms & btChar.PERMISSION_WRITE) !== 0,
+                                writeEncrypted: (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
+                                writeEncryptedMitm: (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
+                                writeSigned: (charPerms & btChar.PERMISSION_WRITE_SIGNED) !== 0,
+                                writeSignedMitm: (charPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
+                            };
+                        }
+                        var characteristicJs = {
+                            UUID: _uuidToString(characteristic.getUuid()),
+                            name: _uuidToString(characteristic.getUuid()),
+                            properties: {
+                                read: (props & btChar.PROPERTY_READ) !== 0,
+                                write: (props & btChar.PROPERTY_WRITE) !== 0,
+                                writeWithoutResponse: (props & btChar.PROPERTY_WRITE_NO_RESPONSE) !== 0,
+                                notify: (props & btChar.PROPERTY_NOTIFY) !== 0,
+                                indicate: (props & btChar.PROPERTY_INDICATE) !== 0,
+                                broadcast: (props & btChar.PROPERTY_BROADCAST) !== 0,
+                                authenticatedSignedWrites: (props & btChar.PROPERTY_SIGNED_WRITE) !== 0,
+                                extendedProperties: (props & btChar.PROPERTY_EXTENDED_PROPS) !== 0
+                            },
+                            descriptors: descriptorsJs,
+                            permissions: _permissions
+                        };
+                        characteristicsJs.push(characteristicJs);
+                    }
+                    servicesJs.push({
+                        UUID: _uuidToString(service.getUuid()),
+                        characteristics: characteristicsJs
+                    });
+                }
+                var device = bluetoothGatt.getDevice();
+                var stateObject = _connections[device.getAddress()];
+                stateObject.onConnected({
+                    UUID: device.getAddress(),
+                    name: device.getName(),
+                    state: 'connected',
+                    services: servicesJs
+                });
+            }
+        },
+        _decodeValue: function (value) {
+            if (value === null) {
+                return null;
+            }
+            // value is of Java type: byte[]
+            var b = android.util.Base64.encodeToString(value, android.util.Base64.NO_WRAP);
+            return common._base64ToArrayBuffer(b);
+        },
+        onCharacteristicRead: function (bluetoothGatt, bluetoothGattCharacteristic, status) {
+            console.log("------- _MyGattCallback.onCharacteristicRead");
+            var device = bluetoothGatt.getDevice();
+            var stateObject = _connections[device.getAddress()];
+            if (!stateObject) {
+                _disconnect(bluetoothGatt);
+                return;
+            }
+            if (stateObject.onReadPromise) {
+                var value = bluetoothGattCharacteristic.getValue();
+                stateObject.onReadPromise({
+                    valueRaw: value,
+                    value: this._decodeValue(value),
+                    characteristicUUID: bluetoothGattCharacteristic.getUuid()
+                });
+            }
+        },
+        onCharacteristicChanged: function (bluetoothGatt, bluetoothGattCharacteristic) {
+            console.log("------- _MyGattCallback.onCharacteristicChanged");
+            var device = bluetoothGatt.getDevice();
+            var stateObject = _connections[device.getAddress()];
+            if (!stateObject) {
+                _disconnect(bluetoothGatt);
+                return;
+            }
+            if (stateObject.onNotifyCallback) {
+                var value = bluetoothGattCharacteristic.getValue();
+                stateObject.onNotifyCallback({
+                    valueRaw: value,
+                    value: this._decodeValue(value),
+                    characteristicUUID: bluetoothGattCharacteristic.getUuid()
+                });
+            }
+        },
+        onCharacteristicWrite: function (bluetoothGatt, bluetoothGattCharacteristic, status) {
+            console.log("------- _MyGattCallback.onCharacteristicWrite");
+            var device = bluetoothGatt.getDevice();
+            var stateObject = _connections[device.getAddress()];
+            if (!stateObject) {
+                _disconnect(bluetoothGatt);
+                return;
+            }
+            console.log(bluetoothGattCharacteristic);
+            if (stateObject.onWritePromise) {
+                stateObject.onWritePromise({
+                    characteristicUUID: bluetoothGattCharacteristic.getUuid()
+                });
+            }
+        },
+        onDescriptorRead: function (bluetoothGatt, bluetoothGattDescriptor, status) {
+            console.log("------- _MyGattCallback.onDescriptorRead");
+        },
+        onDescriptorWrite: function (bluetoothGatt, bluetoothGattDescriptor, status) {
+            console.log("------- _MyGattCallback.onDescriptorWrite");
+        },
+        onReadRemoteRssi: function (bluetoothGatt, rssi, status) {
+            console.log("------- _MyGattCallback.onReadRemoteRssi");
+        },
+        onMtuChanged: function (bluetoothGatt, mtu, status) {
+            console.log("------- _MyGattCallback.onMtuChanged");
+        }
+    });
+    function _isEnabled(arg) {
         return adapter !== null && adapter.isEnabled();
-    };
+    }
     ;
-    Bluetooth.prototype.isBluetoothEnabled = function (arg) {
-        var that = this;
+    function isBluetoothEnabled(arg) {
         return new Promise(function (resolve, reject) {
             try {
-                resolve(that._isEnabled(arg));
+                resolve(_isEnabled());
             }
             catch (ex) {
                 console.log("Error in Bluetooth.isBluetoothEnabled: " + ex);
                 reject(ex);
             }
         });
-    };
+    }
     ;
     // Java UUID -> JS
-    Bluetooth.prototype._uuidToString = function (uuid) {
+    function _uuidToString(uuid) {
         var uuidStr = uuid.toString();
         var pattern = java.util.regex.Pattern.compile("0000(.{4})-0000-1000-8000-00805f9b34fb", 2);
         var matcher = pattern.matcher(uuidStr);
         return matcher.matches() ? matcher.group(1) : uuidStr;
-    };
+    }
     ;
     // JS UUID -> Java
-    Bluetooth.prototype._stringToUuid = function (uuidStr) {
+    function _stringToUuid(uuidStr) {
         if (uuidStr.length === 4) {
             uuidStr = "0000" + uuidStr + "-0000-1000-8000-00805f9b34fb";
         }
         return java.util.UUID.fromString(uuidStr);
-    };
+    }
     ;
-    Bluetooth.prototype.startScanning = function (arg) {
-        var that = this;
+    function startScanning(arg) {
         return new Promise(function (resolve, reject) {
             try {
-                if (!that._isEnabled(arg)) {
+                if (!_isEnabled()) {
                     reject("Bluetooth is not enabled");
                     return;
                 }
                 // log a warning when on Android M and no permission has been granted (it's up to the dev to implement that flow though)
-                if (!that._coarseLocationPermissionGranted()) {
+                if (!_coarseLocationPermissionGranted()) {
                     console.warn("Coarse location permission has not been granted; scanning for peripherals may fail.");
                 }
-                that._connections = {};
+                _connections = {};
                 var serviceUUIDs = arg.serviceUUIDs || [];
                 var uuids = [];
                 for (var s in serviceUUIDs) {
-                    uuids.push(that._stringToUuid(serviceUUIDs[s]));
+                    uuids.push(_stringToUuid(serviceUUIDs[s]));
                 }
                 if (android.os.Build.VERSION.SDK_INT < 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
                     var didStart = uuids.length === 0 ?
-                        adapter.startLeScan(that._scanCallback) :
-                        adapter.startLeScan(uuids, that._scanCallback);
+                        adapter.startLeScan(_scanCallback) :
+                        adapter.startLeScan(uuids, _scanCallback);
                     if (!didStart) {
                         // TODO error msg, see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L758
                         reject("Scanning didn't start");
@@ -384,17 +380,17 @@ var Bluetooth = (function (_super) {
                         var callbackType = arg.callbackType || android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
                         scanSettings.setCallbackType(callbackType);
                     }
-                    adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), that._scanCallback);
+                    adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), _scanCallback);
                 }
                 onDiscovered = arg.onDiscovered;
                 if (arg.seconds) {
                     setTimeout(function () {
                         // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
                         if (android.os.Build.VERSION.SDK_INT < 21 /* android.os.Build.VERSION_CODES.LOLLIPOP */) {
-                            adapter.stopLeScan(that._scanCallback);
+                            adapter.stopLeScan(_scanCallback);
                         }
                         else {
-                            adapter.getBluetoothLeScanner().stopScan(that._scanCallback);
+                            adapter.getBluetoothLeScanner().stopScan(_scanCallback);
                         }
                         resolve();
                     }, arg.seconds * 1000);
@@ -408,21 +404,20 @@ var Bluetooth = (function (_super) {
                 reject(ex);
             }
         });
-    };
+    }
     ;
-    Bluetooth.prototype.stopScanning = function (arg) {
-        var that = this;
+    function stopScanning() {
         return new Promise(function (resolve, reject) {
             try {
-                if (!that._isEnabled(arg)) {
+                if (!_isEnabled()) {
                     reject("Bluetooth is not enabled");
                     return;
                 }
                 if (android.os.Build.VERSION.SDK_INT < 21 /* android.os.Build.VERSION_CODES.LOLLIPOP */) {
-                    adapter.stopLeScan(that._scanCallback);
+                    adapter.stopLeScan(_scanCallback);
                 }
                 else {
-                    adapter.getBluetoothLeScanner().stopScan(that._scanCallback);
+                    adapter.getBluetoothLeScanner().stopScan(_scanCallback);
                 }
                 resolve();
             }
@@ -431,12 +426,12 @@ var Bluetooth = (function (_super) {
                 reject(ex);
             }
         });
-    };
+    }
     ;
-    Bluetooth.prototype._disconnect = function (gatt) {
+    function _disconnect(gatt) {
         if (gatt !== null) {
             var device = gatt.getDevice();
-            var stateObject = this._connections[device.getAddress()];
+            var stateObject = _connections[device.getAddress()];
             console.log("----- invoking disc cb");
             if (stateObject && stateObject.onDisconnected) {
                 stateObject.onDisconnected({
@@ -447,14 +442,13 @@ var Bluetooth = (function (_super) {
             else {
                 console.log("----- !!! no disconnect callback found");
             }
-            this._connections[device.getAddress()] = null;
+            _connections[device.getAddress()] = null;
             gatt.close();
         }
-    };
+    }
     ;
     // note that this doesn't make much sense without scanning first
-    Bluetooth.prototype.connect = function (arg) {
-        var that = this;
+    function connect(arg) {
         return new Promise(function (resolve, reject) {
             try {
                 // or macaddress..
@@ -472,15 +466,15 @@ var Bluetooth = (function (_super) {
                     if (android.os.Build.VERSION.SDK_INT < 23 /*android.os.Build.VERSION_CODES.M */) {
                         bluetoothGatt = bluetoothDevice.connectGatt(utils.ad.getApplicationContext(), // context
                         false, // autoconnect
-                        new that._MyGattCallback());
+                        new _MyGattCallback());
                     }
                     else {
                         bluetoothGatt = bluetoothDevice.connectGatt(utils.ad.getApplicationContext(), // context
                         false, // autoconnect
-                        new that._MyGattCallback(), android.bluetooth.BluetoothDevice.TRANSPORT_LE // 2
+                        new _MyGattCallback(), android.bluetooth.BluetoothDevice.TRANSPORT_LE // 2
                         );
                     }
-                    that._connections[arg.UUID] = {
+                    _connections[arg.UUID] = {
                         state: 'connecting',
                         onConnected: arg.onConnected,
                         onDisconnected: arg.onDisconnected,
@@ -493,22 +487,21 @@ var Bluetooth = (function (_super) {
                 reject(ex);
             }
         });
-    };
+    }
     ;
-    Bluetooth.prototype.disconnect = function (arg) {
-        var that = this;
+    function disconnect(arg) {
         return new Promise(function (resolve, reject) {
             try {
                 if (!arg.UUID) {
                     reject("No UUID was passed");
                     return;
                 }
-                var connection = that._connections[arg.UUID];
+                var connection = _connections[arg.UUID];
                 if (!connection) {
                     reject("Peripheral wasn't connected");
                     return;
                 }
-                that._disconnect(connection.device);
+                _disconnect(connection.device);
                 resolve();
             }
             catch (ex) {
@@ -516,10 +509,10 @@ var Bluetooth = (function (_super) {
                 reject(ex);
             }
         });
-    };
+    }
     ;
     // This guards against peripherals reusing char UUID's. We prefer notify.
-    Bluetooth.prototype._findNotifyCharacteristic = function (bluetoothGattService, characteristicUUID) {
+    function _findNotifyCharacteristic(bluetoothGattService, characteristicUUID) {
         // Check for Notify first
         var characteristics = bluetoothGattService.getCharacteristics();
         for (var i = 0; i < characteristics.size(); i++) {
@@ -537,10 +530,10 @@ var Bluetooth = (function (_super) {
         }
         // As a last resort, try and find ANY characteristic with this UUID, even if it doesn't have the correct properties
         return bluetoothGattService.getCharacteristic(characteristicUUID);
-    };
+    }
     ;
     // This guards against peripherals reusing char UUID's.
-    Bluetooth.prototype._findCharacteristicOfType = function (bluetoothGattService, characteristicUUID, charType) {
+    function _findCharacteristicOfType(bluetoothGattService, characteristicUUID, charType) {
         var characteristics = bluetoothGattService.getCharacteristics();
         for (var i = 0; i < characteristics.size(); i++) {
             var c = characteristics.get(i);
@@ -550,10 +543,10 @@ var Bluetooth = (function (_super) {
         }
         // As a last resort, try and find ANY characteristic with this UUID, even if it doesn't have the correct properties
         return bluetoothGattService.getCharacteristic(characteristicUUID);
-    };
+    }
     ;
-    Bluetooth.prototype._getWrapper = function (arg, reject) {
-        if (!this._isEnabled(arg)) {
+    function _getWrapper(arg, reject) {
+        if (!_isEnabled()) {
             reject("Bluetooth is not enabled");
             return;
         }
@@ -569,8 +562,8 @@ var Bluetooth = (function (_super) {
             reject("No characteristicUUID was passed");
             return;
         }
-        var serviceUUID = this._stringToUuid(arg.serviceUUID);
-        var stateObject = this._connections[arg.peripheralUUID];
+        var serviceUUID = _stringToUuid(arg.serviceUUID);
+        var stateObject = _connections[arg.peripheralUUID];
         if (!stateObject) {
             reject("The peripheral is disconnected");
             return;
@@ -586,26 +579,25 @@ var Bluetooth = (function (_super) {
             gatt: gatt,
             bluetoothGattService: bluetoothGattService
         };
-    };
+    }
     ;
-    Bluetooth.prototype.read = function (arg) {
-        var that = this;
+    function read(arg) {
         return new Promise(function (resolve, reject) {
             try {
-                var wrapper = that._getWrapper(arg, reject);
+                var wrapper = _getWrapper(arg, reject);
                 if (wrapper === null) {
                     // no need to reject, this has already been done
                     return;
                 }
                 var gatt = wrapper.gatt;
                 var bluetoothGattService = wrapper.bluetoothGattService;
-                var characteristicUUID = that._stringToUuid(arg.characteristicUUID);
-                var bluetoothGattCharacteristic = that._findCharacteristicOfType(bluetoothGattService, characteristicUUID, android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ);
+                var characteristicUUID = _stringToUuid(arg.characteristicUUID);
+                var bluetoothGattCharacteristic = _findCharacteristicOfType(bluetoothGattService, characteristicUUID, android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ);
                 if (!bluetoothGattCharacteristic) {
                     reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
                     return;
                 }
-                var stateObject = that._connections[arg.peripheralUUID];
+                var stateObject = _connections[arg.peripheralUUID];
                 stateObject.onReadPromise = resolve;
                 if (!gatt.readCharacteristic(bluetoothGattCharacteristic)) {
                     reject("Failed to set client characteristic read for " + characteristicUUID);
@@ -616,10 +608,10 @@ var Bluetooth = (function (_super) {
                 reject(ex);
             }
         });
-    };
+    }
     ;
     // val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
-    Bluetooth.prototype._encodeValue = function (val) {
+    function _encodeValue(val) {
         // if it's not a string assume it's a byte array already
         if (typeof val != 'string') {
             return val;
@@ -633,34 +625,33 @@ var Bluetooth = (function (_super) {
             result[i] = parts[i];
         }
         return result;
-    };
+    }
     ;
-    Bluetooth.prototype.write = function (arg) {
-        var that = this;
+    function write(arg) {
         return new Promise(function (resolve, reject) {
             try {
                 if (!arg.value) {
                     reject("You need to provide some data to write in the 'value' property");
                     return;
                 }
-                var wrapper = that._getWrapper(arg, reject);
+                var wrapper = _getWrapper(arg, reject);
                 if (wrapper === null) {
                     // no need to reject, this has already been done
                     return;
                 }
-                var bluetoothGattCharacteristic = that._findCharacteristicOfType(wrapper.bluetoothGattService, that._stringToUuid(arg.characteristicUUID), android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE);
+                var bluetoothGattCharacteristic = _findCharacteristicOfType(wrapper.bluetoothGattService, _stringToUuid(arg.characteristicUUID), android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE);
                 if (!bluetoothGattCharacteristic) {
                     reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
                     return;
                 }
-                var val = that._encodeValue(arg.value);
+                var val = _encodeValue(arg.value);
                 if (val === null) {
                     reject("Invalid value: " + arg.value);
                     return;
                 }
                 bluetoothGattCharacteristic.setValue(val);
                 bluetoothGattCharacteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-                that._connections[arg.peripheralUUID].onWritePromise = resolve;
+                _connections[arg.peripheralUUID].onWritePromise = resolve;
                 if (!wrapper.gatt.writeCharacteristic(bluetoothGattCharacteristic)) {
                     reject("Failed to write to characteristic " + arg.characteristicUUID);
                 }
@@ -670,27 +661,26 @@ var Bluetooth = (function (_super) {
                 reject(ex);
             }
         });
-    };
+    }
     ;
-    Bluetooth.prototype.writeWithoutResponse = function (arg) {
-        var that = this;
+    function writeWithoutResponse(arg) {
         return new Promise(function (resolve, reject) {
             try {
                 if (!arg.value) {
                     reject("You need to provide some data to write in the 'value' property");
                     return;
                 }
-                var wrapper = that._getWrapper(arg, reject);
+                var wrapper = _getWrapper(arg, reject);
                 if (wrapper === null) {
                     // no need to reject, this has already been done
                     return;
                 }
-                var bluetoothGattCharacteristic = that._findCharacteristicOfType(wrapper.bluetoothGattService, that._stringToUuid(arg.characteristicUUID), android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE);
+                var bluetoothGattCharacteristic = _findCharacteristicOfType(wrapper.bluetoothGattService, _stringToUuid(arg.characteristicUUID), android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE);
                 if (!bluetoothGattCharacteristic) {
                     reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
                     return;
                 }
-                var val = that._encodeValue(arg.value);
+                var val = _encodeValue(arg.value);
                 if (val === null) {
                     reject("Invalid value: " + arg.value);
                     return;
@@ -709,21 +699,20 @@ var Bluetooth = (function (_super) {
                 reject(ex);
             }
         });
-    };
+    }
     ;
-    Bluetooth.prototype.startNotifying = function (arg) {
-        var that = this;
+    function startNotifying(arg) {
         return new Promise(function (resolve, reject) {
             try {
-                var wrapper = that._getWrapper(arg, reject);
+                var wrapper = _getWrapper(arg, reject);
                 if (wrapper === null) {
                     // no need to reject, this has already been done
                     return;
                 }
                 var gatt = wrapper.gatt;
                 var bluetoothGattService = wrapper.bluetoothGattService;
-                var characteristicUUID = that._stringToUuid(arg.characteristicUUID);
-                var bluetoothGattCharacteristic = that._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
+                var characteristicUUID = _stringToUuid(arg.characteristicUUID);
+                var bluetoothGattCharacteristic = _findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
                 if (!bluetoothGattCharacteristic) {
                     reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
                     return;
@@ -732,7 +721,7 @@ var Bluetooth = (function (_super) {
                     reject("Failed to register notification for characteristic " + arg.characteristicUUID);
                     return;
                 }
-                var clientCharacteristicConfigId = that._stringToUuid("2902");
+                var clientCharacteristicConfigId = _stringToUuid("2902");
                 var bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(clientCharacteristicConfigId);
                 if (!bluetoothGattDescriptor) {
                     reject("Set notification failed for " + characteristicUUID);
@@ -750,7 +739,7 @@ var Bluetooth = (function (_super) {
                 }
                 if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
                     var cb = arg.onNotify || function (result) { console.log("No 'onNotify' callback function specified for 'startNotifying'"); };
-                    var stateObject = that._connections[arg.peripheralUUID];
+                    var stateObject = _connections[arg.peripheralUUID];
                     stateObject.onNotifyCallback = cb;
                     console.log("--- notifying");
                     resolve();
@@ -764,28 +753,27 @@ var Bluetooth = (function (_super) {
                 reject(ex);
             }
         });
-    };
+    }
     ;
     // TODO lot of reuse between this and .startNotifying
-    Bluetooth.prototype.stopNotifying = function (arg) {
-        var that = this;
+    function stopNotifying(arg) {
         return new Promise(function (resolve, reject) {
             try {
-                var wrapper = that._getWrapper(arg, reject);
+                var wrapper = _getWrapper(arg, reject);
                 if (wrapper === null) {
                     // no need to reject, this has already been done
                     return;
                 }
                 var gatt = wrapper.gatt;
                 var bluetoothGattService = wrapper.bluetoothGattService;
-                var characteristicUUID = that._stringToUuid(arg.characteristicUUID);
-                var bluetoothGattCharacteristic = that._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
+                var characteristicUUID = _stringToUuid(arg.characteristicUUID);
+                var bluetoothGattCharacteristic = _findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
                 console.log("---- got gatt service char: " + bluetoothGattCharacteristic);
                 if (!bluetoothGattCharacteristic) {
                     reject("Could not find characteristic with UUID " + arg.characteristicUUID + " on service with UUID " + arg.serviceUUID + " on peripheral with UUID " + arg.peripheralUUID);
                     return;
                 }
-                var stateObject = that._connections[arg.peripheralUUID];
+                var stateObject = _connections[arg.peripheralUUID];
                 stateObject.onNotifyCallback = null;
                 if (gatt.setCharacteristicNotification(bluetoothGattCharacteristic, false)) {
                     resolve();
@@ -799,10 +787,9 @@ var Bluetooth = (function (_super) {
                 reject(ex);
             }
         });
-    };
+    }
     ;
-    return Bluetooth;
-}(bluetooth_common_1.common));
-exports.Bluetooth = Bluetooth;
+})(Bluetooth || (Bluetooth = {}));
+module.exports = Bluetooth;
 
 //# sourceMappingURL=bluetooth.android.js.map

@@ -1,0 +1,17 @@
+declare var CBCharacteristicPropertyBroadcast;
+declare var CBCharacteristicPropertyRead;
+declare var CBCharacteristicPropertyWrite;
+declare var CBCharacteristicPropertyWriteWithoutResponse;
+declare var CBCharacteristicPropertyNotify;
+declare var CBCharacteristicPropertyIndicate;
+declare var CBCharacteristicPropertyAuthenticatedSignedWrites;
+declare var CBCharacteristicPropertyExtendedProperties;
+declare var CBCharacteristicPropertyNotifyEncryptionRequired;
+declare var CBCharacteristicPropertyIndicateEncryptionRequired;
+declare var CBCentralManagerStateUnsupported;
+declare var CBCentralManagerStatePoweredOn;
+declare var CBPeripheralStateConnecting;
+declare var CBPeripheralStateConnected;
+declare var CBPeripheralStateDisconnected;
+declare var CBCharacteristicWriteWithResponse;
+declare var CBCharacteristicWriteWithoutResponse;
