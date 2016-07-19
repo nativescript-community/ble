@@ -5,12 +5,12 @@ import {Bluetooth} from 'nativescript-bluetooth';
 import * as dialogs from "ui/dialogs";
 
 export class HelloWorldModel extends Observable {
-  private bluetooth: Bluetooth;
+  private bluetooth;
   private peripherals: ObservableArray<Bluetooth.Peripheral>;
 
   constructor() {
     super();
-    this.bluetooth = new Bluetooth();
+    this.bluetooth = Bluetooth;
     this.peripherals = new ObservableArray<Bluetooth.Peripheral>();
   }
 

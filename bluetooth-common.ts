@@ -1,28 +1,26 @@
 require('./base64');
 
-export class common {
+export var bluetooth: any = {};
 
-  requestCoarseLocationPermission() {
-    return new Promise(function (resolve) {
-      resolve(true);
-    });
+bluetooth.requestCoarseLocationPermission = function () {
+  return new Promise(function (resolve) {
+    resolve(true);
+  });
+};
+
+bluetooth.hasCoarseLocationPermission = function () {
+  return new Promise(function (resolve) {
+    resolve(true);
+  });
+};
+
+bluetooth._base64ToArrayBuffer = function (b64) {
+  var stringToArrayBuffer = function(str) {
+    var ret = new Uint8Array(str.length);
+    for (var i = 0; i < str.length; i++) {
+      ret[i] = str.charCodeAt(i);
+    }
+    return ret.buffer;
   };
-
-  hasCoarseLocationPermission() {
-    return new Promise(function (resolve) {
-      resolve(true);
-    });
-  };
-
-  _base64ToArrayBuffer(b64) {
-    var stringToArrayBuffer = function (str) {
-      var ret = new Uint8Array(str.length);
-      for (var i = 0; i < str.length; i++) {
-        ret[i] = str.charCodeAt(i);
-      }
-      return ret.buffer;
-    };
-    return stringToArrayBuffer(atob(b64));
-  };
-
-}
+  return stringToArrayBuffer(atob(b64));
+};

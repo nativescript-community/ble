@@ -48,6 +48,7 @@
 /// <reference path="node_modules/tns-core-modules/ui/enums/enums.d.ts" />
 /// <reference path="node_modules/tns-core-modules/ui/gestures/gestures.d.ts" />
 /// <reference path="node_modules/tns-core-modules/ui/image/image.d.ts" />
+/// <reference path="node_modules/tns-core-modules/ui/animation/keyframe-animation.d.ts" />
 /// <reference path="node_modules/tns-core-modules/ui/image-cache/image-cache.d.ts" />
 /// <reference path="node_modules/tns-core-modules/ui/label/label.d.ts" />
 /// <reference path="node_modules/tns-core-modules/ui/layouts/absolute-layout/absolute-layout.d.ts" />

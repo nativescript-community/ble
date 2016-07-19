@@ -15,3 +15,6 @@ declare var CBPeripheralStateConnected;
 declare var CBPeripheralStateDisconnected;
 declare var CBCharacteristicWriteWithResponse;
 declare var CBCharacteristicWriteWithoutResponse;
+declare var _onReadPromise;
+declare var _onNotifyCallback;
+declare var _onWritePromise;
