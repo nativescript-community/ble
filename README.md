@@ -1,4 +1,4 @@
-# NativeScript <img src="https://www.bluetooth.com/~/media/bluetooth/homepage/smalllogo.ashx" height="20px" alt="Bluetooth"/> plugin
+# NativeScript <img src="bluetooth.gif" height="20px" alt="Bluetooth"/> plugin
 
 ### Use when you want to
 * scan for Bluetooth LE / Smart peripherals,
