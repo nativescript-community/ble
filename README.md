@@ -279,6 +279,9 @@ bluetooth.stopNotifying({
 ```
 
 ## Changelog
+* 1.1.3  TypeScript definition fix in package.json
+* 1.1.2  Better Android M compatibility
+* 1.1.1  Better Android permission handling
 * 1.1.0  To be compatible with any Bluetooth device out there, the value returned from `read` and `notify` is now an `ArrayBuffer`.
 * 1.0.0  Initial release
 

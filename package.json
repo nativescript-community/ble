@@ -6,8 +6,8 @@
   "typings": "bluetooth.d.ts",
   "nativescript": {
     "platforms": {
-      "android": "1.6.0",
-      "ios": "1.6.0"
+      "android": "2.3.0",
+      "ios": "2.3.0"
     }
   },
   "repository": {
