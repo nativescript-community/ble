@@ -155,7 +155,7 @@ declare module "nativescript-bluetooth" {
      */
     export interface ReadResult {
       value: any;
-      valueDecoded: any;
+      valueRaw: any;
       characteristicUUID: string;
     }
 
