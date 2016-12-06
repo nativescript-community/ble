@@ -2,7 +2,7 @@
   "name": "nativescript-bluetooth",
   "version": "1.1.4",
   "description" : "Connect to and interact with Bluetooth LE peripherals",
-  "main" : "bluetooth.js",
+  "main" : "bluetooth",
   "typings": "bluetooth.d.ts",
   "nativescript": {
     "platforms": {
