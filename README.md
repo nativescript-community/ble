@@ -56,7 +56,7 @@ Reports if bluetooth is enabled.
 // require the plugin
 var bluetooth = require("nativescript-bluetooth");
 
-isBluetoothEnabled().then(
+bluetooth.isBluetoothEnabled().then(
   function(enabled) {
     console.log("Enabled? " + enabled);
   }
