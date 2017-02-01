@@ -767,8 +767,10 @@ Bluetooth.startNotifying = function (arg) {
       var clientCharacteristicConfigId = Bluetooth._stringToUuid("2902");
       var bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(clientCharacteristicConfigId);
       if (!bluetoothGattDescriptor) {
-        reject("Set notification failed for " + characteristicUUID);
-        return;
+          bluetoothGattDescriptor=new android.bluetooth.BluetoothGattDescriptor(clientCharacteristicConfigId, android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE);
+          bluetoothGattCharacteristic.addDescriptor(bluetoothGattDescriptor);
+          console.log("BluetoothGattDescriptor created...");
+          //Any creation error will trigger the global catch. Ok.
       }
 
       // prefer notify over indicate
@@ -777,7 +779,8 @@ Bluetooth.startNotifying = function (arg) {
       } else if ((bluetoothGattCharacteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE) !== 0) {
         bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
       } else {
-        console.log("Characteristic " + characteristicUUID + " does not have NOTIFY or INDICATE property set");
+        reject("Characteristic " + characteristicUUID + " does not have NOTIFY or INDICATE property set");
+        return;
       }
 
       if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
