@@ -724,7 +724,7 @@ Bluetooth.writeWithoutResponse = function (arg) {
 
       var valueEncoded = Bluetooth._encodeValue(arg.value);
       
-      if(Bluetooth.extensiveLogging)
+      if (Bluetooth.characteristicLogging)
         console.log("Attempting to write (encoded): " + valueEncoded);
       
       wrapper.peripheral.writeValueForCharacteristicType(
