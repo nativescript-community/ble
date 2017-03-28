@@ -1,6 +1,8 @@
 require('./base64');
 
-var Bluetooth = {};
+var Bluetooth = {
+  characteristicLogging: true
+};
 
 Bluetooth.requestCoarseLocationPermission = function () {
   return new Promise(function (resolve) {
@@ -24,5 +26,9 @@ Bluetooth._base64ToArrayBuffer = function (b64) {
   };
   return stringToArrayBuffer(atob(b64));
 };
+
+Bluetooth.setCharacteristicLogging = function (enable) {
+  Bluetooth.characteristicLogging = enable;
+}
 
 module.exports = Bluetooth;
