@@ -170,6 +170,12 @@ declare module "nativescript-bluetooth" {
      * Required for Android 6+ to be able to scan for peripherals in the background.
      */
     export function requestCoarseLocationPermission(): Promise<any>;
+    
+    /**
+     * Can be used to reduce the console.log messaging for characteristic read, write, change operations
+     * @param enable Set to false to reduce console.log messages
+     */
+    export function setCharacteristicLogging(enable: boolean);
 
     export function startScanning(options: StartScanningOptions): Promise<any>;
     export function stopScanning(): Promise<any>;

@@ -278,7 +278,12 @@ bluetooth.stopNotifying({
 });
 ```
 
+### setCharacteristicLogging
+The app using bluetooth can generate many console.log messages - one for each characteristic read, write, change.
+This can be reduced by calling `bluetooth.setCharacteristicLogging(false)`.
+
 ## Changelog
+* 1.1.5  Added setCharacteristicLogging function to reduce logging
 * 1.1.4  TypeScript fix and TS definition fix in package.json
 * 1.1.3  TypeScript fix
 * 1.1.2  Better Android M compatibility
