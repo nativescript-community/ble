@@ -204,8 +204,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
     }
 
     // now let's see if we're ready to invoke the callback
-    // TODO wait for the last one, THEN return
-    if (this._services.length == this._servicesWithCharacteristics.length) {
+    if (this._services.length === this._servicesWithCharacteristics.length) {
       if (this._callback) {
         this._callback({
           UUID: peripheral.identifier.UUIDString,
@@ -724,8 +723,9 @@ Bluetooth.writeWithoutResponse = function (arg) {
 
       var valueEncoded = Bluetooth._encodeValue(arg.value);
       
-      if (Bluetooth.characteristicLogging)
+      if (Bluetooth.characteristicLogging) {
         console.log("Attempting to write (encoded): " + valueEncoded);
+      }
       
       wrapper.peripheral.writeValueForCharacteristicType(
         valueEncoded,

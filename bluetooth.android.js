@@ -242,8 +242,9 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
   },
 
   onCharacteristicRead: function(bluetoothGatt, bluetoothGattCharacteristic, status) {
-    if(Bluetooth.characteristicLogging)
+    if (Bluetooth.characteristicLogging) {
       console.log("------- _MyGattCallback.onCharacteristicRead");
+    }
 
     var device = bluetoothGatt.getDevice();
     var stateObject = Bluetooth._connections[device.getAddress()];
@@ -263,8 +264,9 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
   },
 
   onCharacteristicChanged: function(bluetoothGatt, bluetoothGattCharacteristic) {
-    if(Bluetooth.characteristicLogging)
+    if (Bluetooth.characteristicLogging) {
       console.log("------- _MyGattCallback.onCharacteristicChanged");
+    }
 
     var device = bluetoothGatt.getDevice();
     var stateObject = Bluetooth._connections[device.getAddress()];
@@ -284,8 +286,9 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
   },
 
   onCharacteristicWrite: function(bluetoothGatt, bluetoothGattCharacteristic, status) {
-    if(Bluetooth.characteristicLogging)
+    if (Bluetooth.characteristicLogging) {
       console.log("------- _MyGattCallback.onCharacteristicWrite");
+    }
 
     var device = bluetoothGatt.getDevice();
     var stateObject = Bluetooth._connections[device.getAddress()];
@@ -294,8 +297,9 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
       return;
     }
 
-    if(Bluetooth.characteristicLogging)
+    if (Bluetooth.characteristicLogging) {
       console.log(bluetoothGattCharacteristic);
+    }
 
     if (stateObject.onWritePromise) {
       stateObject.onWritePromise({
