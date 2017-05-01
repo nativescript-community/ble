@@ -1,5 +1,15 @@
 # NativeScript <img src="https://github.com/EddyVerbruggen/nativescript-bluetooth/raw/master/bluetooth.gif" height="20px" alt="Bluetooth"/> plugin
 
+[![NPM version][npm-image]][npm-url]
+[![Downloads][downloads-image]][npm-url]
+[![Twitter Follow][twitter-image]][twitter-url]
+
+[npm-image]:http://img.shields.io/npm/v/nativescript-bluetooth.svg
+[npm-url]:https://npmjs.org/package/nativescript-bluetooth
+[downloads-image]:http://img.shields.io/npm/dm/nativescript-bluetooth.svg
+[twitter-image]:https://img.shields.io/twitter/follow/eddyverbruggen.svg?style=social&label=Follow%20me
+[twitter-url]:https://twitter.com/eddyverbruggen
+
 ### Use when you want to
 * scan for Bluetooth LE / Smart peripherals,
 * connect to those peripherals,
