@@ -56,6 +56,9 @@ Bluetooth._connections = {};
 (function () {
   var bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
   adapter = bluetoothManager.getAdapter();
+  if (adapter !== null && !adapter.isEnabled()){
+    adapter.enable();                         //TODO: add prompt instead of directly enabling
+  }
 
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
     var MyScanCallback = android.bluetooth.le.ScanCallback.extend({
