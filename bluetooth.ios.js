@@ -317,6 +317,11 @@ Bluetooth._isEnabled = function (arg) {
   return Bluetooth._state.manager.state == CBCentralManagerStatePoweredOn;
 };
 
+//not really required, but still
+Bluetooth._doEnable = function (arg) {
+  return false;
+}
+
 Bluetooth._getState = function(stateId) {
   if (stateId == CBPeripheralStateConnecting) {
     return 'connecting';
@@ -340,6 +345,13 @@ Bluetooth.isBluetoothEnabled = function (arg) {
     }
   });
 };
+
+Bluetooth.turnBluetoothOn = function (arg) {
+  return new Promise(function (resolve, reject) {
+    console.log("Not allowed in iOS");
+    reject("Not Allowed!");
+  });
+}
 
 Bluetooth.startScanning = function (arg) {
   return new Promise(function (resolve, reject) {

@@ -330,7 +330,12 @@ Bluetooth._isEnabled = function (arg) {
 };
 
 Bluetooth._doEnable = function (arg) {
-    adapter.enable(); 
+    try{
+      adapter.enable();
+      return true;
+    } catch (ex) {
+      return false;
+    }
 }
 
 Bluetooth.turnBluetoothOn = function (arg) {
@@ -341,7 +346,7 @@ Bluetooth.turnBluetoothOn = function (arg) {
       console.log("Error in Bluetooth.turnBluetoothOn: " + ex);
       reject(ex);
     }
-  })
+  });
 }
 
 Bluetooth.isBluetoothEnabled = function (arg) {
