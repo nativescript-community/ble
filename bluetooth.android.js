@@ -56,7 +56,7 @@ Bluetooth._connections = {};
 (function () {
   var bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
   adapter = bluetoothManager.getAdapter();
-  if (adapter !== null && !adapter.isEnabled()){
+  if (adapter !== null){
     adapter.enable();                         //TODO: add prompt instead of directly enabling
   }
 
