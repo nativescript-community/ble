@@ -56,10 +56,7 @@ Bluetooth._connections = {};
 (function () {
   var bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
   adapter = bluetoothManager.getAdapter();
-  if (adapter !== null){
-    adapter.enable();                         //TODO: add prompt instead of directly enabling
-  }
-
+  
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
     var MyScanCallback = android.bluetooth.le.ScanCallback.extend({
       onBatchScanResults: function(results) {
@@ -331,6 +328,21 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
 Bluetooth._isEnabled = function (arg) {
   return adapter !== null && adapter.isEnabled();
 };
+
+Bluetooth._doEnable = function (arg) {
+    adapter.enable(); 
+}
+
+Bluetooth.turnBluetoothOn = function (arg) {
+  return new Promise(function (resolve, reject) {
+    try {
+      resolve(Bluetooth._doEnable());
+    } catch (ex) {
+      console.log("Error in Bluetooth.turnBluetoothOn: " + ex);
+      reject(ex);
+    }
+  })
+}
 
 Bluetooth.isBluetoothEnabled = function (arg) {
   return new Promise(function (resolve, reject) {
