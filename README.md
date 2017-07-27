@@ -106,6 +106,7 @@ bluetooth.requestCoarseLocationPermission().then(
 ### turnBluetoothOn
 ```js
 //this turns the bluetooth on, however you should prompt the user before using this
+//works only on android so far.
 bluetooth.turnBluetoothOn().then(
   function(enabled) {
       //wait a while, till adapter turns on, then check if enabled.
