@@ -198,7 +198,7 @@ bluetooth.disconnect({
   UUID: '34234-5453-4453-54545'
 }).then(function() {
   console.log("disconnected successfully");
-}).then(function(err) {
+}, function (err) {
   // in this case you're probably best off treating this as a disconnected peripheral though
   console.log("disconnection error: " + err);
 });
@@ -228,7 +228,7 @@ bluetooth.read({
   // fi. a heartrate monitor value (Uint8) can be retrieved like this:
   var data = new Uint8Array(result.value);
   console.log("Your heartrate is: " + data[1] + " bpm");  
-}).then(function(err) {
+}, function (err) {
   console.log("read error: " + err);
 });
 ```
@@ -246,7 +246,7 @@ bluetooth.write({
   value: '0x01' // a hex 1
 }).then(function(result) {
   console.log("value written");
-}).then(function(err) {
+}, function (err) {
   console.log("write error: " + err);
 });
 ```
