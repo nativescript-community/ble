@@ -43,6 +43,7 @@ Want to dive in quickly? Check out [the demo app](https://github.com/EddyVerbrug
 - [isBluetoothEnabled](#isbluetoothenabled)
 - [hasCoarseLocationPermission](#hascoarselocationpermission)
 - [requestCoarseLocationPermission](#requestcoarselocationpermission)
+- [turnBluetoothOn](#turnBluetoothOn)
 
 #### Discovery
 - [startScanning](#startscanning)
@@ -98,6 +99,17 @@ bluetooth.hasCoarseLocationPermission().then(
 bluetooth.requestCoarseLocationPermission().then(
   function() {
     console.log("Location permission requested");
+  }
+);
+```
+
+### turnBluetoothOn
+```js
+//this turns the bluetooth on, however you should prompt the user before using this
+//works only on android so far.
+bluetooth.turnBluetoothOn().then(
+  function(enabled) {
+      //wait a while, till adapter turns on, then check if enabled.
   }
 );
 ```
