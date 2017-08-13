@@ -7,7 +7,9 @@ var ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 
 var adapter /* android.bluetooth.BluetoothAdapter */,
     onDiscovered,
-    _onBluetoothEnabledResolve;
+    _onBluetoothEnabledResolve,
+    _permissionRequestResolver,
+    _onPermissionGranted;
 
 Bluetooth._coarseLocationPermissionGranted = function () {
   var hasPermission = android.os.Build.VERSION.SDK_INT < 23; // Android M. (6.0)
@@ -24,18 +26,19 @@ Bluetooth.hasCoarseLocationPermission = function () {
   });
 };
 
+
+Bluetooth._requestCoarseLocationPermission = function (resolve) {
+  _permissionRequestResolver = resolve;
+
+  android.support.v4.app.ActivityCompat.requestPermissions(
+      application.android.foregroundActivity,
+      [android.Manifest.permission.ACCESS_COARSE_LOCATION],
+      ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE);
+};
+
 Bluetooth.requestCoarseLocationPermission = function () {
   return new Promise(function (resolve) {
-    if (!Bluetooth._coarseLocationPermissionGranted()) {
-      // in a future version we could hook up the callback and change this flow a bit
-      android.support.v4.app.ActivityCompat.requestPermissions(
-          application.android.foregroundActivity,
-          [android.Manifest.permission.ACCESS_COARSE_LOCATION],
-          ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE);
-      // this is not the nicest solution as the user needs to initiate scanning again after granting permission,
-      // so enhance this in a future version, but it's ok for now
-      resolve();
-    }
+    Bluetooth._requestCoarseLocationPermission(resolve);
   });
 };
 
@@ -63,6 +66,24 @@ Bluetooth._connections = {};
       _onBluetoothEnabledResolve && _onBluetoothEnabledResolve(data.resultCode === -1);
       _onBluetoothEnabledResolve = undefined;
     }
+  });
+
+  application.android.on(application.AndroidApplication.activityRequestPermissionsEvent, function (args) {
+    if (args.requestCode !== ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
+      return;
+    }
+    for (var i = 0; i < args.permissions.length; i++) {
+      if (args.grantResults[i] === android.content.pm.PackageManager.PERMISSION_DENIED) {
+        _permissionRequestResolver && _permissionRequestResolver(false);
+        _permissionRequestResolver = undefined;
+        return;
+      }
+    }
+
+    _permissionRequestResolver && _permissionRequestResolver(true);
+    _permissionRequestResolver = undefined;
+    _onPermissionGranted && _onPermissionGranted();
+    _onPermissionGranted = undefined;
   });
 
   var bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
@@ -387,74 +408,80 @@ Bluetooth.startScanning = function (arg) {
         reject("Bluetooth is not enabled");
         return;
       }
+
+      _onPermissionGranted = function() {
+        Bluetooth._connections = {};
+
+        var serviceUUIDs = arg.serviceUUIDs || [];
+        var uuids = [];
+        for (var s in serviceUUIDs) {
+          uuids.push(Bluetooth._stringToUuid(serviceUUIDs[s]));
+        }
+
+        if (android.os.Build.VERSION.SDK_INT < 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
+          var didStart = uuids.length === 0 ?
+              adapter.startLeScan(Bluetooth._scanCallback) :
+              adapter.startLeScan(uuids, Bluetooth._scanCallback);
+          if (!didStart) {
+            // TODO error msg, see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L758
+            reject("Scanning didn't start");
+            return;
+          }
+        } else {
+          var scanFilters = null;
+          if (uuids.length > 0) {
+            scanFilters = new java.util.ArrayList();
+            for (var u in uuids) {
+              var theUuid = uuids[u];
+              var scanFilterBuilder = new android.bluetooth.le.ScanFilter.Builder();
+              scanFilterBuilder.setServiceUuid(new android.os.ParcelUuid(theUuid));
+              scanFilters.add(scanFilterBuilder.build());
+            }
+          }
+          // ga hier verder: https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L775
+          var scanSettings = new android.bluetooth.le.ScanSettings.Builder();
+          scanSettings.setReportDelay(0);
+
+          var scanMode = arg.scanMode || android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
+          scanSettings.setScanMode(scanMode);
+
+          if (android.os.Build.VERSION.SDK_INT >= 23 /*android.os.Build.VERSION_CODES.M */) {
+            var matchMode = arg.matchMode || android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE;
+            scanSettings.setMatchMode(matchMode);
+
+            var matchNum = arg.matchNum || android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;
+            scanSettings.setNumOfMatches(matchNum);
+
+            var callbackType = arg.callbackType || android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
+            scanSettings.setCallbackType(callbackType);
+          }
+          adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), Bluetooth._scanCallback);
+        }
+
+        onDiscovered = arg.onDiscovered;
+
+        if (arg.seconds) {
+          setTimeout(function () {
+            // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
+            if (android.os.Build.VERSION.SDK_INT < 21 /* android.os.Build.VERSION_CODES.LOLLIPOP */) {
+              adapter.stopLeScan(Bluetooth._scanCallback);
+            } else {
+              adapter.getBluetoothLeScanner().stopScan(Bluetooth._scanCallback);
+            }
+            resolve();
+          }, arg.seconds * 1000);
+        } else {
+          resolve();
+        }
+      };
+
       // log a warning when on Android M and no permission has been granted (it's up to the dev to implement that flow though)
       if (!Bluetooth._coarseLocationPermissionGranted()) {
-        console.warn("Coarse location permission has not been granted; scanning for peripherals may fail.");
-      }
-
-      Bluetooth._connections = {};
-
-      var serviceUUIDs = arg.serviceUUIDs || [];
-      var uuids = [];
-      for (var s in serviceUUIDs) {
-        uuids.push(Bluetooth._stringToUuid(serviceUUIDs[s]));
-      }
-
-      if (android.os.Build.VERSION.SDK_INT < 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
-        var didStart = uuids.length === 0 ?
-            adapter.startLeScan(Bluetooth._scanCallback) :
-            adapter.startLeScan(uuids, Bluetooth._scanCallback);
-        if (!didStart) {
-          // TODO error msg, see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L758
-          reject("Scanning didn't start");
-          return;
-        }
+        Bluetooth._requestCoarseLocationPermission();
       } else {
-        var scanFilters = null;
-        if (uuids.length > 0) {
-          scanFilters = new java.util.ArrayList();
-          for (var u in uuids) {
-            var theUuid = uuids[u];
-            var scanFilterBuilder = new android.bluetooth.le.ScanFilter.Builder();
-            scanFilterBuilder.setServiceUuid(new android.os.ParcelUuid(theUuid));
-            scanFilters.add(scanFilterBuilder.build());
-          }
-        }
-        // ga hier verder: https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L775
-        var scanSettings = new android.bluetooth.le.ScanSettings.Builder();
-        scanSettings.setReportDelay(0);
-
-        var scanMode = arg.scanMode || android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
-        scanSettings.setScanMode(scanMode);
-
-        if (android.os.Build.VERSION.SDK_INT >= 23 /*android.os.Build.VERSION_CODES.M */) {
-          var matchMode = arg.matchMode || android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE;
-          scanSettings.setMatchMode(matchMode);
-
-          var matchNum = arg.matchNum || android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;
-          scanSettings.setNumOfMatches(matchNum);
-
-          var callbackType = arg.callbackType || android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
-          scanSettings.setCallbackType(callbackType);
-        }
-        adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), Bluetooth._scanCallback);
+        _onPermissionGranted();
       }
 
-      onDiscovered = arg.onDiscovered;
-
-      if (arg.seconds) {
-        setTimeout(function() {
-          // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
-          if (android.os.Build.VERSION.SDK_INT < 21 /* android.os.Build.VERSION_CODES.LOLLIPOP */) {
-            adapter.stopLeScan(Bluetooth._scanCallback);
-          } else {
-            adapter.getBluetoothLeScanner().stopScan(Bluetooth._scanCallback);
-          }
-          resolve();
-        }, arg.seconds * 1000);
-      } else {
-        resolve();
-      }
     } catch (ex) {
       console.log("Error in Bluetooth.startScanning: " + ex);
       reject(ex);
