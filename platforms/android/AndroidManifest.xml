@@ -1,5 +1,5 @@
-<manifest package="org.nativescript.plugins.bluetooth"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
   <uses-permission android:name="android.permission.BLUETOOTH"/>
   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
@@ -8,5 +8,4 @@
   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
   <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
-
 </manifest>

@@ -29,6 +29,6 @@ Bluetooth._base64ToArrayBuffer = function (b64) {
 
 Bluetooth.setCharacteristicLogging = function (enable) {
   Bluetooth.characteristicLogging = enable;
-}
+};
 
 module.exports = Bluetooth;

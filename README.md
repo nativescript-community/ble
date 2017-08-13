@@ -103,12 +103,14 @@ bluetooth.requestCoarseLocationPermission().then(
 );
 ```
 
-### turnBluetoothOn (Android only)
+### enable (Android only)
+The promise will be rejected on iOS
+
 ```js
-// This turns bluetooth on, however you should prompt the user before using this.
-bluetooth.turnBluetoothOn().then(
+// This turns bluetooth on, will return false if the user denied the request.
+bluetooth.enable().then(
   function(enabled) {
-      // wait a while, till adapter turns on, then check if enabled.
+    // use Bluetooth features if enabled is true 
   }
 );
 ```
@@ -304,13 +306,17 @@ The app using bluetooth can generate many console.log messages - one for each ch
 This can be reduced by calling `bluetooth.setCharacteristicLogging(false)`.
 
 ## Changelog
-* 1.1.5  Added setCharacteristicLogging function to reduce logging
+* 1.2.0  Added `enable` so your app can now switch on Bluetooth if the user allows it (Android only)
+* 1.1.5  Added `setCharacteristicLogging` to reduce logging
 * 1.1.4  TypeScript fix and TS definition fix in package.json
 * 1.1.3  TypeScript fix
 * 1.1.2  Better Android M compatibility
 * 1.1.1  Better Android permission handling
 * 1.1.0  To be compatible with any Bluetooth device out there, the value returned from `read` and `notify` is now an `ArrayBuffer`.
 * 1.0.0  Initial release
+
+## Troubleshooting
+Get a merge issue in AndroidManifest.xml? Remove the platforms/android folder and rebuild.
 
 ## Future work
 * Find an even better way to write values.

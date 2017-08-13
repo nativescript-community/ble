@@ -1,17 +1,19 @@
-var utils = require("utils/utils");
-var application = require("application");
+var utils = require("tns-core-modules/utils/utils");
+var application = require("tns-core-modules/application");
 var Bluetooth = require("./bluetooth-common");
 
 var ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
+var ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 
-var adapter,
-    onDiscovered;
+var adapter /* android.bluetooth.BluetoothAdapter */,
+    onDiscovered,
+    _onBluetoothEnabledResolve;
 
 Bluetooth._coarseLocationPermissionGranted = function () {
   var hasPermission = android.os.Build.VERSION.SDK_INT < 23; // Android M. (6.0)
   if (!hasPermission) {
     hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED ==
-      android.support.v4.content.ContextCompat.checkSelfPermission(application.android.foregroundActivity, android.Manifest.permission.ACCESS_COARSE_LOCATION);
+        android.support.v4.content.ContextCompat.checkSelfPermission(application.android.foregroundActivity, android.Manifest.permission.ACCESS_COARSE_LOCATION);
   }
   return hasPermission;
 };
@@ -54,9 +56,18 @@ Bluetooth.requestCoarseLocationPermission = function () {
 Bluetooth._connections = {};
 
 (function () {
+
+  // TODO add something similar for permissions: https://github.com/EddyVerbruggen/nativescript-barcodescanner/blob/master/barcodescanner.android.ts#L20
+  application.android.on(application.AndroidApplication.activityResultEvent, function (data /* AndroidActivityResultEventData */) {
+    if (data.requestCode === ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE) {
+      _onBluetoothEnabledResolve && _onBluetoothEnabledResolve(data.resultCode === -1);
+      _onBluetoothEnabledResolve = undefined;
+    }
+  });
+
   var bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
   adapter = bluetoothManager.getAdapter();
-  
+
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
     var MyScanCallback = android.bluetooth.le.ScanCallback.extend({
       onBatchScanResults: function(results) {
@@ -134,7 +145,7 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
   onConnectionStateChange: function(bluetoothGatt, status, newState) {
     console.log("------- _MyGattCallback.onConnectionStateChange, status: " + status + ", new state: " + newState);
 
-    // https://github.com/don/cordova-plugin-ble-central/blob/master/src/android/Peripheral.java#L191    
+    // https://github.com/don/cordova-plugin-ble-central/blob/master/src/android/Peripheral.java#L191
     if (newState == 2 /* connected */ && status === 0 /* gatt success */) {
       console.log("---- discovering services..");
       bluetoothGatt.discoverServices();
@@ -325,31 +336,24 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
   }
 });
 
-Bluetooth._isEnabled = function (arg) {
+Bluetooth._isEnabled = function () {
   return adapter !== null && adapter.isEnabled();
 };
 
-Bluetooth._doEnable = function (arg) {
-    try{
-      adapter.enable();
-      return true;
-    } catch (ex) {
-      return false;
-    }
-}
-
-Bluetooth.turnBluetoothOn = function (arg) {
+Bluetooth.enable = function () {
   return new Promise(function (resolve, reject) {
     try {
-      resolve(Bluetooth._doEnable());
+      _onBluetoothEnabledResolve = resolve;
+      var intent = new android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE);
+      application.android.foregroundActivity.startActivityForResult(intent, ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE);
     } catch (ex) {
-      console.log("Error in Bluetooth.turnBluetoothOn: " + ex);
+      console.log("Error in Bluetooth.enable: " + ex);
       reject(ex);
     }
   });
-}
+};
 
-Bluetooth.isBluetoothEnabled = function (arg) {
+Bluetooth.isBluetoothEnabled = function () {
   return new Promise(function (resolve, reject) {
     try {
       resolve(Bluetooth._isEnabled());
@@ -499,7 +503,7 @@ Bluetooth._disconnect = function(gatt) {
 // note that this doesn't make much sense without scanning first
 Bluetooth.connect = function (arg) {
   return new Promise(function (resolve, reject) {
-    try { 
+    try {
       // or macaddress..
       if (!arg.UUID) {
         reject("No UUID was passed");
@@ -797,10 +801,10 @@ Bluetooth.startNotifying = function (arg) {
       var clientCharacteristicConfigId = Bluetooth._stringToUuid("2902");
       var bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(clientCharacteristicConfigId);
       if (!bluetoothGattDescriptor) {
-          bluetoothGattDescriptor=new android.bluetooth.BluetoothGattDescriptor(clientCharacteristicConfigId, android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE);
-          bluetoothGattCharacteristic.addDescriptor(bluetoothGattDescriptor);
-          console.log("BluetoothGattDescriptor created...");
-          //Any creation error will trigger the global catch. Ok.
+        bluetoothGattDescriptor=new android.bluetooth.BluetoothGattDescriptor(clientCharacteristicConfigId, android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE);
+        bluetoothGattCharacteristic.addDescriptor(bluetoothGattDescriptor);
+        console.log("BluetoothGattDescriptor created...");
+        //Any creation error will trigger the global catch. Ok.
       }
 
       // prefer notify over indicate

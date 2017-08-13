@@ -161,6 +161,12 @@ declare module "nativescript-bluetooth" {
 
     export function isBluetoothEnabled(): Promise<boolean>;
 
+  /**
+   * Android only. Will return false if the user denied turning Bluetooth on.
+   * @returns {Promise<boolean>}
+   */
+  export function enable(): Promise<boolean>;
+
     /**
      * Required for Android 6+ to be able to scan for peripherals in the background.
      */
