@@ -74,7 +74,7 @@ bluetooth.isBluetoothEnabled().then(
 );
 ```
 ### hasCoarseLocationPermission
-__ Since plugin version 1.2.0 the `startScanning` function will handle this internally so it's no longer mandatory to add permission checks to your code.__
+__Since plugin version 1.2.0 the `startScanning` function will handle this internally so it's no longer mandatory to add permission checks to your code.__
 
 On Android 6 you need to request permission to be able to interact with a Bluetooth peripheral (when the app is in the background) when targeting API level 23+. Even if the `uses-permission` tag for `ACCESS_COARSE_LOCATION` is present in `AndroidManifest.xml`.
 
@@ -96,7 +96,7 @@ bluetooth.hasCoarseLocationPermission().then(
 ```
 
 ### requestCoarseLocationPermission
-__ Since plugin version 1.2.0 the `startScanning` function will handle this internally so it's no longer mandatory to add permission checks to your code.__
+__Since plugin version 1.2.0 the `startScanning` function will handle this internally so it's no longer mandatory to add permission checks to your code.__
 
 ```js
 // if no permission was granted previously this will open a user consent screen
