@@ -1,4 +1,4 @@
-# NativeScript <img src="https://github.com/EddyVerbruggen/nativescript-bluetooth/raw/master/bluetooth.gif" height="20px" alt="Bluetooth"/> plugin
+# NativeScript <img src="https://github.com/EddyVerbruggen/nativescript-bluetooth/raw/master/media/bluetooth.gif" height="20px" alt="Bluetooth"/> plugin
 
 [![NPM version][npm-image]][npm-url]
 [![Downloads][downloads-image]][npm-url]
@@ -103,13 +103,12 @@ bluetooth.requestCoarseLocationPermission().then(
 );
 ```
 
-### turnBluetoothOn
+### turnBluetoothOn (Android only)
 ```js
-//this turns the bluetooth on, however you should prompt the user before using this
-//works only on android so far.
+// This turns bluetooth on, however you should prompt the user before using this.
 bluetooth.turnBluetoothOn().then(
   function(enabled) {
-      //wait a while, till adapter turns on, then check if enabled.
+      // wait a while, till adapter turns on, then check if enabled.
   }
 );
 ```

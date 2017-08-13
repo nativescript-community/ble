@@ -1,4 +1,4 @@
-.idea
-.vscode
+.idea/
+.vscode/
+media/
 bluetooth.gif
-platforms/android/libraryproject
