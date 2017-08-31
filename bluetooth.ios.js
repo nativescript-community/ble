@@ -1,6 +1,6 @@
 var Bluetooth = require("./bluetooth-common");
 
-Bluetooth._state = { 
+Bluetooth._state = {
   manager: null,
   centralDelegate: null,
   peripheralArray: null,
@@ -103,7 +103,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
       // Could add this one day: get details about the characteristic
       // peripheral.discoverDescriptorsForCharacteristic(characteristic);
     }
-   
+
     if (this._services.length === 0) {
       if (this._callback) {
         this._callback({
@@ -116,16 +116,6 @@ var CBPeripheralDelegateImpl = (function (_super) {
       }
     }
   };
- 
-  CBPeripheralDelegateImpl.prototype._toArrayBuffer = function(value) {
-    if (value === null) {
-      return null;
-    }
-
-    // value is of ObjC type: NSData
-    var b = value.base64EncodedStringWithOptions(0);
-    return Bluetooth._base64ToArrayBuffer(b);
-  };
 
   // this is called when a value is read from a peripheral
   CBPeripheralDelegateImpl.prototype.peripheralDidUpdateValueForCharacteristicError = function(peripheral, characteristic, error) {
@@ -133,7 +123,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
       console.log("^^^^^^^^ NO peripheralDidUpdateValueForCharacteristicError");
       return;
     }
-    
+
     if (error !== null) {
       // TODO handle.. pass in sep callback?
       console.log("------------ error @ peripheralDidUpdateValueForCharacteristicError! " + error);
@@ -144,9 +134,9 @@ var CBPeripheralDelegateImpl = (function (_super) {
       type: characteristic.isNotifying ? "notification" : "read",
       characteristicUUID: characteristic.UUID.UUIDString,
       valueRaw: characteristic.value,
-      value: this._toArrayBuffer(characteristic.value)
+      value: Bluetooth._toArrayBuffer(characteristic.value)
     };
-    
+
     if (result.type === "read") {
       if (this._onReadPromise) {
         this._onReadPromise(result);
@@ -171,7 +161,7 @@ var CBPeripheralDelegateImpl = (function (_super) {
       console.log("No _onWritePromise found!");
     }
   };
-  
+
   // The peripheral letting us know whether our subscribe/unsubscribe happened or not
   CBPeripheralDelegateImpl.prototype.peripheralDidUpdateNotificationStateForCharacteristicError = function(peripheral, characteristic, error) {
     console.log("----- delegate peripheral:didUpdateNotificationStateForCharacteristic:error, error: " + error);
@@ -241,11 +231,20 @@ var CBCentralManagerDelegateImpl = (function (_super) {
     if (!peri) {
       Bluetooth._state.peripheralArray.addObject(peripheral);
       if (Bluetooth._state.onDiscovered) {
+        var manufacturerId, manufacturerData;
+        if(advData.objectForKey(CBAdvertisementDataManufacturerDataKey)) {
+          var manufacturerIdBuffer = Bluetooth._toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(0, 2)));
+          manufacturerId = new DataView(manufacturerIdBuffer, 0).getUint16(0);
+          manufacturerData = Bluetooth._toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(2, advData.objectForKey(CBAdvertisementDataManufacturerDataKey).length - 2)));
+        }
+
         Bluetooth._state.onDiscovered({
           UUID: peripheral.identifier.UUIDString,
           name: peripheral.name,
           RSSI: RSSI,
-          state: Bluetooth._getState(peripheral.state)
+          state: Bluetooth._getState(peripheral.state),
+          manufacturerId: manufacturerId,
+          manufacturerData: manufacturerData
         });
       } else {
         console.log("----- !!! No onDiscovered callback specified");
@@ -262,16 +261,16 @@ var CBCentralManagerDelegateImpl = (function (_super) {
   };
   CBCentralManagerDelegateImpl.prototype.centralManagerDidConnectPeripheral = function(central, peripheral) {
     console.log("----- delegate centralManager:didConnectPeripheral: " + peripheral);
-    
+
     // find the peri in the array and attach the delegate to that
     var peri = Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
     console.log("----- delegate centralManager:didConnectPeripheral: cached perio: " + peri);
-    
+
     var cb = Bluetooth._state.connectCallbacks[peripheral.identifier.UUIDString];
     var delegate = CBPeripheralDelegateImpl.new().initWithCallback(cb);
     CFRetain(delegate);
     peri.delegate = delegate;
-    
+
     console.log("----- delegate centralManager:didConnectPeripheral, let's discover service");
     peri.discoverServices(null);
   };
@@ -284,7 +283,7 @@ var CBCentralManagerDelegateImpl = (function (_super) {
         name: peripheral.name
       });
     } else {
-      console.log("----- !!! no disconnect callback found");      
+      console.log("----- !!! no disconnect callback found");
     }
     var foundAt = Bluetooth._state.peripheralArray.indexOfObject(peripheral);
     Bluetooth._state.peripheralArray.removeObject(foundAt);
@@ -306,6 +305,16 @@ var CBCentralManagerDelegateImpl = (function (_super) {
   // TODO options? https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/ios/BluetoothLePlugin.m#L187
   Bluetooth._state.manager = CBCentralManager.alloc().initWithDelegateQueue(Bluetooth._state.centralDelegate, null);
 })();
+
+Bluetooth._toArrayBuffer = function(value) {
+    if (value === null) {
+        return null;
+    }
+
+    // value is of ObjC type: NSData
+    var b = value.base64EncodedStringWithOptions(0);
+    return Bluetooth._base64ToArrayBuffer(b);
+};
 
 Bluetooth._isEnabled = function () {
   return Bluetooth._state.manager.state === CBCentralManagerStatePoweredOn;
@@ -359,7 +368,7 @@ Bluetooth.startScanning = function (arg) {
       // TODO actualy, should init the delegate here with this as the callback (see 'onConnected') --> but first test if that works
       Bluetooth._state.onDiscovered = arg.onDiscovered;
       var serviceUUIDs = arg.serviceUUIDs || [];
-     
+
       var services = [];
       for (var s in serviceUUIDs) {
         services.push(CBUUID.UUIDWithString(serviceUUIDs[s]));
@@ -728,11 +737,11 @@ Bluetooth.writeWithoutResponse = function (arg) {
       }
 
       var valueEncoded = Bluetooth._encodeValue(arg.value);
-      
+
       if (Bluetooth.characteristicLogging) {
         console.log("Attempting to write (encoded): " + valueEncoded);
       }
-      
+
       wrapper.peripheral.writeValueForCharacteristicType(
         valueEncoded,
         wrapper.characteristic,
