@@ -307,9 +307,9 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
       return;
     }
 
-    if (stateObject.onNotifyCallback) {
+    if (stateObject.onNotifyCallback && stateObject.onNotifyCallback[Bluetooth._uuidToString(bluetoothGattCharacteristic.getUuid())]) {
       var value = bluetoothGattCharacteristic.getValue();
-      stateObject.onNotifyCallback({
+      stateObject.onNotifyCallback[Bluetooth._uuidToString(bluetoothGattCharacteristic.getUuid())]({
         valueRaw: value,
         value: this._decodeValue(value),
         characteristicUUID: bluetoothGattCharacteristic.getUuid()
@@ -847,7 +847,8 @@ Bluetooth.startNotifying = function (arg) {
       if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
         var cb = arg.onNotify || function(result) { console.log("No 'onNotify' callback function specified for 'startNotifying'"); };
         var stateObject = Bluetooth._connections[arg.peripheralUUID];
-        stateObject.onNotifyCallback = cb;
+        if (!stateObject.onNotifyCallback) stateObject.onNotifyCallback = []
+        stateObject.onNotifyCallback[arg.characteristicUUID] = cb;
         console.log("--- notifying");
         resolve();
       } else {
@@ -883,7 +884,7 @@ Bluetooth.stopNotifying = function (arg) {
       }
 
       var stateObject = Bluetooth._connections[arg.peripheralUUID];
-      stateObject.onNotifyCallback = null;
+      stateObject.onNotifyCallback[arg.characteristicUUID] = null;
 
       if (gatt.setCharacteristicNotification(bluetoothGattCharacteristic, false)) {
         resolve();
