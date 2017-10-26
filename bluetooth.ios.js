@@ -234,7 +234,7 @@ var CBCentralManagerDelegateImpl = (function (_super) {
         var manufacturerId, manufacturerData;
         if(advData.objectForKey(CBAdvertisementDataManufacturerDataKey)) {
           var manufacturerIdBuffer = Bluetooth._toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(0, 2)));
-          manufacturerId = new DataView(manufacturerIdBuffer, 0).getUint16(0);
+          manufacturerId = new DataView(manufacturerIdBuffer, 0).getUint16(0, true);
           manufacturerData = Bluetooth._toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(2, advData.objectForKey(CBAdvertisementDataManufacturerDataKey).length - 2)));
         }
 

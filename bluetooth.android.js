@@ -138,6 +138,26 @@ Bluetooth._connections = {};
     });
     Bluetooth._scanCallback = new MyScanCallback();
   } else {
+
+    function extractManufacturerRawData(scanRecord) {
+      var offset = 0;
+      while (offset < (scanRecord.length - 2)) {
+        var len = scanRecord[offset++] & 0xff;
+        if (len === 0) {
+          break;
+        }
+
+        var type = scanRecord[offset++] & 0xff;
+        switch (type) {
+          case 0xFF:  // Manufacturer Specific Data
+            return Bluetooth._decodeValue(java.util.Arrays.copyOfRange(scanRecord, offset, offset + len - 1));
+          default:
+            offset += (len - 1);
+            break;
+        }
+      }
+    }
+
     Bluetooth._scanCallback = new android.bluetooth.BluetoothAdapter.LeScanCallback({
       // see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L2181
       onLeScan: function(device, rssi, scanRecord) {
@@ -146,13 +166,25 @@ Bluetooth._connections = {};
           Bluetooth._connections[device.getAddress()] = {
             state: 'disconnected'
           };
-          onDiscovered({
+
+          var manufacturerId, manufacturerData;
+          var manufacturerDataRaw = extractManufacturerRawData(scanRecord);
+          if (manufacturerDataRaw) {
+            manufacturerId = new DataView(manufacturerDataRaw, 0).getUint16(0, true);
+            manufacturerData = manufacturerDataRaw.slice(2);
+          }
+
+          var payload = {
             type: 'scanResult', // TODO or use different callback functions?
             UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
             name: device.getName(),
             RSSI: rssi,
-            state: 'disconnected'
-          });
+            state: 'disconnected',
+            manufacturerId: manufacturerId,
+            manufacturerData: manufacturerData
+          };
+          console.log("---- scanCallback result: " + JSON.stringify(payload));
+          onDiscovered(payload);
         }
       }
     });
