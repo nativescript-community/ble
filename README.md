@@ -133,7 +133,15 @@ If you're only interested in finding a heartrate peripheral for instance, pass i
 Note that UUID's are ALWAYS strings; don't pass integers.
 
 #### onDiscovered
-While scanning the plugin will immediately report back uniquely discovered peripherals. This function will receive an object representing the peripheral which contains the properties `UUID`, `name` and `RSSI` (relative signal strength).
+While scanning the plugin will immediately report back uniquely discovered peripherals.
+
+This function will receive an object representing the peripheral which contains these properties (and types):
+* `UUID: string`
+* `name: string`
+* `RSSI: number` (relative signal strength, can be used for distance measurement)
+* `services?:` (optional - this is set once connected to the peripheral)
+* `manufacturerId?: number` (optional)
+* `manufacturerData?: ArrayBuffer` (optional)
 
 ```js
 bluetooth.startScanning({
