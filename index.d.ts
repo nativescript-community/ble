@@ -74,6 +74,10 @@ declare module "nativescript-bluetooth" {
        * Once connected to the peripheral a list of services will be set.
        */
       services: Service[];
+
+      manufacturerId?: number;
+
+      manufacturerData?: ArrayBuffer;
     }
 
     /**

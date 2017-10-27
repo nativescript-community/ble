@@ -116,13 +116,20 @@ Bluetooth._connections = {};
           Bluetooth._connections[result.getDevice().getAddress()] = {
             state: 'disconnected'
           };
+          var manufacturerId, manufacturerData;
+          if(result.getScanRecord().getManufacturerSpecificData().size() > 0) {
+            manufacturerId = result.getScanRecord().getManufacturerSpecificData().keyAt(0);
+            manufacturerData = Bluetooth._decodeValue(result.getScanRecord().getManufacturerSpecificData().valueAt(0));
+          }
           var payload = {
             type: 'scanResult', // TODO or use different callback functions?
             UUID: result.getDevice().getAddress(),
             name: result.getDevice().getName(),
             RSSI: result.getRssi(),
             state: 'disconnected',
-            advertisement: android.util.Base64.encodeToString(result.getScanRecord().getBytes(), android.util.Base64.NO_WRAP)
+            advertisement: android.util.Base64.encodeToString(result.getScanRecord().getBytes(), android.util.Base64.NO_WRAP),
+            manufacturerId: manufacturerId,
+            manufacturerData: manufacturerData
           };
           console.log("---- Lollipop+ scanCallback result: " + JSON.stringify(payload));
           onDiscovered(payload);
@@ -131,6 +138,26 @@ Bluetooth._connections = {};
     });
     Bluetooth._scanCallback = new MyScanCallback();
   } else {
+
+    function extractManufacturerRawData(scanRecord) {
+      var offset = 0;
+      while (offset < (scanRecord.length - 2)) {
+        var len = scanRecord[offset++] & 0xff;
+        if (len === 0) {
+          break;
+        }
+
+        var type = scanRecord[offset++] & 0xff;
+        switch (type) {
+          case 0xFF:  // Manufacturer Specific Data
+            return Bluetooth._decodeValue(java.util.Arrays.copyOfRange(scanRecord, offset, offset + len - 1));
+          default:
+            offset += (len - 1);
+            break;
+        }
+      }
+    }
+
     Bluetooth._scanCallback = new android.bluetooth.BluetoothAdapter.LeScanCallback({
       // see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L2181
       onLeScan: function(device, rssi, scanRecord) {
@@ -139,13 +166,25 @@ Bluetooth._connections = {};
           Bluetooth._connections[device.getAddress()] = {
             state: 'disconnected'
           };
-          onDiscovered({
+
+          var manufacturerId, manufacturerData;
+          var manufacturerDataRaw = extractManufacturerRawData(scanRecord);
+          if (manufacturerDataRaw) {
+            manufacturerId = new DataView(manufacturerDataRaw, 0).getUint16(0, true);
+            manufacturerData = manufacturerDataRaw.slice(2);
+          }
+
+          var payload = {
             type: 'scanResult', // TODO or use different callback functions?
             UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
             name: device.getName(),
             RSSI: rssi,
-            state: 'disconnected'
-          });
+            state: 'disconnected',
+            manufacturerId: manufacturerId,
+            manufacturerData: manufacturerData
+          };
+          console.log("---- scanCallback result: " + JSON.stringify(payload));
+          onDiscovered(payload);
         }
       }
     });
@@ -263,16 +302,6 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
     }
   },
 
-  _decodeValue: function(value) {
-    if (value === null) {
-      return null;
-    }
-
-    // value is of Java type: byte[]
-    var b = android.util.Base64.encodeToString(value, android.util.Base64.NO_WRAP);
-    return Bluetooth._base64ToArrayBuffer(b);
-  },
-
   onCharacteristicRead: function(bluetoothGatt, bluetoothGattCharacteristic, status) {
     if (Bluetooth.characteristicLogging) {
       console.log("------- _MyGattCallback.onCharacteristicRead");
@@ -289,7 +318,7 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
       var value = bluetoothGattCharacteristic.getValue();
       stateObject.onReadPromise({
         valueRaw: value,
-        value: this._decodeValue(value),
+        value: Bluetooth._decodeValue(value),
         characteristicUUID: bluetoothGattCharacteristic.getUuid()
       });
     }
@@ -311,7 +340,7 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
       var value = bluetoothGattCharacteristic.getValue();
       stateObject.onNotifyCallback({
         valueRaw: value,
-        value: this._decodeValue(value),
+        value: Bluetooth._decodeValue(value),
         characteristicUUID: bluetoothGattCharacteristic.getUuid()
       });
     }
@@ -356,6 +385,16 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
     console.log("------- _MyGattCallback.onMtuChanged");
   }
 });
+
+Bluetooth._decodeValue = function(value) {
+    if (value === null) {
+        return null;
+    }
+
+    // value is of Java type: byte[]
+    var b = android.util.Base64.encodeToString(value, android.util.Base64.NO_WRAP);
+    return Bluetooth._base64ToArrayBuffer(b);
+};
 
 Bluetooth._isEnabled = function () {
   return adapter !== null && adapter.isEnabled();
