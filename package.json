@@ -29,7 +29,10 @@
     "Bluetooth Smart",
     "Bluetooth Low Energy"
   ],
-  "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com>",
+  "author": {
+    "name": "Eddy Verbruggen",
+    "email": "eddyverbruggen@gmail.com"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/eddyverbruggen/nativescript-bluetooth/issues"
