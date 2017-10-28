@@ -305,6 +305,7 @@ The app using bluetooth can generate many console.log messages - one for each ch
 This can be reduced by calling `bluetooth.setCharacteristicLogging(false)`.
 
 ## Changelog
+* 1.3.0  Added `manufacturerId` and `manufacturerData` to the `onDiscovered` callback of `startScanning`.
 * 1.2.0  Automatic permission handling on Android. Added `enable` so your app can now switch on Bluetooth if the user allows it (Android only).
 * 1.1.5  Added `setCharacteristicLogging` to reduce logging
 * 1.1.4  TypeScript fix and TS definition fix in package.json
