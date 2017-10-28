@@ -10,19 +10,6 @@
 [twitter-image]:https://img.shields.io/twitter/follow/eddyverbruggen.svg?style=social&label=Follow%20me
 [twitter-url]:https://twitter.com/eddyverbruggen
 
-### Use when you want to
-* scan for Bluetooth LE / Smart peripherals,
-* connect to those peripherals,
-* read values of a characteristic,
-* write new values to them,
-* get notified when the value of a characteristic changes.
-
-### Supported platforms
-* iOS
-* Android 4.3 and up
-
-Note that a simulator can't be used to test conneting to Bluetooth peripherals.
-
 ## Installation
 From the command prompt go to your app's root folder and execute:
 
