@@ -828,9 +828,8 @@ Bluetooth.writeWithoutResponse = function (arg) {
       bluetoothGattCharacteristic.setValue(val);
       bluetoothGattCharacteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
 
-      if (wrapper.gatt.writeCharacteristic(bluetoothGattCharacteristic)) {
-        resolve();
-      } else {
+      Bluetooth._connections[arg.peripheralUUID].onWritePromise = resolve;
+      if (!wrapper.gatt.writeCharacteristic(bluetoothGattCharacteristic)) {
         reject("Failed to write to characteristic " + arg.characteristicUUID);
       }
     } catch (ex) {
