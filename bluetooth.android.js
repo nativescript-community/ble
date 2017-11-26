@@ -208,7 +208,10 @@ Bluetooth._MyGattCallback = android.bluetooth.BluetoothGattCallback.extend({
     // https://github.com/don/cordova-plugin-ble-central/blob/master/src/android/Peripheral.java#L191
     if (newState == 2 /* connected */ && status === 0 /* gatt success */) {
       console.log("---- discovering services..");
-      bluetoothGatt.discoverServices();
+      setTimeout( () => { 
+        // some devices need a delay before discovering services -GS
+        bluetoothGatt.discoverServices();
+      }, 3000)
     } else {
       // perhaps the device was manually disconnected, or in use by another device
       Bluetooth._disconnect(bluetoothGatt);
