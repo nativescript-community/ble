@@ -699,20 +699,26 @@ Bluetooth.stopNotifying = function (arg) {
 // val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
 Bluetooth._encodeValue = function (val) {
   // if it's not a string assume it's a UintXArray
-  if (typeof val != 'string') {
-    return val.buffer;
-  }
-  var parts = val.split(',');
-  if (parts[0].indexOf('x') == -1) {
-    return null;
-  }
+  var parts = val;
   var result;
-  if (parts[0].length == 4) { // eg. 0x01
-    result = new Uint8Array(parts.length);
+
+  if (typeof val === 'string') {
+
+    parts = val.split(',');
+    if (parts[0].indexOf('x') == -1) {
+      return null;
+    }
+
+    if (parts[0].length == 4) { // eg. 0x01
+      result = new Uint8Array(parts.length);
+    } else {
+      // assuming eg. 0x007F
+      result = new Uint16Array(parts.length);
+    }
   } else {
-    // assuming eg. 0x007F
-    result = new Uint16Array(parts.length);
+    result = new Uint8Array(parts.length);
   }
+
   for (var i = 0; i < parts.length; i++) {
     result[i] = parts[i];
   }
