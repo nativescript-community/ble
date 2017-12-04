@@ -295,7 +295,10 @@ var CBCentralManagerDelegateImpl = (function (_super) {
     peri.delegate = delegate;
 
     console.log("----- delegate centralManager:didConnectPeripheral, let's discover service");
-    peri.discoverServices(null);
+    setTimeout( () => {  // Some devices need a delay before discovering services
+      peri.discoverServices(null);
+    }, 3000)  
+    
   };
 
   CBCentralManagerDelegateImpl.prototype.centralManagerDidDisconnectPeripheralError = function (central, peripheral, error) {
