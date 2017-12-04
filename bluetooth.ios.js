@@ -283,7 +283,12 @@ var CBCentralManagerDelegateImpl = (function (_super) {
     // find the peri in the array and attach the delegate to that
     var peri = Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
     console.log("----- delegate centralManager:didConnectPeripheral: cached perio: " + peri);
-
+    
+    if( !peri ){
+      Bluetooth._state.peripheralArray.addObject(peripheral);
+      peri = peripheral
+    }
+    
     var cb = Bluetooth._state.connectCallbacks[peripheral.identifier.UUIDString];
     var delegate = CBPeripheralDelegateImpl.new().initWithCallback(cb);
     CFRetain(delegate);
