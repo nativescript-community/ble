@@ -396,6 +396,20 @@ Bluetooth._decodeValue = function (value) {
   return Bluetooth._base64ToArrayBuffer(b);
 };
 
+/* * * * * *  BLUETOOTH PERIPHERAL CODE * * * * * * */
+Bluetooth.getAdapter = function() {
+  return adapter;
+};
+
+Bluetooth.isPeripheralModeSupported = function() {
+  return new Promise((resolve, reject) => {
+    resolve(adapter.isMultipleAdvertisementSupported() &&
+    adapter.isOffloadedFilteringSupported() &&
+    adapter.isOffloadedScanBatchingSupported());
+  });
+};
+/* * * * * * END BLUETOOTH PERIPHERAL CODE  * * * * */
+
 Bluetooth._isEnabled = function () {
   return adapter !== null && adapter.isEnabled();
 };
