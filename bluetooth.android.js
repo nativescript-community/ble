@@ -4,10 +4,12 @@ var Bluetooth = require("./bluetooth-common");
 
 var ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 var ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
+var ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 224;
 
 var adapter /* android.bluetooth.BluetoothAdapter */,
     onDiscovered,
     _onBluetoothEnabledResolve,
+    _onBluetoothDiscoverableResolve,
     _permissionRequestResolver,
     _onPermissionGranted;
 
@@ -65,6 +67,10 @@ Bluetooth._connections = {};
     if (data.requestCode === ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE) {
       _onBluetoothEnabledResolve && _onBluetoothEnabledResolve(data.resultCode === -1);
       _onBluetoothEnabledResolve = undefined;
+    }
+    else if (data.requestCode === ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE) {
+      _onBluetoothDiscoverableResolve && _onBluetoothDiscoverableResolve(data.resultCode === -1);
+      _onBluetoothDiscoverableResolve = undefined;
     }
   });
 
@@ -396,14 +402,65 @@ Bluetooth._decodeValue = function (value) {
   return Bluetooth._base64ToArrayBuffer(b);
 };
 
+
 /* * * * * *  BLUETOOTH PERIPHERAL CODE * * * * * * */
 Bluetooth.getAdapter = function() {
   return adapter;
 };
 
+Bluetooth.setDiscoverable = function() {
+  return new Promise(function (resolve, reject) {
+    try {
+      _onBluetoothDiscoverableResolve = resolve;
+      var intent = new android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+      application.android.foregroundActivity.startActivityForResult(intent, ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE);
+    } catch (ex) {
+      console.log("Error in Bluetooth.setDiscoverable: " + ex);
+      reject(ex);
+    }
+  });
+}
+
+Bluetooth.getAdvertiser = function() {
+  return adapter.getBluetoothAdvertiser();
+}
+
+Bluetooth.startAdvertising = function() {
+  return new Promise((resolve, reject) => {
+    let adv = adapter.getBluetoothAdvertiser();
+    if (adv === null || !adapter.isMultipleAdvertisementSupported()) {
+      reject("Adapter is turned off or doesnt support bluetooth advertisement");
+    }
+    else {
+      adv.startAdvertising(); // need to flesh out settings
+    }
+  });
+}
+
+Bluetooth.stopAdvertising = function() {
+  return new Promise((resolve, reject) => {
+    let adv = adapter.getBluetoothAdvertiser();
+    if (adv === null || !adapter.isMultipleAdvertisementSupported()) {
+      reject("Adapter is turned off or doesnt support bluetooth advertisement");
+    }
+    else {
+      adv.stopAdvertising();
+    }
+  });
+}
+
+Bluetooth.disable = function() {
+  adapter.disable();
+  return new Promise(function(resolve, reject) {
+    resolve();
+  });
+};
+
 Bluetooth.isPeripheralModeSupported = function() {
   return new Promise((resolve, reject) => {
     resolve(adapter.isMultipleAdvertisementSupported() &&
+    //adapter.isLeExtendedAdvertisingSupported() &&
+    //adapter.isLePeriodicAdvertisingSupported() &&
     adapter.isOffloadedFilteringSupported() &&
     adapter.isOffloadedScanBatchingSupported());
   });
@@ -842,8 +899,9 @@ Bluetooth.writeWithoutResponse = function (arg) {
       bluetoothGattCharacteristic.setValue(val);
       bluetoothGattCharacteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
 
-      Bluetooth._connections[arg.peripheralUUID].onWritePromise = resolve;
-      if (!wrapper.gatt.writeCharacteristic(bluetoothGattCharacteristic)) {
+      if (wrapper.gatt.writeCharacteristic(bluetoothGattCharacteristic)) {
+        resolve();
+      } else {
         reject("Failed to write to characteristic " + arg.characteristicUUID);
       }
     } catch (ex) {
