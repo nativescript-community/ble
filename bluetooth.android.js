@@ -143,6 +143,18 @@ Bluetooth._connections = {};
       }
     });
     Bluetooth._scanCallback = new MyScanCallback();
+
+
+    var MyAdvertiseCallback = android.bluetooth.le.AdvertiseCallback.extend({
+      onStartSuccess: function(advertiseSettings, settingsInEffect) {
+        console.log("---- _MyAdvertiseCallback.onStartSuccess, settingsInEffect: " + settingsInEffect);
+      },
+      onStartFailure: function(errorCode) {
+        console.log("---- _MyAdvertiseCallback.onStartFailure, errorCode: " + errorCode);
+      },
+    });
+    Bluetooth._MyAdvertiseCallback = new MyAdvertiseCallback();
+
   } else {
 
     function extractManufacturerRawData(scanRecord) {
@@ -425,14 +437,34 @@ Bluetooth.getAdvertiser = function() {
   return adapter.getBluetoothAdvertiser();
 }
 
-Bluetooth.startAdvertising = function() {
+Bluetooth.startAdvertising = function(advertiseOptions) {
+  console.log("--- bluetooth starting advertising!");
   return new Promise((resolve, reject) => {
-    let adv = adapter.getBluetoothAdvertiser();
+    let adv = adapter.getBluetoothLeAdvertiser();
     if (adv === null || !adapter.isMultipleAdvertisementSupported()) {
       reject("Adapter is turned off or doesnt support bluetooth advertisement");
     }
     else {
-      adv.startAdvertising(); // need to flesh out settings
+      let settings = advertiseOptions.settings;
+      console.log("Making settings");
+      let _s = new android.bluetooth.le.AdvertiseSettings.Builder()
+        .setAdvertiseMode( android.bluetooth.le.AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY )
+        .setTxPowerLevel( android.bluetooth.le.AdvertiseSettings.ADVERTISE_TX_POWER_HIGH )
+        .setConnectable( false )
+        .build();
+
+      let pUuid = new android.os.ParcelUuid(Bluetooth._stringToUuid("9358ac8f-6343-4a31-b4e0-4b13a2b45d86"));
+
+      let data = advertiseOptions.data;
+      console.log("Making data");
+      let _d = new android.bluetooth.le.AdvertiseData.Builder()
+        .setIncludeDeviceName( true )
+        .addServiceUuid( pUuid )
+        .addServiceData( pUuid, [0x50, 0x50, 0x50] )
+        .build();
+
+      console.log("--- bluetooth starting advertising!");
+      adv.startAdvertising(_s, _d, Bluetooth._MyAdvertiseCallback); // need to flesh out settings
     }
   });
 }
