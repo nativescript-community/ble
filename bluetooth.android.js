@@ -102,6 +102,32 @@ Bluetooth._connections = {};
   // peripheral mode:
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
 
+    var MyDevicePairingHandler = android.content.BroadcastReceiver.extend({
+      onReceive: function(context, intent) {
+        console.log("RECEIVED context: " +context+", intent: "+intent);
+        const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
+        const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+        let message = "";
+        switch (bs) {
+          case android.bluetooth.BluetoothDevice.BOND_BONDING:
+            message = "Bonding with device ";
+            break;
+          case android.bluetooth.BluetoothDevice.BOND_BONDED:
+            message = "Successfully bonded ";
+            break;
+          case android.bluetooth.BluetoothDevice.BOND_NONE:
+            message = "Failed to bond ";
+            break;
+          default:
+            break;
+        }
+        console.log(message + device);
+      }
+    });
+    var devicePairingIntent = new android.content.IntentFilter( android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED );
+    Bluetooth._MyDevicePairingHandler = new MyDevicePairingHandler();
+    utils.ad.getApplicationContext().registerReceiver(Bluetooth._MyDevicePairingHandler, devicePairingIntent);
+
     // callback for handling peripheral mode events
     var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
       onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
