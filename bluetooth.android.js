@@ -110,6 +110,12 @@ Bluetooth._connections = {};
       onCharacteristicReadRequest(device, requestId, offset, characteristic) {
         console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
       },
+      onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
+        console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
+      },
+      onDescriptorReadRequest(device, requestId, offset, descriptor) {
+        console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
+      },
       onConnectionStateChange(device, status, newState) {
         console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
         switch (newState) {
@@ -136,9 +142,6 @@ Bluetooth._connections = {};
     Bluetooth._MyGattServerCallback = new MyGattServerCallback();
 
     var MyAdvertiseCallback = android.bluetooth.le.AdvertiseCallback.extend({
-      onConnectionStateChange(device, status, newState) {
-        console.log("----- _MyAdvertiseCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
-      },
       onStartSuccess: function(settingsInEffect) {
         console.log("---- _MyAdvertiseCallback.onStartSuccess, settingsInEffect: " + settingsInEffect);
         _onBluetoothAdvertiseResolve && _onBluetoothAdvertiseResolve(settingsInEffect);
@@ -148,21 +151,12 @@ Bluetooth._connections = {};
         console.log("---- _MyAdvertiseCallback.onStartFailure, errorCode: " + errorCode);
         _onBluetoothAdvertiseReject && _onBluetoothAdvertiseReject(errorCode);
         _onBluetoothAdvertiseReject = undefined;
-      },
-      onStopSuccess: function() {
-        console.log("---- _MyAdvertiseCallback.onStopSuccess");
-        _onBluetoothAdvertiseResolve && _onBluetoothAdvertiseResolve();
-        _onBluetoothAdvertiseResolve = undefined;
-      },
-      onStopFailure: function(errorCode) {
-        console.log("---- _MyAdvertiseCallback.onStopFailure, errorCode: " + errorCode);
-        _onBluetoothAdvertiseReject && _onBluetoothAdvertiseReject(errorCode);
-        _onBluetoothAdvertiseReject = undefined;
       }
     });
     Bluetooth._MyAdvertiseCallback = new MyAdvertiseCallback();
 
     gattServer = bluetoothManager.openGattServer(utils.ad.getApplicationContext(), Bluetooth._MyGattServerCallback);
+    Bluetooth._gattServer = gattServer;
   }
 
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
@@ -518,8 +512,14 @@ Bluetooth.makeDescriptor = function(options) {
 }
 
 Bluetooth.addService = function(service) {
-  if (service !== null && service !== undefined) {
+  if (service !== null && service !== undefined && gattServer !== null && gattServer !== undefined) {
     gattServer.addService(service);
+  }
+}
+
+Bluetooth.clearServices = function() {
+  if (gattServer !== null && gattServer !== undefined) {
+    gattServer.clearServices();
   }
 }
 
