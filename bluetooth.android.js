@@ -510,6 +510,13 @@ Bluetooth.makeAdvCharacteristic = function(characteristicOptions) {
   return new android.bluetooth.BluetoothGattCharacteristic(cuuid, gprop, gperm);
 }
 
+Bluetooth.makeDescriptor = function(options) {
+  let uuid = Bluetooth._stringToUuid(options.UUID);
+  let perms = new Number(options.permissions || android.bluetooth.BluetoothGattDescriptor.PERMISSION_READ);
+
+  return new android.bluetooth.BluetoothGattDescriptor(uuid, perms);
+}
+
 Bluetooth.addService = function(service) {
   if (service !== null && service !== undefined) {
     gattServer.addService(service);
