@@ -148,7 +148,7 @@ Bluetooth._connections = {};
 
 
     var MyAdvertiseCallback = android.bluetooth.le.AdvertiseCallback.extend({
-      onStartSuccess: function(advertiseSettings, settingsInEffect) {
+      onStartSuccess: function(settingsInEffect) {
         console.log("---- _MyAdvertiseCallback.onStartSuccess, settingsInEffect: " + settingsInEffect);
         _onBluetoothAdvertiseResolve && _onBluetoothAdvertiseResolve(settingsInEffect);
         _onBluetoothAdvertiseResolve = undefined;
@@ -158,6 +158,16 @@ Bluetooth._connections = {};
         _onBluetoothAdvertiseReject && _onBluetoothAdvertiseReject(errorCode);
         _onBluetoothAdvertiseReject = undefined;
       },
+      onStopSuccess: function() {
+        console.log("---- _MyAdvertiseCallback.onStopSuccess");
+        _onBluetoothAdvertiseResolve && _onBluetoothAdvertiseResolve();
+        _onBluetoothAdvertiseResolve = undefined;
+      },
+      onStopFailure: function(errorCode) {
+        console.log("---- _MyAdvertiseCallback.onStopFailure, errorCode: " + errorCode);
+        _onBluetoothAdvertiseReject && _onBluetoothAdvertiseReject(errorCode);
+        _onBluetoothAdvertiseReject = undefined;
+      }
     });
     Bluetooth._MyAdvertiseCallback = new MyAdvertiseCallback();
 
@@ -463,7 +473,7 @@ Bluetooth.startAdvertising = function(advertiseOptions) {
       let _d = new android.bluetooth.le.AdvertiseData.Builder()
         .setIncludeDeviceName( true )
         .addServiceUuid( pUuid )
-        .addServiceData( pUuid, [0x50, 0x50, 0x50] )
+        //.addServiceData( pUuid, Bluetooth._encodeValue("0x50") )
         .build();
 
       console.log("--- bluetooth starting advertising!");
@@ -476,12 +486,16 @@ Bluetooth.startAdvertising = function(advertiseOptions) {
 
 Bluetooth.stopAdvertising = function() {
   return new Promise((resolve, reject) => {
-    let adv = adapter.getBluetoothAdvertiser();
+    let adv = adapter.getBluetoothLeAdvertiser();
     if (adv === null || !adapter.isMultipleAdvertisementSupported()) {
       reject("Adapter is turned off or doesnt support bluetooth advertisement");
     }
     else {
-      adv.stopAdvertising();
+      console.log("--- bluetooth stopping advertising!");
+      _onBluetoothAdvertiseResolve = resolve;
+      _onBluetoothAdvertiseReject = reject;
+      adv.stopAdvertising(Bluetooth._MyAdvertiseCallback);
+      resolve(); // for some reason the callback doesn't get called... TODO: FIX
     }
   });
 }
