@@ -132,19 +132,19 @@ Bluetooth._connections = {};
 
     // callback for handling peripheral mode events
     var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
-      onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
+      onCharacteristicWriteRequest: function(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
         console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
       },
-      onCharacteristicReadRequest(device, requestId, offset, characteristic) {
+      onCharacteristicReadRequest: function(device, requestId, offset, characteristic) {
         console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
       },
-      onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
+      onDescriptorWriteRequest: function(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
         console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
       },
-      onDescriptorReadRequest(device, requestId, offset, descriptor) {
+      onDescriptorReadRequest: function(device, requestId, offset, descriptor) {
         console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
       },
-      onConnectionStateChange(device, status, newState) {
+      onConnectionStateChange: function(device, status, newState) {
         console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
         switch (newState) {
           case android.bluetooth.BluetoothProfile.STATE_CONNECTED:
@@ -163,7 +163,7 @@ Bluetooth._connections = {};
             break;
         }
       },
-      onServiceAdded(status, service) {
+      onServiceAdded: function(status, service) {
         console.log("----- _MyGattServerCallback.onServiceAdded, status: "+status +", service: "+service);
       },
     });
