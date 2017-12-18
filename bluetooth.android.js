@@ -104,13 +104,13 @@ Bluetooth._connections = {};
 
     var MyDevicePairingHandler = android.content.BroadcastReceiver.extend({
       onReceive: function(context, intent) {
-        console.log("RECEIVED context: " +context+", intent: "+intent);
+        //console.log("RECEIVED context: " +context+", intent: "+intent);
         const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
         const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
         let message = "";
         switch (bs) {
           case android.bluetooth.BluetoothDevice.BOND_BONDING:
-            message = "Bonding with device ";
+            message = "Bonding with ";
             break;
           case android.bluetooth.BluetoothDevice.BOND_BONDED:
             message = "Successfully bonded ";
@@ -119,6 +119,7 @@ Bluetooth._connections = {};
             message = "Failed to bond ";
             break;
           default:
+            message = "Unknown bonding status for ";
             break;
         }
         console.log(message + device);
