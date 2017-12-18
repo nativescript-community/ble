@@ -7,6 +7,8 @@ var ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 var ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 224;
 
 var adapter /* android.bluetooth.BluetoothAdapter */,
+    bluetoothManager,
+    gattServer,
     onDiscovered,
     _onBluetoothEnabledResolve,
     _onBluetoothDiscoverableResolve,
@@ -94,7 +96,27 @@ Bluetooth._connections = {};
     _onPermissionGranted = undefined;
   });
 
-  var bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
+
+  // callback for handling peripheral mode events
+  var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
+    onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
+      console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
+    },
+    onCharacteristicReadRequest(device, requestId, offset, characteristic) {
+      console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
+    },
+    onConnectionStatusChange(device, status, newState) {
+      console.log("----- _MyGattServerCallback.onConnectionStatusChange, device: " +device + ", status: "+status +", newState: "+newState);
+    },
+    onServiceAdded(status, service) {
+      console.log("----- _MyGattServerCallback.onServiceAdded, status: "+status +", service: "+service);
+    },
+  });
+  Bluetooth._MyGattServerCallback = new MyGattServerCallback();
+
+
+  bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
+  gattServer = bluetoothManager.openGattServer(utils.ad.getApplicationContext(), Bluetooth._MyGattServerCallback);
   adapter = bluetoothManager.getAdapter();
 
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
@@ -453,6 +475,27 @@ Bluetooth.getAdvertiser = function() {
   return adapter.getBluetoothAdvertiser();
 }
 
+Bluetooth.makeAdvService = function(serviceOptions) {
+  let suuid = Bluetooth._stringToUuid(serviceOptions.UUID);
+  let serviceType = new Number(serviceOptions.serviceType || android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY);
+
+  return new android.bluetooth.BluetoothGattService( suuid, serviceType );
+}
+
+Bluetooth.makeAdvCharacteristic = function(characteristicOptions) {
+  let cuuid = Bluetooth._stringToUuid(characteristicOptions.UUID);
+  let gprop = new Number(characteristicOptions.gattProperty || android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ);
+  let gperm = new Number(characteristicOptions.gattPermissions || android.bluetooth.BluetoothGattCharacteristic.PERMISSION_READ);
+
+  return new android.bluetooth.BluetoothGattCharacteristic(cuuid, gprop, gperm);
+}
+
+Bluetooth.addService = function(service) {
+  if (service !== null && service !== undefined) {
+    gattServer.addService(service);
+  }
+}
+
 Bluetooth.startAdvertising = function(advertiseOptions) {
   return new Promise((resolve, reject) => {
     let adv = adapter.getBluetoothLeAdvertiser();
@@ -462,16 +505,16 @@ Bluetooth.startAdvertising = function(advertiseOptions) {
     else {
       let settings = advertiseOptions.settings;
       let _s = new android.bluetooth.le.AdvertiseSettings.Builder()
-        .setAdvertiseMode( android.bluetooth.le.AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY )
-        .setTxPowerLevel( android.bluetooth.le.AdvertiseSettings.ADVERTISE_TX_POWER_HIGH )
-        .setConnectable( false )
+        .setAdvertiseMode( settings.advertiseMode || android.bluetooth.le.AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY )
+        .setTxPowerLevel( settings.txPowerLevel || android.bluetooth.le.AdvertiseSettings.ADVERTISE_TX_POWER_HIGH )
+        .setConnectable( settings.connectable || false )
         .build();
 
-      let pUuid = new android.os.ParcelUuid(Bluetooth._stringToUuid("9358ac8f-6343-4a31-b4e0-4b13a2b45d86"));
+      let pUuid = new android.os.ParcelUuid(Bluetooth._stringToUuid( advertiseOptions.UUID ));
 
       let data = advertiseOptions.data;
       let _d = new android.bluetooth.le.AdvertiseData.Builder()
-        .setIncludeDeviceName( true )
+        .setIncludeDeviceName( data.includeDeviceName || true )
         .addServiceUuid( pUuid )
         //.addServiceData( pUuid, Bluetooth._encodeValue("0x50") )
         .build();
