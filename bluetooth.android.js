@@ -114,6 +114,7 @@ Bluetooth._connections = {};
             break;
           case android.bluetooth.BluetoothDevice.BOND_BONDED:
             message = "Successfully bonded ";
+            utils.ad.getApplicationContext().unregisterReceiver(this);
             break;
           case android.bluetooth.BluetoothDevice.BOND_NONE:
             message = "Failed to bond ";
