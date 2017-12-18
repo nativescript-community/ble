@@ -10,6 +10,8 @@ var adapter /* android.bluetooth.BluetoothAdapter */,
     onDiscovered,
     _onBluetoothEnabledResolve,
     _onBluetoothDiscoverableResolve,
+    _onBluetoothAdvertiseResolve,
+    _onBluetoothAdvertiseReject,
     _permissionRequestResolver,
     _onPermissionGranted;
 
@@ -148,9 +150,13 @@ Bluetooth._connections = {};
     var MyAdvertiseCallback = android.bluetooth.le.AdvertiseCallback.extend({
       onStartSuccess: function(advertiseSettings, settingsInEffect) {
         console.log("---- _MyAdvertiseCallback.onStartSuccess, settingsInEffect: " + settingsInEffect);
+        _onBluetoothAdvertiseResolve && _onBluetoothAdvertiseResolve(settingsInEffect);
+        _onBluetoothAdvertiseResolve = undefined;
       },
       onStartFailure: function(errorCode) {
         console.log("---- _MyAdvertiseCallback.onStartFailure, errorCode: " + errorCode);
+        _onBluetoothAdvertiseReject && _onBluetoothAdvertiseReject(errorCode);
+        _onBluetoothAdvertiseReject = undefined;
       },
     });
     Bluetooth._MyAdvertiseCallback = new MyAdvertiseCallback();
@@ -438,7 +444,6 @@ Bluetooth.getAdvertiser = function() {
 }
 
 Bluetooth.startAdvertising = function(advertiseOptions) {
-  console.log("--- bluetooth starting advertising!");
   return new Promise((resolve, reject) => {
     let adv = adapter.getBluetoothLeAdvertiser();
     if (adv === null || !adapter.isMultipleAdvertisementSupported()) {
@@ -446,7 +451,6 @@ Bluetooth.startAdvertising = function(advertiseOptions) {
     }
     else {
       let settings = advertiseOptions.settings;
-      console.log("Making settings");
       let _s = new android.bluetooth.le.AdvertiseSettings.Builder()
         .setAdvertiseMode( android.bluetooth.le.AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY )
         .setTxPowerLevel( android.bluetooth.le.AdvertiseSettings.ADVERTISE_TX_POWER_HIGH )
@@ -456,7 +460,6 @@ Bluetooth.startAdvertising = function(advertiseOptions) {
       let pUuid = new android.os.ParcelUuid(Bluetooth._stringToUuid("9358ac8f-6343-4a31-b4e0-4b13a2b45d86"));
 
       let data = advertiseOptions.data;
-      console.log("Making data");
       let _d = new android.bluetooth.le.AdvertiseData.Builder()
         .setIncludeDeviceName( true )
         .addServiceUuid( pUuid )
@@ -464,6 +467,8 @@ Bluetooth.startAdvertising = function(advertiseOptions) {
         .build();
 
       console.log("--- bluetooth starting advertising!");
+      _onBluetoothAdvertiseResolve = resolve;
+      _onBluetoothAdvertiseReject = reject;
       adv.startAdvertising(_s, _d, Bluetooth._MyAdvertiseCallback); // need to flesh out settings
     }
   });
