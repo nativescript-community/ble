@@ -134,15 +134,23 @@ Bluetooth._connections = {};
     var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
       onCharacteristicWriteRequest: function(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
         console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
+        let status = 0;
+        gattServer.sendResponse(device, requestId, status, offset, new Uint8Array([0x01]));
       },
       onCharacteristicReadRequest: function(device, requestId, offset, characteristic) {
         console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
+        let status = 0;
+        gattServer.sendResponse(device, requestId, status, offset, new Uint8Array([0x01]));
       },
       onDescriptorWriteRequest: function(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
         console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
+        let status = 0;
+        gattServer.sendResponse(device, requestId, status, offset, new Uint8Array([0x01]));
       },
       onDescriptorReadRequest: function(device, requestId, offset, descriptor) {
         console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
+        let status = 0;
+        gattServer.sendResponse(device, requestId, status, offset, new Uint8Array([0x01]));
       },
       onConnectionStateChange: function(device, status, newState) {
         console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
@@ -160,6 +168,7 @@ Bluetooth._connections = {};
             console.log("DISCONNECTING");
             break;
           default:
+            console.log("UNKNOWN STATE");
             break;
         }
       },
