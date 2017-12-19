@@ -99,109 +99,6 @@ Bluetooth._connections = {};
   bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
   adapter = bluetoothManager.getAdapter();
 
-  // peripheral mode:
-  if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
-
-    var MyDevicePairingHandler = android.content.BroadcastReceiver.extend({
-      onReceive: function(context, intent) {
-        //console.log("RECEIVED context: " +context+", intent: "+intent);
-        const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
-        const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
-        let message = "";
-        switch (bs) {
-          case android.bluetooth.BluetoothDevice.BOND_BONDING:
-            message = "Bonding with ";
-            break;
-          case android.bluetooth.BluetoothDevice.BOND_BONDED:
-            message = "Successfully bonded ";
-            utils.ad.getApplicationContext().unregisterReceiver(this);
-            break;
-          case android.bluetooth.BluetoothDevice.BOND_NONE:
-            message = "Failed to bond ";
-            break;
-          default:
-            message = "Unknown bonding status for ";
-            break;
-        }
-        console.log(message + device);
-      }
-    });
-    var devicePairingIntent = new android.content.IntentFilter( android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED );
-    Bluetooth._MyDevicePairingHandler = new MyDevicePairingHandler();
-    utils.ad.getApplicationContext().registerReceiver(Bluetooth._MyDevicePairingHandler, devicePairingIntent);
-
-    // callback for handling peripheral mode events
-    var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
-      onCharacteristicWriteRequest: function(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
-        console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
-        console.log("      offset: " + offset)
-        let str = "";
-        for (let i=0; i<value.length; i++) {
-          str += Number(value[i]).toString(16) + " ";
-        }
-        console.log("      value: " + str)
-        let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
-      },
-      onCharacteristicReadRequest: function(device, requestId, offset, characteristic) {
-        console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
-        let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
-      },
-      onDescriptorWriteRequest: function(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
-        console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
-        let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
-      },
-      onDescriptorReadRequest: function(device, requestId, offset, descriptor) {
-        console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
-        let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
-      },
-      onConnectionStateChange: function(device, status, newState) {
-        console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
-        switch (newState) {
-          case android.bluetooth.BluetoothProfile.STATE_CONNECTED:
-            console.log("CONNECTED");
-            break;
-          case android.bluetooth.BluetoothProfile.STATE_CONNECTING:
-            console.log("CONNECTING");
-            break;
-          case android.bluetooth.BluetoothProfile.STATE_DISCONNECTED:
-            console.log("DISCONNECTED");
-            break;
-          case android.bluetooth.BluetoothProfile.STATE_DISCONNECTING:
-            console.log("DISCONNECTING");
-            break;
-          default:
-            console.log("UNKNOWN STATE");
-            break;
-        }
-      },
-      onServiceAdded: function(status, service) {
-        console.log("----- _MyGattServerCallback.onServiceAdded, status: "+status +", service: "+service);
-      },
-    });
-    Bluetooth._MyGattServerCallback = new MyGattServerCallback();
-
-    var MyAdvertiseCallback = android.bluetooth.le.AdvertiseCallback.extend({
-      onStartSuccess: function(settingsInEffect) {
-        console.log("---- _MyAdvertiseCallback.onStartSuccess, settingsInEffect: " + settingsInEffect);
-        _onBluetoothAdvertiseResolve && _onBluetoothAdvertiseResolve(settingsInEffect);
-        _onBluetoothAdvertiseResolve = undefined;
-      },
-      onStartFailure: function(errorCode) {
-        console.log("---- _MyAdvertiseCallback.onStartFailure, errorCode: " + errorCode);
-        _onBluetoothAdvertiseReject && _onBluetoothAdvertiseReject(errorCode);
-        _onBluetoothAdvertiseReject = undefined;
-      }
-    });
-    Bluetooth._MyAdvertiseCallback = new MyAdvertiseCallback();
-
-    gattServer = bluetoothManager.openGattServer(utils.ad.getApplicationContext(), Bluetooth._MyGattServerCallback);
-    Bluetooth._gattServer = gattServer;
-  }
-
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
     var MyScanCallback = android.bluetooth.le.ScanCallback.extend({
       onBatchScanResults: function (results) {
@@ -515,6 +412,111 @@ Bluetooth.getAdapter = function() {
   return adapter;
 };
 
+Bluetooth.startGattServer = function() {
+  // peripheral mode:
+  if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
+
+    var MyDevicePairingHandler = android.content.BroadcastReceiver.extend({
+      onReceive: function(context, intent) {
+        //console.log("RECEIVED context: " +context+", intent: "+intent);
+        const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
+        const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+        let message = "";
+        switch (bs) {
+          case android.bluetooth.BluetoothDevice.BOND_BONDING:
+            message = "Bonding with ";
+            break;
+          case android.bluetooth.BluetoothDevice.BOND_BONDED:
+            message = "Successfully bonded ";
+            //utils.ad.getApplicationContext().unregisterReceiver(this);
+            break;
+          case android.bluetooth.BluetoothDevice.BOND_NONE:
+            message = "Failed to bond ";
+            break;
+          default:
+            message = "Unknown bonding status for ";
+            break;
+        }
+        console.log(message + device);
+      }
+    });
+    var devicePairingIntent = new android.content.IntentFilter( android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED );
+    Bluetooth._MyDevicePairingHandler = new MyDevicePairingHandler();
+    utils.ad.getApplicationContext().registerReceiver(Bluetooth._MyDevicePairingHandler, devicePairingIntent);
+
+    // callback for handling peripheral mode events
+    var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
+      onCharacteristicWriteRequest: function(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
+        console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
+        console.log("      offset: " + offset)
+        let str = "";
+        for (let i=0; i<value.length; i++) {
+          str += Number(value[i]).toString(16) + " ";
+        }
+        console.log("      value: " + str)
+        let status = 0;
+        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+      },
+      onCharacteristicReadRequest: function(device, requestId, offset, characteristic) {
+        console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
+        let status = 0;
+        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+      },
+      onDescriptorWriteRequest: function(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
+        console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
+        let status = 0;
+        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+      },
+      onDescriptorReadRequest: function(device, requestId, offset, descriptor) {
+        console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
+        let status = 0;
+        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+      },
+      onConnectionStateChange: function(device, status, newState) {
+        console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
+        switch (newState) {
+          case android.bluetooth.BluetoothProfile.STATE_CONNECTED:
+            console.log("CONNECTED");
+            break;
+          case android.bluetooth.BluetoothProfile.STATE_CONNECTING:
+            console.log("CONNECTING");
+            break;
+          case android.bluetooth.BluetoothProfile.STATE_DISCONNECTED:
+            console.log("DISCONNECTED");
+            break;
+          case android.bluetooth.BluetoothProfile.STATE_DISCONNECTING:
+            console.log("DISCONNECTING");
+            break;
+          default:
+            console.log("UNKNOWN STATE");
+            break;
+        }
+      },
+      onServiceAdded: function(status, service) {
+        console.log("----- _MyGattServerCallback.onServiceAdded, status: "+status +", service: "+service);
+      },
+    });
+    Bluetooth._MyGattServerCallback = new MyGattServerCallback();
+
+    var MyAdvertiseCallback = android.bluetooth.le.AdvertiseCallback.extend({
+      onStartSuccess: function(settingsInEffect) {
+        console.log("---- _MyAdvertiseCallback.onStartSuccess, settingsInEffect: " + settingsInEffect);
+        _onBluetoothAdvertiseResolve && _onBluetoothAdvertiseResolve(settingsInEffect);
+        _onBluetoothAdvertiseResolve = undefined;
+      },
+      onStartFailure: function(errorCode) {
+        console.log("---- _MyAdvertiseCallback.onStartFailure, errorCode: " + errorCode);
+        _onBluetoothAdvertiseReject && _onBluetoothAdvertiseReject(errorCode);
+        _onBluetoothAdvertiseReject = undefined;
+      }
+    });
+    Bluetooth._MyAdvertiseCallback = new MyAdvertiseCallback();
+
+    gattServer = bluetoothManager.openGattServer(utils.ad.getApplicationContext(), Bluetooth._MyGattServerCallback);
+    Bluetooth._gattServer = gattServer;
+  }  
+}
+
 Bluetooth.setDiscoverable = function() {
   return new Promise(function (resolve, reject) {
     try {
@@ -563,6 +565,24 @@ Bluetooth.addService = function(service) {
 Bluetooth.clearServices = function() {
   if (gattServer !== null && gattServer !== undefined) {
     gattServer.clearServices();
+  }
+}
+
+Bluetooth.getServerConnectedDevices = function() {
+  if (gattServer !== null && gattServer !== undefined) {
+    return bluetoothManager.getConnectedDevices(gattServer);
+  }
+}
+
+Bluetooth.getServerConnectedDeviceState = function(device) {
+  if (gattServer !== null && gattServer !== undefined && device !== null && device !== undefined) {
+    return bluetoothManager.getConnectionState(device, gattServer);
+  }
+}
+
+Bluetooth.getServerConnectedDevicesMatchingState = function(state) {
+  if (gattServer !== null && gattServer !== undefined && state !== null && state !== undefined) {
+    return bluetoothManager.getDevicesMatchingConnectionState(gattServer, state);
   }
 }
 
