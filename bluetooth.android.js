@@ -570,19 +570,19 @@ Bluetooth.clearServices = function() {
 
 Bluetooth.getServerConnectedDevices = function() {
   if (gattServer !== null && gattServer !== undefined) {
-    return bluetoothManager.getConnectedDevices(gattServer);
+    return bluetoothManager.getConnectedDevices(8);//gattServer.GATT_SERVER);
   }
 }
 
 Bluetooth.getServerConnectedDeviceState = function(device) {
   if (gattServer !== null && gattServer !== undefined && device !== null && device !== undefined) {
-    return bluetoothManager.getConnectionState(device, gattServer);
+    return bluetoothManager.getConnectionState(device, 8);//gattServer.GATT_SERVER);
   }
 }
 
 Bluetooth.getServerConnectedDevicesMatchingState = function(state) {
   if (gattServer !== null && gattServer !== undefined && state !== null && state !== undefined) {
-    return bluetoothManager.getDevicesMatchingConnectionState(gattServer, state);
+    return bluetoothManager.getDevicesMatchingConnectionState(gattServer.GATT_SERVER, state);
   }
 }
 
