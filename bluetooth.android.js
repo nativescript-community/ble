@@ -134,23 +134,29 @@ Bluetooth._connections = {};
     var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
       onCharacteristicWriteRequest: function(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
         console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
+        console.log("      offset: " + offset)
+        let str = "";
+        for (let i=0; i<value.length; i++) {
+          str += Number(value[i]).toString(16) + " ";
+        }
+        console.log("      value: " + str)
         let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Uint8Array([0x01]));
+        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
       },
       onCharacteristicReadRequest: function(device, requestId, offset, characteristic) {
         console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
         let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Uint8Array([0x01]));
+        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
       },
       onDescriptorWriteRequest: function(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
         console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
         let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Uint8Array([0x01]));
+        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
       },
       onDescriptorReadRequest: function(device, requestId, offset, descriptor) {
         console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
         let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Uint8Array([0x01]));
+        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
       },
       onConnectionStateChange: function(device, status, newState) {
         console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
