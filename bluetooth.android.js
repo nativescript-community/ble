@@ -412,6 +412,20 @@ Bluetooth.getAdapter = function() {
   return adapter;
 };
 
+Bluetooth.removeBond = function(device) {
+  try {
+    let m = device.getClass();
+    const tmp = Array.create("java.lang.Class", 0);
+    m = m.getMethod("removeBond", tmp);
+    const removed = m.invoke(device, null);
+
+    return removed;
+  }
+  catch (ex) {
+    console.log(ex);
+  }
+};
+
 Bluetooth.startGattServer = function() {
   // peripheral mode:
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
@@ -428,7 +442,7 @@ Bluetooth.startGattServer = function() {
             break;
           case android.bluetooth.BluetoothDevice.BOND_BONDED:
             message = "Successfully bonded ";
-            //utils.ad.getApplicationContext().unregisterReceiver(this);
+            Bluetooth.removeBond(device);
             break;
           case android.bluetooth.BluetoothDevice.BOND_NONE:
             message = "Failed to bond ";
