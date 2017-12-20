@@ -408,6 +408,13 @@ Bluetooth._decodeValue = function (value) {
 
 
 /* * * * * *  BLUETOOTH PERIPHERAL CODE * * * * * * */
+var _onServerConnectionStateChangeCallback = null,
+    _onBondStatusChangeCallback = null,
+    _onCharacteristicWriteRequestCallback = null,
+    _onCharacteristicReadRequestCallback = null,
+    _onDescriptorWriteRequestCallback = null,
+    _onDescriptorReadRequestCallback = null;
+
 Bluetooth.getAdapter = function() {
   return adapter;
 };
@@ -426,6 +433,24 @@ Bluetooth.removeBond = function(device) {
   }
 };
 
+Bluetooth.setGattServerCallbacks = function(callbackOptions) {
+  _onServerConnectionStateChangeCallback = null;
+  _onBondStatusChangeCallback = null;
+  _onCharacteristicWriteRequestCallback = null;
+  _onCharacteristicReadRequestCallback = null;
+  _onDescriptorWriteRequestCallback = null;
+  _onDescriptorReadRequestCallback = null;
+
+  if (callbackOptions !== null && callbackOptions !== undefined) {
+    _onServerConnectionStateChangeCallback = callbackOptions.onServerConnectionStateChange;
+    _onBondStatusChangeCallback = callbackOptions.onBondStatusChange;
+    _onCharacteristicWriteRequestCallback = callbackOptions.onCharacteristicWrite;
+    _onCharacteristicReadRequestCallback = callbackOptions.onCharacteristicRead;
+    _onDescriptorWriteRequestCallback = callbackOptions.onDescriptorWrite;
+    _onDescriptorReadRequestCallback = callbackOptions.onDescriptorRead;
+  }
+};
+
 Bluetooth.startGattServer = function() {
   // peripheral mode:
   if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
@@ -435,23 +460,8 @@ Bluetooth.startGattServer = function() {
         //console.log("RECEIVED context: " +context+", intent: "+intent);
         const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
         const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
-        let message = "";
-        switch (bs) {
-          case android.bluetooth.BluetoothDevice.BOND_BONDING:
-            message = "Bonding with ";
-            break;
-          case android.bluetooth.BluetoothDevice.BOND_BONDED:
-            message = "Successfully bonded ";
-            Bluetooth.removeBond(device);
-            break;
-          case android.bluetooth.BluetoothDevice.BOND_NONE:
-            message = "Failed to bond ";
-            break;
-          default:
-            message = "Unknown bonding status for ";
-            break;
-        }
-        console.log(message + device);
+
+        _onBondStatusChangeCallback && _onBondStatusChangeCallback(device, bs);
       }
     });
     var devicePairingIntent = new android.content.IntentFilter( android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED );
@@ -488,6 +498,9 @@ Bluetooth.startGattServer = function() {
       },
       onConnectionStateChange: function(device, status, newState) {
         console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
+
+        _onServerConnectionStateChangeCallback && _onServerConnectionStateChangeCallback(device, status, newState);
+
         switch (newState) {
           case android.bluetooth.BluetoothProfile.STATE_CONNECTED:
             console.log("CONNECTED");
