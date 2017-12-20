@@ -472,27 +472,33 @@ Bluetooth.startGattServer = function() {
     var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
       onCharacteristicWriteRequest: function(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
         console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
+        _onCharacteristicWriteRequestCallback && _onCharacteristicWriteRequestCallback(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
+        /*
         console.log("      offset: " + offset)
         let str = "";
         for (let i=0; i<value.length; i++) {
           str += Number(value[i]).toString(16) + " ";
         }
         console.log("      value: " + str)
+        */
         let status = 0;
         gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
       },
       onCharacteristicReadRequest: function(device, requestId, offset, characteristic) {
         console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
+        _onCharacteristicReadRequestCallback && _onCharacteristicReadRequestCallback(device, requestId, offset, characteristic);
         let status = 0;
         gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
       },
       onDescriptorWriteRequest: function(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
         console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
+        _onDescriptorWriteRequestCallback && _onDescriptorWriteRequestCallback(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
         let status = 0;
         gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
       },
       onDescriptorReadRequest: function(device, requestId, offset, descriptor) {
         console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
+        _onDescriptorReadRequestCallback && _onDescriptorReadRequestCallback(device, requestId, offset, descriptor);
         let status = 0;
         gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
       },
