@@ -453,7 +453,9 @@ Bluetooth.setGattServerCallbacks = function(callbackOptions) {
 
 Bluetooth.stopGattServer = function() {
   Bluetooth.setGattServerCallbacks();
-  gattServer.close();
+  if (gattServer !== null && gattServer !== undefined) {
+    gattServer.close();
+  }
   gattServer = null;
 }
 
@@ -480,25 +482,33 @@ Bluetooth.startGattServer = function() {
         console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
         _onCharacteristicWriteRequestCallback && _onCharacteristicWriteRequestCallback(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
         let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+        if (gattServer !== null && gattServer !== undefined) {
+          gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+        }
       },
       onCharacteristicReadRequest: function(device, requestId, offset, characteristic) {
         console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
         _onCharacteristicReadRequestCallback && _onCharacteristicReadRequestCallback(device, requestId, offset, characteristic);
         let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+        if (gattServer !== null && gattServer !== undefined) {
+          gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+        }
       },
       onDescriptorWriteRequest: function(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
         console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
         _onDescriptorWriteRequestCallback && _onDescriptorWriteRequestCallback(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
         let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+        if (gattServer !== null && gattServer !== undefined) {
+          gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+        }
       },
       onDescriptorReadRequest: function(device, requestId, offset, descriptor) {
         console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
         _onDescriptorReadRequestCallback && _onDescriptorReadRequestCallback(device, requestId, offset, descriptor);
         let status = 0;
-        gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+        if (gattServer !== null && gattServer !== undefined) {
+          gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+        }
       },
       onConnectionStateChange: function(device, status, newState) {
         console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
@@ -582,6 +592,8 @@ Bluetooth.clearServices = function() {
 
 Bluetooth.cancelServerConnection = function(device) {
   if (gattServer !== null && gattServer !== undefined && device !== null && device !== undefined) {
+    console.log("----- cancelServerConnection -> gattServer.cancelConnection");
+    console.log(`      ${device}`);
     gattServer.cancelConnection(device);
   }
 }
@@ -589,7 +601,7 @@ Bluetooth.cancelServerConnection = function(device) {
 Bluetooth.getServerConnectedDevices = function() {
   if (gattServer !== null && gattServer !== undefined && 
       bluetoothManager !== null && bluetoothManager !== undefined) {
-    return bluetoothManager.getConnectedDevices(8);//gattServer.GATT_SERVER);
+    return bluetoothManager.getConnectedDevices(android.bluetooth.BluetoothGattServer.GATT);
   }
 }
 
@@ -597,7 +609,7 @@ Bluetooth.getServerConnectedDeviceState = function(device) {
   if (gattServer !== null && gattServer !== undefined && 
       device !== null && device !== undefined && 
       bluetoothManager !== null && bluetoothManager !== undefined) {
-    return bluetoothManager.getConnectionState(device, 8);//gattServer.GATT_SERVER);
+    return bluetoothManager.getConnectionState(device, android.bluetooth.BluetoothGattServer.GATT);
   }
 }
 
@@ -605,7 +617,7 @@ Bluetooth.getServerConnectedDevicesMatchingState = function(state) {
   if (gattServer !== null && gattServer !== undefined && 
       state !== null && state !== undefined &&
       bluetoothManager !== null && bluetoothManager !== undefined) {
-    return bluetoothManager.getDevicesMatchingConnectionState(gattServer.GATT_SERVER, state);
+    return bluetoothManager.getDevicesMatchingConnectionState(android.bluetooth.BluetoothGattServer.GATT, state);
   }
 }
 
