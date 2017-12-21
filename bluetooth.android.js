@@ -10,6 +10,7 @@ var adapter /* android.bluetooth.BluetoothAdapter */,
     bluetoothManager,
     onDiscovered,
     _onBluetoothEnabledResolve,
+    _onBluetoothDiscoverableResolve = null,
     _permissionRequestResolver,
     _onPermissionGranted;
 
@@ -405,7 +406,6 @@ Bluetooth._decodeValue = function (value) {
 
 /* * * * * *  BLUETOOTH PERIPHERAL CODE * * * * * * */
 var gattServer = null,
-    _onBluetoothDiscoverableResolve = null,
     _onBluetoothAdvertiseResolve = null,
     _onBluetoothAdvertiseReject = null,
     _onServerConnectionStateChangeCallback = null,
@@ -526,7 +526,7 @@ Bluetooth.startGattServer = function() {
 
     gattServer = bluetoothManager.openGattServer(utils.ad.getApplicationContext(), Bluetooth._MyGattServerCallback);
     Bluetooth._gattServer = gattServer;
-  }  
+  }
 }
 
 Bluetooth.setDiscoverable = function() {
@@ -577,6 +577,12 @@ Bluetooth.addService = function(service) {
 Bluetooth.clearServices = function() {
   if (gattServer !== null && gattServer !== undefined) {
     gattServer.clearServices();
+  }
+}
+
+Bluetooth.cancelServerConnection = function(device) {
+  if (gattServer !== null && gattServer !== undefined && device !== null && device !== undefined) {
+    gattServer.cancelConnection(device);
   }
 }
 
