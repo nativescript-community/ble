@@ -433,6 +433,20 @@ Bluetooth.removeBond = function(device) {
     }
 };
 
+Bluetooth.fetchUuidsWithSdp = function(device) {
+    try {
+	let m = device.getClass();
+	const tmp = Array.create("java.lang.Class", 0);
+	m = m.getMethod("fetchUuidsWithSdp", tmp);
+	const worked = m.invoke(device, null);
+
+	return worked;
+    }
+    catch (ex) {
+	console.log(ex);
+    }
+};
+
 Bluetooth.setGattServerCallbacks = function(callbackOptions) {
     _onServerConnectionStateChangeCallback = null;
     _onBondStatusChangeCallback = null;
@@ -656,8 +670,8 @@ Bluetooth.startAdvertising = function(advertiseOptions) {
 	    console.log("--- bluetooth starting advertising!");
 	    _onBluetoothAdvertiseResolve = resolve;
 	    _onBluetoothAdvertiseReject = reject;
-	    //adv.startAdvertising(_s, _d, Bluetooth._MyAdvertiseCallback); // need to flesh out settings
-	    adv.startAdvertising(_s, _d, _scanResult, Bluetooth._MyAdvertiseCallback); // need to flesh out settings
+	    //adv.startAdvertising(_s, _d, Bluetooth._MyAdvertiseCallback);
+	    adv.startAdvertising(_s, _d, _scanResult, Bluetooth._MyAdvertiseCallback);
 	}
     });
 }
