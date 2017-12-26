@@ -634,8 +634,20 @@ Bluetooth.addService = function(service) {
 
 Bluetooth.getServerService = function(uuidString) {
     if (gattServer !== null && gattServer !== undefined) {
-	let pUuid = new android.os.ParcelUuid.fromString( uuidString );
-	return gattServer.getService(pUuid);
+	let pUuid = new Bluetooth._stringToUuid( uuidString );
+	let services = gattServer.getServices();
+	/*
+	console.log(services);
+	console.log(services.length);
+	console.log(services.size());
+	for (let i=0; i<services.size(); i++) {
+	    console.log(services.get(i));
+	    console.log(services.get(i).getUuid());
+	}
+	*/
+	let s = gattServer.getService(pUuid);
+	console.log(`---- gattServer.getService: ${s} - ${s && s.getUuid()}`);
+	return s;
     }
     return null;
 }
