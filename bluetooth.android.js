@@ -410,6 +410,9 @@ var gattServer = null,
     _onBluetoothAdvertiseReject = null,
     _onServerConnectionStateChangeCallback = null,
     _onBondStatusChangeCallback = null,
+    _onDeviceNameChangeCallback = null,
+    _onDeviceUUIDChangeCallback = null,
+    _onDeviceACLDisconnectedCallback = null,
     _onCharacteristicWriteRequestCallback = null,
     _onCharacteristicReadRequestCallback = null,
     _onDescriptorWriteRequestCallback = null,
@@ -450,6 +453,9 @@ Bluetooth.fetchUuidsWithSdp = function(device) {
 Bluetooth.setGattServerCallbacks = function(callbackOptions) {
     _onServerConnectionStateChangeCallback = null;
     _onBondStatusChangeCallback = null;
+    _onDeviceNameChangeCallback = null;
+    _onDeviceUUIDChangeCallback = null;
+    _onDeviceACLDisconnectedCallback = null;
     _onCharacteristicWriteRequestCallback = null;
     _onCharacteristicReadRequestCallback = null;
     _onDescriptorWriteRequestCallback = null;
@@ -458,6 +464,9 @@ Bluetooth.setGattServerCallbacks = function(callbackOptions) {
     if (callbackOptions !== null && callbackOptions !== undefined) {
 	_onServerConnectionStateChangeCallback = callbackOptions.onServerConnectionStateChange;
 	_onBondStatusChangeCallback = callbackOptions.onBondStatusChange;
+	_onDeviceNameChangeCallback = callbackOptions.onDeviceNameChange;
+	_onDeviceUUIDChangeCallback = callbackOptions.onDeviceUUIDChange;
+	_onDeviceACLDisconnectedCallback = callbackOptions.onDeviceACLDisconnected;
 	_onCharacteristicWriteRequestCallback = callbackOptions.onCharacteristicWrite;
 	_onCharacteristicReadRequestCallback = callbackOptions.onCharacteristicRead;
 	_onDescriptorWriteRequestCallback = callbackOptions.onDescriptorWrite;
@@ -480,13 +489,37 @@ Bluetooth.startGattServer = function() {
 	var MyDevicePairingHandler = android.content.BroadcastReceiver.extend({
 	    onReceive: function(context, intent) {
 		//console.log("RECEIVED context: " +context+", intent: "+intent);
-		const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
-		const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+		if (intent === android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
+		    const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
+		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
 
-		_onBondStatusChangeCallback && _onBondStatusChangeCallback(device, bs);
+		    _onBondStatusChangeCallback && _onBondStatusChangeCallback(device, bs);
+		}
+		else if (intent === android.bluetooth.BluetoothDevice.ACTION_NAME_CHANGED) {
+		    const name = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_NAME, android.bluetooth.BluetoothDevice.ERROR);
+		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+
+		    _onDeviceNameChangeCallback && _onDeviceNameChangeCallback(device, name);
+		}
+		else if (intent === android.bluetooth.BluetoothDevice.ACTION_UUID) {
+		    const uuid = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_UUID, android.bluetooth.BluetoothDevice.ERROR);
+		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+
+		    _onDeviceUUIDChangeCallback && _onDeviceUUIDChangeCallback(device, uuid);
+		}
+		else if (intent === android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED) {
+		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+
+		    _onDeviceACLDisconnectedCallback && _onDeviceACLDisconnectedCallback(device);
+		}
 	    }
 	});
-	var devicePairingIntent = new android.content.IntentFilter( android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED );
+	var devicePairingIntent = new android.content.IntentFilter(
+	    android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED |
+	    android.bluetooth.BluetoothDevice.ACTION_NAME_CHANGED |
+	    android.bluetooth.BluetoothDevice.ACTION_UUID |
+	    android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED
+	);
 	Bluetooth._MyDevicePairingHandler = new MyDevicePairingHandler();
 	utils.ad.getApplicationContext().registerReceiver(Bluetooth._MyDevicePairingHandler, devicePairingIntent);
 
