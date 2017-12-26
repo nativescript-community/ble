@@ -488,26 +488,28 @@ Bluetooth.startGattServer = function() {
 
 	var MyDevicePairingHandler = android.content.BroadcastReceiver.extend({
 	    onReceive: function(context, intent) {
-		//console.log("RECEIVED context: " +context+", intent: "+intent);
-		if (intent === android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
+		console.log("RECEIVED context: " +context+", intent: "+intent);
+		const action = intent.getAction();
+		console.log(action);
+		if (action === android.bluetooth.device.action.BOND_STATE_CHANGED) {
 		    const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
 		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
 
 		    _onBondStatusChangeCallback && _onBondStatusChangeCallback(device, bs);
 		}
-		else if (intent === android.bluetooth.BluetoothDevice.ACTION_NAME_CHANGED) {
+		else if (action === android.bluetooth.device.action.NAME_CHANGED) {
 		    const name = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_NAME, android.bluetooth.BluetoothDevice.ERROR);
 		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
 
 		    _onDeviceNameChangeCallback && _onDeviceNameChangeCallback(device, name);
 		}
-		else if (intent === android.bluetooth.BluetoothDevice.ACTION_UUID) {
+		else if (action === android.bluetooth.device.action.UUID) {
 		    const uuid = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_UUID, android.bluetooth.BluetoothDevice.ERROR);
 		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
 
 		    _onDeviceUUIDChangeCallback && _onDeviceUUIDChangeCallback(device, uuid);
 		}
-		else if (intent === android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED) {
+		else if (action === android.bluetooth.device.action.ACL_DISCONNECTED) {
 		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
 
 		    _onDeviceACLDisconnectedCallback && _onDeviceACLDisconnectedCallback(device);
