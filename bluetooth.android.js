@@ -14,6 +14,23 @@ var adapter /* android.bluetooth.BluetoothAdapter */,
     _permissionRequestResolver,
     _onPermissionGranted;
 
+// PERIPHERAL MODE START
+var gattServer = null,
+    _onBluetoothAdvertiseResolve = null,
+    _onBluetoothAdvertiseReject = null,
+    _onServerConnectionStateChangeCallback = null,
+    _onBondStatusChangeCallback = null,
+    _onDeviceNameChangeCallback = null,
+    _onDeviceUUIDChangeCallback = null,
+    _onDeviceACLDisconnectedCallback = null,
+    _onCharacteristicWriteRequestCallback = null,
+    _onCharacteristicReadRequestCallback = null,
+    _onDescriptorWriteRequestCallback = null,
+    _onDescriptorReadRequestCallback = null;
+
+
+// PERIPHERAL MODE STOP
+
 Bluetooth._coarseLocationPermissionGranted = function () {
     var hasPermission = android.os.Build.VERSION.SDK_INT < 23; // Android M. (6.0)
     if (!hasPermission) {
@@ -97,6 +114,104 @@ Bluetooth._connections = {};
     adapter = bluetoothManager.getAdapter();
 
     if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
+	// PERIPHERAL MODE START
+
+	var MyDevicePairingHandler = android.content.BroadcastReceiver.extend({
+	    onReceive: function(context, intent) {
+		const action = intent.getAction();
+		//console.log("RECEIVED context: " +context+", intent: "+intent);
+		//console.log(action);
+		if (action === android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
+		    const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
+		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+
+		    _onBondStatusChangeCallback && _onBondStatusChangeCallback(device, bs);
+		}
+		else if (action === android.bluetooth.BluetoothDevice.ACTION_NAME_CHANGED) {
+		    const name = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_NAME, android.bluetooth.BluetoothDevice.ERROR);
+		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+
+		    _onDeviceNameChangeCallback && _onDeviceNameChangeCallback(device, name);
+		}
+		else if (action === android.bluetooth.BluetoothDevice.ACTION_UUID) {
+		    const uuid = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_UUID, android.bluetooth.BluetoothDevice.ERROR);
+		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+
+		    _onDeviceUUIDChangeCallback && _onDeviceUUIDChangeCallback(device, uuid);
+		}
+		else if (action === android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED) {
+		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+
+		    _onDeviceACLDisconnectedCallback && _onDeviceACLDisconnectedCallback(device);
+		}
+	    }
+	});
+	var deviceChangeIntent = new android.content.IntentFilter();
+	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_NAME_CHANGED);
+	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_UUID);
+	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED);
+	Bluetooth._MyDevicePairingHandler = new MyDevicePairingHandler();
+	utils.ad.getApplicationContext().registerReceiver(Bluetooth._MyDevicePairingHandler, deviceChangeIntent);
+
+	// callback for handling peripheral mode events
+	var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
+	    onCharacteristicWriteRequest: function(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
+		console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
+		_onCharacteristicWriteRequestCallback && _onCharacteristicWriteRequestCallback(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
+		let status = 0;
+		if (gattServer !== null && gattServer !== undefined) {
+		    gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+		}
+	    },
+	    onCharacteristicReadRequest: function(device, requestId, offset, characteristic) {
+		console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
+		_onCharacteristicReadRequestCallback && _onCharacteristicReadRequestCallback(device, requestId, offset, characteristic);
+		let status = 0;
+		if (gattServer !== null && gattServer !== undefined) {
+		    gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+		}
+	    },
+	    onDescriptorWriteRequest: function(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
+		console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
+		_onDescriptorWriteRequestCallback && _onDescriptorWriteRequestCallback(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
+		let status = 0;
+		if (gattServer !== null && gattServer !== undefined) {
+		    gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+		}
+	    },
+	    onDescriptorReadRequest: function(device, requestId, offset, descriptor) {
+		console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
+		_onDescriptorReadRequestCallback && _onDescriptorReadRequestCallback(device, requestId, offset, descriptor);
+		let status = 0;
+		if (gattServer !== null && gattServer !== undefined) {
+		    gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
+		}
+	    },
+	    onConnectionStateChange: function(device, status, newState) {
+		console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
+		_onServerConnectionStateChangeCallback && _onServerConnectionStateChangeCallback(device, status, newState);
+	    },
+	    onServiceAdded: function(status, service) {
+		console.log("----- _MyGattServerCallback.onServiceAdded, status: "+status +", service: "+service);
+	    },
+	});
+	Bluetooth._MyGattServerCallback = new MyGattServerCallback();
+
+	var MyAdvertiseCallback = android.bluetooth.le.AdvertiseCallback.extend({
+	    onStartSuccess: function(settingsInEffect) {
+		console.log("---- _MyAdvertiseCallback.onStartSuccess, settingsInEffect: " + settingsInEffect);
+		_onBluetoothAdvertiseResolve && _onBluetoothAdvertiseResolve(settingsInEffect);
+		_onBluetoothAdvertiseResolve = undefined;
+	    },
+	    onStartFailure: function(errorCode) {
+		console.log("---- _MyAdvertiseCallback.onStartFailure, errorCode: " + errorCode);
+		_onBluetoothAdvertiseReject && _onBluetoothAdvertiseReject(errorCode);
+		_onBluetoothAdvertiseReject = undefined;
+	    }
+	});
+	Bluetooth._MyAdvertiseCallback = new MyAdvertiseCallback();
+	// PERIPHERAL MODE STOP
 	var MyScanCallback = android.bluetooth.le.ScanCallback.extend({
 	    onBatchScanResults: function (results) {
 		console.log("------- scanCallback.onBatchScanResults");
@@ -405,19 +520,6 @@ Bluetooth._decodeValue = function (value) {
 
 
 /* * * * * *  BLUETOOTH PERIPHERAL CODE * * * * * * */
-var gattServer = null,
-    _onBluetoothAdvertiseResolve = null,
-    _onBluetoothAdvertiseReject = null,
-    _onServerConnectionStateChangeCallback = null,
-    _onBondStatusChangeCallback = null,
-    _onDeviceNameChangeCallback = null,
-    _onDeviceUUIDChangeCallback = null,
-    _onDeviceACLDisconnectedCallback = null,
-    _onCharacteristicWriteRequestCallback = null,
-    _onCharacteristicReadRequestCallback = null,
-    _onDescriptorWriteRequestCallback = null,
-    _onDescriptorReadRequestCallback = null;
-
 Bluetooth.getAdapter = function() {
     return adapter;
 };
@@ -485,103 +587,6 @@ Bluetooth.stopGattServer = function() {
 Bluetooth.startGattServer = function() {
     // peripheral mode:
     if (android.os.Build.VERSION.SDK_INT >= 21 /*android.os.Build.VERSION_CODES.LOLLIPOP */) {
-
-	var MyDevicePairingHandler = android.content.BroadcastReceiver.extend({
-	    onReceive: function(context, intent) {
-		const action = intent.getAction();
-		//console.log("RECEIVED context: " +context+", intent: "+intent);
-		//console.log(action);
-		if (action === android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
-		    const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
-		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
-
-		    _onBondStatusChangeCallback && _onBondStatusChangeCallback(device, bs);
-		}
-		else if (action === android.bluetooth.BluetoothDevice.ACTION_NAME_CHANGED) {
-		    const name = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_NAME, android.bluetooth.BluetoothDevice.ERROR);
-		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
-
-		    _onDeviceNameChangeCallback && _onDeviceNameChangeCallback(device, name);
-		}
-		else if (action === android.bluetooth.BluetoothDevice.ACTION_UUID) {
-		    const uuid = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_UUID, android.bluetooth.BluetoothDevice.ERROR);
-		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
-
-		    _onDeviceUUIDChangeCallback && _onDeviceUUIDChangeCallback(device, uuid);
-		}
-		else if (action === android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED) {
-		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
-
-		    _onDeviceACLDisconnectedCallback && _onDeviceACLDisconnectedCallback(device);
-		}
-	    }
-	});
-	var deviceChangeIntent = new android.content.IntentFilter();
-	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_NAME_CHANGED);
-	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_UUID);
-	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED);
-	Bluetooth._MyDevicePairingHandler = new MyDevicePairingHandler();
-	utils.ad.getApplicationContext().registerReceiver(Bluetooth._MyDevicePairingHandler, deviceChangeIntent);
-
-	// callback for handling peripheral mode events
-	var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
-	    onCharacteristicWriteRequest: function(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value) {
-		console.log("----- _MyGattServerCallback.onCharacteristicWriteRequest, device: " +device + ", requestId: "+requestId);
-		_onCharacteristicWriteRequestCallback && _onCharacteristicWriteRequestCallback(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
-		let status = 0;
-		if (gattServer !== null && gattServer !== undefined) {
-		    gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
-		}
-	    },
-	    onCharacteristicReadRequest: function(device, requestId, offset, characteristic) {
-		console.log("----- _MyGattServerCallback.onCharacteristicReadRequest, device: " +device + ", requestId: "+requestId);
-		_onCharacteristicReadRequestCallback && _onCharacteristicReadRequestCallback(device, requestId, offset, characteristic);
-		let status = 0;
-		if (gattServer !== null && gattServer !== undefined) {
-		    gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
-		}
-	    },
-	    onDescriptorWriteRequest: function(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value) {
-		console.log("----- _MyGattServerCallback.onDescriptorWriteRequest, device: " +device + ", requestId: "+requestId);
-		_onDescriptorWriteRequestCallback && _onDescriptorWriteRequestCallback(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
-		let status = 0;
-		if (gattServer !== null && gattServer !== undefined) {
-		    gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
-		}
-	    },
-	    onDescriptorReadRequest: function(device, requestId, offset, descriptor) {
-		console.log("----- _MyGattServerCallback.onDescriptorReadRequest, device: " +device + ", requestId: "+requestId);
-		_onDescriptorReadRequestCallback && _onDescriptorReadRequestCallback(device, requestId, offset, descriptor);
-		let status = 0;
-		if (gattServer !== null && gattServer !== undefined) {
-		    gattServer.sendResponse(device, requestId, status, offset, new Array([0x01]));
-		}
-	    },
-	    onConnectionStateChange: function(device, status, newState) {
-		console.log("----- _MyGattServerCallback.onConnectionStateChange, device: " +device + ", status: "+status +", newState: "+newState);
-		_onServerConnectionStateChangeCallback && _onServerConnectionStateChangeCallback(device, status, newState);
-	    },
-	    onServiceAdded: function(status, service) {
-		console.log("----- _MyGattServerCallback.onServiceAdded, status: "+status +", service: "+service);
-	    },
-	});
-	Bluetooth._MyGattServerCallback = new MyGattServerCallback();
-
-	var MyAdvertiseCallback = android.bluetooth.le.AdvertiseCallback.extend({
-	    onStartSuccess: function(settingsInEffect) {
-		console.log("---- _MyAdvertiseCallback.onStartSuccess, settingsInEffect: " + settingsInEffect);
-		_onBluetoothAdvertiseResolve && _onBluetoothAdvertiseResolve(settingsInEffect);
-		_onBluetoothAdvertiseResolve = undefined;
-	    },
-	    onStartFailure: function(errorCode) {
-		console.log("---- _MyAdvertiseCallback.onStartFailure, errorCode: " + errorCode);
-		_onBluetoothAdvertiseReject && _onBluetoothAdvertiseReject(errorCode);
-		_onBluetoothAdvertiseReject = undefined;
-	    }
-	});
-	Bluetooth._MyAdvertiseCallback = new MyAdvertiseCallback();
-
 	gattServer = bluetoothManager.openGattServer(utils.ad.getApplicationContext(), Bluetooth._MyGattServerCallback);
 	Bluetooth._gattServer = gattServer;
     }
