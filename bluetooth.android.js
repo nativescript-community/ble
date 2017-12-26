@@ -514,14 +514,13 @@ Bluetooth.startGattServer = function() {
 		}
 	    }
 	});
-	var devicePairingIntent = new android.content.IntentFilter(
-	    android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED |
-	    android.bluetooth.BluetoothDevice.ACTION_NAME_CHANGED |
-	    android.bluetooth.BluetoothDevice.ACTION_UUID |
-	    android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED
-	);
+	var deviceChangeIntent = new android.content.IntentFilter();
+	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_NAME_CHANGED);
+	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_UUID);
+	deviceChangeIntent.addAction(android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED);
 	Bluetooth._MyDevicePairingHandler = new MyDevicePairingHandler();
-	utils.ad.getApplicationContext().registerReceiver(Bluetooth._MyDevicePairingHandler, devicePairingIntent);
+	utils.ad.getApplicationContext().registerReceiver(Bluetooth._MyDevicePairingHandler, deviceChangeIntent);
 
 	// callback for handling peripheral mode events
 	var MyGattServerCallback = android.bluetooth.BluetoothGattServerCallback.extend({
