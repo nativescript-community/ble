@@ -488,9 +488,9 @@ Bluetooth.startGattServer = function() {
 
 	var MyDevicePairingHandler = android.content.BroadcastReceiver.extend({
 	    onReceive: function(context, intent) {
-		console.log("RECEIVED context: " +context+", intent: "+intent);
 		const action = intent.getAction();
-		console.log(action);
+		//console.log("RECEIVED context: " +context+", intent: "+intent);
+		//console.log(action);
 		if (action === android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
 		    const bs = intent.getIntExtra(android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE, android.bluetooth.BluetoothDevice.ERROR);
 		    const device = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
@@ -630,6 +630,18 @@ Bluetooth.addService = function(service) {
     if (service !== null && service !== undefined && gattServer !== null && gattServer !== undefined) {
 	gattServer.addService(service);
     }
+}
+
+Bluetooth.getServerService = function(uuidString) {
+    if (gattServer !== null && gattServer !== undefined) {
+	let pUuid = new android.os.ParcelUuid.fromString( uuidString );
+	return gattServer.getService(pUuid);
+    }
+    return null;
+}
+
+Bluetooth.offersService = function(uuidString) {
+    return Bluetooth.getServerService(uuidString) !== null;
 }
 
 Bluetooth.clearServices = function() {
