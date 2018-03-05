@@ -337,6 +337,300 @@ Bluetooth._toArrayBuffer = function (value) {
   return Bluetooth._base64ToArrayBuffer(b);
 };
 
+/* * * * * *  BLUETOOTH PERIPHERAL CODE * * * * * * */
+Bluetooth.getAdapter = function() {
+    return adapter;
+};
+
+Bluetooth.removeBond = function(device) {
+    /*
+    try {
+	let m = device.getClass();
+	const tmp = Array.create("java.lang.Class", 0);
+	m = m.getMethod("removeBond", tmp);
+	const removed = m.invoke(device, null);
+
+	return removed;
+    }
+    catch (ex) {
+	console.log(ex);
+    }
+    */
+};
+
+Bluetooth.fetchUuidsWithSdp = function(device) {
+    /*
+    try {
+	let m = device.getClass();
+	const tmp = Array.create("java.lang.Class", 0);
+	m = m.getMethod("fetchUuidsWithSdp", tmp);
+	const worked = m.invoke(device, null);
+
+	return worked;
+    }
+    catch (ex) {
+	console.log(ex);
+    }
+    */
+};
+
+Bluetooth.setGattServerCallbacks = function(callbackOptions) {
+    _onServerConnectionStateChangeCallback = null;
+    _onBondStatusChangeCallback = null;
+    _onDeviceNameChangeCallback = null;
+    _onDeviceUUIDChangeCallback = null;
+    _onDeviceACLDisconnectedCallback = null;
+    _onCharacteristicWriteRequestCallback = null;
+    _onCharacteristicReadRequestCallback = null;
+    _onDescriptorWriteRequestCallback = null;
+    _onDescriptorReadRequestCallback = null;
+
+    if (callbackOptions !== null && callbackOptions !== undefined) {
+	_onServerConnectionStateChangeCallback = callbackOptions.onServerConnectionStateChange;
+	_onBondStatusChangeCallback = callbackOptions.onBondStatusChange;
+	_onDeviceNameChangeCallback = callbackOptions.onDeviceNameChange;
+	_onDeviceUUIDChangeCallback = callbackOptions.onDeviceUUIDChange;
+	_onDeviceACLDisconnectedCallback = callbackOptions.onDeviceACLDisconnected;
+	_onCharacteristicWriteRequestCallback = callbackOptions.onCharacteristicWrite;
+	_onCharacteristicReadRequestCallback = callbackOptions.onCharacteristicRead;
+	_onDescriptorWriteRequestCallback = callbackOptions.onDescriptorWrite;
+	_onDescriptorReadRequestCallback = callbackOptions.onDescriptorRead;
+    }
+};
+
+Bluetooth.stopGattServer = function() {
+    Bluetooth.setGattServerCallbacks();
+    if (gattServer !== null && gattServer !== undefined) {
+	gattServer.close();
+    }
+    gattServer = null;
+}
+
+Bluetooth.startGattServer = function() {
+    /*
+    // peripheral mode:
+    if (android.os.Build.VERSION.SDK_INT >= 21) { android.os.Build.VERSION_CODES.LOLLIPOP
+	gattServer = bluetoothManager.openGattServer(utils.ad.getApplicationContext(), Bluetooth._MyGattServerCallback);
+	Bluetooth._gattServer = gattServer;
+    }
+    */
+}
+
+Bluetooth.setDiscoverable = function() {
+    return new Promise(function (resolve, reject) {
+	/*
+	try {
+	    _onBluetoothDiscoverableResolve = resolve;
+	    var intent = new android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+	    application.android.foregroundActivity.startActivityForResult(intent, ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE);
+	} catch (ex) {
+	    console.log("Error in Bluetooth.setDiscoverable: " + ex);
+	    reject(ex);
+	}
+	*/
+	resolve();
+    });
+}
+
+Bluetooth.getAdvertiser = function() {
+    //return adapter.getBluetoothAdvertiser();
+    return null;
+}
+
+Bluetooth.makeService = function(serviceOptions) {
+    /*
+    let suuid = Bluetooth._stringToUuid(serviceOptions.UUID);
+    let serviceType = new Number(serviceOptions.serviceType || android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY);
+
+    return new android.bluetooth.BluetoothGattService( suuid, serviceType );
+    */
+    return null;
+}
+
+Bluetooth.makeCharacteristic = function(characteristicOptions) {
+    /*
+    let cuuid = Bluetooth._stringToUuid(characteristicOptions.UUID);
+    let gprop = new Number(characteristicOptions.gattProperty || android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ);
+    let gperm = new Number(characteristicOptions.gattPermissions || android.bluetooth.BluetoothGattCharacteristic.PERMISSION_READ);
+
+    return new android.bluetooth.BluetoothGattCharacteristic(cuuid, gprop, gperm);
+    */
+    return null;
+}
+
+Bluetooth.makeDescriptor = function(options) {
+    let uuid = Bluetooth._stringToUuid(options.UUID);
+    let perms = new Number(options.permissions || android.bluetooth.BluetoothGattDescriptor.PERMISSION_READ);
+
+    //return new android.bluetooth.BluetoothGattDescriptor(uuid, perms);
+    return null;
+}
+
+Bluetooth.addService = function(service) {
+    if (service !== null &&
+	service !== undefined &&
+	gattServer !== null &&
+	gattServer !== undefined) {
+	gattServer.addService(service);
+    }
+}
+
+Bluetooth.getServerService = function(uuidString) {
+    if (gattServer !== null &&
+	gattServer !== undefined) {
+	let pUuid = new Bluetooth._stringToUuid( uuidString );
+	let services = gattServer.getServices();
+	/*
+	console.log(services);
+	console.log(services.length);
+	console.log(services.size());
+	for (let i=0; i<services.size(); i++) {
+	    console.log(services.get(i));
+	    console.log(services.get(i).getUuid());
+	}
+	*/
+	let s = gattServer.getService(pUuid);
+	console.log(`---- gattServer.getService: ${s} - ${s && s.getUuid()}`);
+	return s;
+    }
+    return null;
+}
+
+Bluetooth.offersService = function(uuidString) {
+    return Bluetooth.getServerService(uuidString) !== null;
+}
+
+Bluetooth.clearServices = function() {
+    if (gattServer !== null && gattServer !== undefined) {
+	//gattServer.clearServices();
+    }
+}
+
+Bluetooth.cancelServerConnection = function(device) {
+    if (gattServer !== null &&
+	gattServer !== undefined &&
+	device !== null &&
+	device !== undefined) {
+	//gattServer.cancelConnection(device);
+    }
+}
+
+Bluetooth.getServerConnectedDevices = function() {
+    if (gattServer !== null && gattServer !== undefined && 
+	bluetoothManager !== null && bluetoothManager !== undefined) {
+	//return bluetoothManager.getConnectedDevices(android.bluetooth.BluetoothGattServer.GATT);
+	return null;
+    }
+}
+
+Bluetooth.getServerConnectedDeviceState = function(device) {
+    if (gattServer !== null && gattServer !== undefined && 
+	device !== null && device !== undefined && 
+	bluetoothManager !== null && bluetoothManager !== undefined) {
+	//return bluetoothManager.getConnectionState(device, android.bluetooth.BluetoothGattServer.GATT);
+	return null;
+    }
+}
+
+Bluetooth.getServerConnectedDevicesMatchingState = function(state) {
+    if (gattServer !== null && gattServer !== undefined && 
+	state !== null && state !== undefined &&
+	bluetoothManager !== null && bluetoothManager !== undefined) {
+	//return bluetoothManager.getDevicesMatchingConnectionState(android.bluetooth.BluetoothGattServer.GATT, state);
+	return null;
+    }
+}
+
+Bluetooth.startAdvertising = function(advertiseOptions) {
+    return new Promise((resolve, reject) => {
+	resolve();
+	/*
+	if (adapter === null || adapter === undefined) {
+	    reject("Bluetooth not properly initialized!");
+
+	    return;
+	}
+	let adv = adapter.getBluetoothLeAdvertiser();
+	if (adv === null || !adapter.isMultipleAdvertisementSupported()) {
+	    reject("Adapter is turned off or doesnt support bluetooth advertisement");
+	    
+	    return;
+	}
+	else {
+	    let settings = advertiseOptions.settings;
+	    let _s = new android.bluetooth.le.AdvertiseSettings.Builder()
+		.setAdvertiseMode( settings.advertiseMode || android.bluetooth.le.AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY )
+		.setTxPowerLevel( settings.txPowerLevel || android.bluetooth.le.AdvertiseSettings.ADVERTISE_TX_POWER_HIGH )
+		.setConnectable( settings.connectable || false )
+		.build();
+
+	    let pUuid = new android.os.ParcelUuid.fromString( advertiseOptions.UUID );
+
+	    let data = advertiseOptions.data;
+	    let _d = new android.bluetooth.le.AdvertiseData.Builder()
+		.addServiceUuid( pUuid )
+		.build();
+
+	    let _scanResult = new android.bluetooth.le.AdvertiseData.Builder()
+		.setIncludeDeviceName( data.includeDeviceName || true )
+		.build();
+
+	    console.log("--- bluetooth starting advertising!");
+	    _onBluetoothAdvertiseResolve = resolve;
+	    _onBluetoothAdvertiseReject = reject;
+	    //adv.startAdvertising(_s, _d, Bluetooth._MyAdvertiseCallback);
+	    adv.startAdvertising(_s, _d, _scanResult, Bluetooth._MyAdvertiseCallback);
+	}
+	*/
+    });
+}
+
+Bluetooth.stopAdvertising = function() {
+    return new Promise((resolve, reject) => {
+	/*
+	if (adapter === null || adapter === undefined) {
+	    reject("Bluetooth not properly initialized!");
+
+	    return;
+	}
+	let adv = adapter.getBluetoothLeAdvertiser();
+	if (adv === null || !adapter.isMultipleAdvertisementSupported()) {
+	    reject("Adapter is turned off or doesnt support bluetooth advertisement");
+
+	    return;
+	}
+	else {
+	    console.log("--- bluetooth stopping advertising!");
+	    _onBluetoothAdvertiseResolve = resolve;
+	    _onBluetoothAdvertiseReject = reject;
+	    adv.stopAdvertising(Bluetooth._MyAdvertiseCallback);
+	    resolve(); // for some reason the callback doesn't get called... TODO: FIX
+	}
+	*/
+	resolve();
+    });
+}
+
+Bluetooth.disable = function() {
+    /*
+    adapter.disable();
+    */
+    return new Promise(function(resolve, reject) {
+	resolve();
+    });
+};
+
+Bluetooth.isPeripheralModeSupported = function() {
+    return new Promise((resolve, reject) => {
+	resolve(adapter.isMultipleAdvertisementSupported() &&
+		//adapter.isLeExtendedAdvertisingSupported() &&
+		//adapter.isLePeriodicAdvertisingSupported() &&
+		adapter.isOffloadedFilteringSupported() &&
+		adapter.isOffloadedScanBatchingSupported());
+    });
+};
+/* * * * * * END BLUETOOTH PERIPHERAL CODE  * * * * */
+
 Bluetooth._isEnabled = function () {
   return Bluetooth._state.manager.state === CBCentralManagerStatePoweredOn;
 };
