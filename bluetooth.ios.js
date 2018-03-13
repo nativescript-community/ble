@@ -338,6 +338,18 @@ Bluetooth._toArrayBuffer = function (value) {
 };
 
 /* * * * * *  BLUETOOTH PERIPHERAL CODE * * * * * * */
+var CBPeripheralManagerImpl = (function (_super) {
+    __extends(CBPeripheralManagerImpl, _super);
+
+    function CBPeripheralManagerImpl() {
+	_super.apply(this, arguments);
+    }
+
+    CBPeripheralManagerImpl.new = function () {
+	return _super.new.call(this);
+    }
+})();
+
 Bluetooth.getAdapter = function() {
     return adapter;
 };
