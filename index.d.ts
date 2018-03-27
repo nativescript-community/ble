@@ -21,7 +21,7 @@ declare module "nativescript-bluetooth" {
     onDiscovered: (data: Peripheral) => void;
 
     /**
-     * Set this to true if you don't want the plugin to check the required Bluetooth permissions.
+     * Set this to true if you don't want the plugin to check (and request) the required Bluetooth permissions.
      * Particularly useful if you're running this function on a non-UI thread (ie. a Worker).
      *
      * Android only.
