@@ -338,7 +338,9 @@ Bluetooth._toArrayBuffer = function (value) {
 };
 
 Bluetooth._isEnabled = function () {
-  return Bluetooth._state.manager.state === CBCentralManagerStatePoweredOn;
+  // see #54 for why we also allow 'undefined'
+  return Bluetooth._state.manager.state === undefined ||
+      Bluetooth._state.manager.state === CBManagerState.PoweredOn;
 };
 
 //not really required, but still
