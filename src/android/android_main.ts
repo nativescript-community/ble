@@ -95,6 +95,7 @@ export class Bluetooth extends BluetoothCommon {
   public requestCoarseLocationPermission(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       // grab the permission dialog result
+      // TODO for Eddy (after the TS PR is merged) add application.android.off
       application.android.on(
         application.AndroidApplication.activityRequestPermissionsEvent,
         (args: application.AndroidActivityRequestPermissionsEventData) => {
@@ -271,7 +272,7 @@ export class Bluetooth extends BluetoothCommon {
             scanSettings.setReportDelay(0);
 
             const scanMode =
-              arg.android.scanMode ||
+                (arg.android && arg.android.scanMode) ||
               android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
             scanSettings.setScanMode(scanMode);
 
@@ -281,17 +282,17 @@ export class Bluetooth extends BluetoothCommon {
               android.os.Build.VERSION_CODES.M
             ) {
               const matchMode =
-                arg.android.matchMode ||
+                  (arg.android && arg.android.matchMode) ||
                 android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE;
               scanSettings.setMatchMode(matchMode);
 
               const matchNum =
-                arg.android.matchNum ||
+                  (arg.android && arg.android.matchNum) ||
                 android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;
               scanSettings.setNumOfMatches(matchNum);
 
               const callbackType =
-                arg.android.callbackType ||
+                  (arg.android && arg.android.callbackType) ||
                 android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
               scanSettings.setCallbackType(callbackType);
             }
