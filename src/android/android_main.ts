@@ -82,25 +82,20 @@ export class Bluetooth extends BluetoothCommon {
   public coarseLocationPermissionGranted() {
     let hasPermission = android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M;
     if (!hasPermission) {
+      const ctx = this._getContext();
+      CLog(CLogTypes.info, `app context ${ctx}`);
+
       hasPermission =
         android.content.pm.PackageManager.PERMISSION_GRANTED ===
-        (android.support.v4.content.ContextCompat as any).checkSelfPermission(
-          application.android.foregroundActivity,
-          android.Manifest.permission.ACCESS_COARSE_LOCATION
-        );
+        (android.support.v4.content.ContextCompat as any).checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
     }
-    CLog(
-      CLogTypes.info,
-      'Bluetooth.coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?',
-      hasPermission
-    );
+    CLog(CLogTypes.info, 'Bluetooth.coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
     return hasPermission;
   }
 
   public requestCoarseLocationPermission(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       // grab the permission dialog result
-      // TODO for Eddy (after the TS PR is merged) add application.android.off
       application.android.on(
         application.AndroidApplication.activityRequestPermissionsEvent,
         (args: application.AndroidActivityRequestPermissionsEventData) => {
@@ -114,25 +109,23 @@ export class Bluetooth extends BluetoothCommon {
         }
       );
 
+      const activity = this._getActivity();
+
       // invoke the permission dialog
       (android.support.v4.app.ActivityCompat as any).requestPermissions(
-        application.android.foregroundActivity,
+        activity,
         [android.Manifest.permission.ACCESS_COARSE_LOCATION],
         ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE
       );
     });
   }
 
- public enable() {
+  public enable() {
     return new Promise((resolve, reject) => {
       try {
         // activityResult event
         const onBluetoothEnableResult = (args: application.AndroidActivityResultEventData) => {
-          CLog(
-            CLogTypes.info,
-            'Bluetooth.onBluetoothEnableResult ---',
-            `requestCode: ${args.requestCode}, result: ${args.resultCode}`
-          );
+          CLog(CLogTypes.info, 'Bluetooth.onBluetoothEnableResult ---', `requestCode: ${args.requestCode}, result: ${args.resultCode}`);
 
           if (args.requestCode === ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE) {
             try {
@@ -207,9 +200,7 @@ export class Bluetooth extends BluetoothCommon {
           // if less than Android21 (Lollipop)
           if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
             const didStart =
-              uuids.length === 0
-                ? this.adapter.startLeScan(this.LeScanCallback)
-                : this.adapter.startLeScan(uuids, this.LeScanCallback);
+              uuids.length === 0 ? this.adapter.startLeScan(this.LeScanCallback) : this.adapter.startLeScan(uuids, this.LeScanCallback);
             CLog(CLogTypes.info, `Bluetooth.startScanning ---- didStart scanning: ${didStart}`);
 
             if (!didStart) {
@@ -235,23 +226,18 @@ export class Bluetooth extends BluetoothCommon {
             const scanSettings = new android.bluetooth.le.ScanSettings.Builder();
             scanSettings.setReportDelay(0);
 
-            const scanMode =
-              (arg.android && arg.android.scanMode) || android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
+            const scanMode = (arg.android && arg.android.scanMode) || android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
             scanSettings.setScanMode(scanMode);
 
             // if >= Android23 (Marshmallow)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-              const matchMode =
-                (arg.android && arg.android.matchMode) || android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE;
+              const matchMode = (arg.android && arg.android.matchMode) || android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE;
               scanSettings.setMatchMode(matchMode);
 
-              const matchNum =
-                (arg.android && arg.android.matchNum) || android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;
+              const matchNum = (arg.android && arg.android.matchNum) || android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;
               scanSettings.setNumOfMatches(matchNum);
 
-              const callbackType =
-                (arg.android && arg.android.callbackType) ||
-                android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
+              const callbackType = (arg.android && arg.android.callbackType) || android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
               scanSettings.setCallbackType(callbackType);
             }
 
@@ -568,16 +554,13 @@ export class Bluetooth extends BluetoothCommon {
           );
           characteristic.addDescriptor(bluetoothGattDescriptor);
           CLog(CLogTypes.info, `Bluetooth.startNotifying ---- descriptor: ${bluetoothGattDescriptor}`);
-          //Any creation error will trigger the global catch. Ok.
+          // Any creation error will trigger the global catch. Ok.
         }
 
         // prefer notify over indicate
         if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY) !== 0) {
           bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        } else if (
-          (characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE) !==
-          0
-        ) {
+        } else if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE) !== 0) {
           bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
         } else {
           reject(`Characteristic ${characteristicUUID} does not have NOTIFY or INDICATE property set.`);
@@ -761,11 +744,7 @@ export class Bluetooth extends BluetoothCommon {
   }
 
   // This guards against peripherals reusing char UUID's.
-  private _findCharacteristicOfType(
-    bluetoothGattService: android.bluetooth.BluetoothGattService,
-    characteristicUUID,
-    charType
-  ) {
+  private _findCharacteristicOfType(bluetoothGattService: android.bluetooth.BluetoothGattService, characteristicUUID, charType) {
     // Returns a list of characteristics included in this service.
     const characteristics = bluetoothGattService.getCharacteristics();
     for (let i = 0; i < characteristics.size(); i++) {
@@ -821,5 +800,33 @@ export class Bluetooth extends BluetoothCommon {
 
   private _isEnabled() {
     return this.adapter && this.adapter.isEnabled();
+  }
+
+  private _getContext() {
+    //noinspection JSUnresolvedVariable,JSUnresolvedFunction
+    const ctx = java.lang.Class.forName('android.app.AppGlobals')
+      .getMethod('getInitialApplication', null)
+      .invoke(null, null);
+    if (ctx) {
+      return ctx;
+    }
+
+    //noinspection JSUnresolvedVariable,JSUnresolvedFunction
+    return java.lang.Class.forName('android.app.ActivityThread')
+      .getMethod('currentApplication', null)
+      .invoke(null, null);
+  }
+
+  private _getActivity() {
+    const activity = application.android.foregroundActivity || application.android.startActivity;
+    if (activity === null) {
+      // Throw this off into the future since an activity is not available....
+      setTimeout(() => {
+        this._getActivity();
+      }, 250);
+      return;
+    } else {
+      return activity;
+    }
   }
 }

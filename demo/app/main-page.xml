@@ -6,7 +6,7 @@
         <TabViewItem.view>
           <StackLayout class="p-10">
             <GridLayout columns="*, *" rows="auto, auto, auto, auto" horizontalAlignment="center">
-              <Button row="0" colSpan="2" text="Is Bluetooth Enabled?" tap="{{ doIsBluetoothEnabled }}" class="btn btn-primary" />
+              <Button row="0" android:col="0" ios:colSpan="2" text="Is Bluetooth Enabled?" tap="{{ doIsBluetoothEnabled }}" class="btn btn-primary" />
               <android>
                 <Button row="0" col="1" text="Enable Bluetooth" tap="{{ doEnableBluetooth }}" class="btn btn-green" />
               </android>

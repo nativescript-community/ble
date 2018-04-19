@@ -1,9 +1,9 @@
-import * as dialogs from "tns-core-modules/ui/dialogs";
-import { Observable, fromObject } from "tns-core-modules/data/observable";
-import { ObservableArray } from "tns-core-modules/data/observable-array";
-import { topmost } from "tns-core-modules/ui/frame";
-import { Prop } from "./utils/obs-prop";
-import { Peripheral, Bluetooth } from "nativescript-bluetooth";
+import * as dialogs from 'tns-core-modules/ui/dialogs';
+import { Observable, fromObject } from 'tns-core-modules/data/observable';
+import { ObservableArray } from 'tns-core-modules/data/observable-array';
+import { topmost } from 'tns-core-modules/ui/frame';
+import { Prop } from './utils/obs-prop';
+import { Peripheral, Bluetooth, IBluetoothEvents } from 'nativescript-bluetooth';
 
 export class DemoAppModel extends Observable {
   @Prop() public isLoading = false;
@@ -15,46 +15,45 @@ export class DemoAppModel extends Observable {
     super();
     // enables the console.logs from the Bluetooth source code
     this._bluetooth.debug = true;
+    console.log('enabled', this._bluetooth.enabled);
+
+    this._bluetooth.on(Bluetooth.device_discovered_event, args => {
+      alert('device found');
+      console.log('device', JSON.stringify(args));
+    });
   }
 
   public doIsBluetoothEnabled() {
-    console.log("doIsBluetoothEnabled tap");
-    this._bluetooth
-      .isBluetoothEnabled()
-      .then(enabled => {
-        dialogs.alert({
-          title: "Enabled?",
-          message: enabled ? "Yes" : "No",
-          okButtonText: "Okay"
-        });
-      })
-      .catch(err => {
-        console.log("error with isBluetoothEnabled");
-      });
+    console.log('doIsBluetoothEnabled tap');
+    if (this._bluetooth.enabled === false) {
+      dialogs.alert('Bluetooth is DISABLED.');
+    } else {
+      dialogs.alert('Bluetooth is ENABLED.');
+    }
   }
 
   public doEnableBluetooth() {
     this._bluetooth.enable().then(enabled => {
       setTimeout(() => {
         dialogs.alert({
-          title: "Did the user allow enabling Bluetooth by our app?",
-          message: enabled ? "Yes" : "No",
-          okButtonText: "OK, nice!"
+          title: 'Did the user allow enabling Bluetooth by our app?',
+          message: enabled ? 'Yes' : 'No',
+          okButtonText: 'OK, nice!'
         });
       }, 500);
     });
   }
 
   public onPeripheralTap(args) {
-    console.log("!!&&&&***** Clicked item with index " + args.index);
+    console.log('!!&&&&***** Clicked item with index ' + args.index);
     const peri = this.peripherals.getItem(args.index);
-    console.log("--- peripheral selected: " + peri.UUID);
+    console.log('--- peripheral selected: ' + peri.UUID);
 
     var navigationEntry = {
-      moduleName: "services-page",
+      moduleName: 'services-page',
       context: {
-        info: "something you want to pass to your page",
-        foo: "bar",
+        info: 'something you want to pass to your page',
+        foo: 'bar',
         peripheral: peri
       },
       animated: true
@@ -70,15 +69,15 @@ export class DemoAppModel extends Observable {
           // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
           granted2 => {
             dialogs.alert({
-              title: "Granted?",
-              message: granted2 ? "Yep - now invoke that button again" : "Nope",
-              okButtonText: "OK!"
+              title: 'Granted?',
+              message: granted2 ? 'Yep - now invoke that button again' : 'Nope',
+              okButtonText: 'OK!'
             });
           }
         );
       } else {
-        var heartrateService = "180d";
-        var omegaService = "12345678-9012-3456-7890-1234567890ee";
+        var heartrateService = '180d';
+        var omegaService = '12345678-9012-3456-7890-1234567890ee';
 
         this.isLoading = true;
         // reset the array
@@ -94,15 +93,16 @@ export class DemoAppModel extends Observable {
             skipPermissionCheck: false
           })
           .then(
-            () => {
+            p => {
               this.isLoading = false;
+              console.log('p', p);
             },
             err => {
               this.isLoading = false;
               dialogs.alert({
-                title: "Whoops!",
+                title: 'Whoops!',
                 message: err,
-                okButtonText: "OK, got it"
+                okButtonText: 'OK, got it'
               });
             }
           );
@@ -125,15 +125,16 @@ export class DemoAppModel extends Observable {
         skipPermissionCheck: false
       })
       .then(
-        () => {
+        p => {
+          console.log('p', p);
           this.isLoading = false;
         },
         err => {
           this.isLoading = false;
           dialogs.alert({
-            title: "Whoops!",
+            title: 'Whoops!',
             message: err,
-            okButtonText: "OK, got it"
+            okButtonText: 'OK, got it'
           });
         }
       );
@@ -146,9 +147,9 @@ export class DemoAppModel extends Observable {
       },
       err => {
         dialogs.alert({
-          title: "Whoops!",
+          title: 'Whoops!',
           message: err,
-          okButtonText: "OK, so be it"
+          okButtonText: 'OK, so be it'
         });
       }
     );
