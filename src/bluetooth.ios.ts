@@ -1,14 +1,14 @@
 /**
  * Bluetooth
  */
-export * from "./ios/ios_main";
+export * from './ios/ios_main';
 
 /**
  * CBCentralManagerDelegate
  */
-export * from "./ios/CBCentralManagerDelegateImpl";
+export * from './ios/CBCentralManagerDelegateImpl';
 
 /**
  * CBPeripheralDelegate
  */
-export * from "./ios/CBPeripheralDelegateImpl";
+export * from './ios/CBPeripheralDelegateImpl';

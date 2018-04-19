@@ -1,13 +1,12 @@
 /// <reference path="../node_modules/tns-platform-declarations/android.d.ts" />
 /// <reference path="../typings/android27.d.ts" />
 
-import { Bluetooth } from "./android_main";
-import { CLog, CLogTypes } from "../common";
+import { Bluetooth } from './android_main';
+import { CLog, CLogTypes } from '../common';
 
-@JavaProxy("com.nativescript.TNS_BluetoothGattCallback")
+@JavaProxy('com.nativescript.TNS_BluetoothGattCallback')
 // tslint:disable-next-line:class-name
-export class TNS_BluetoothGattCallback extends android.bluetooth
-  .BluetoothGattCallback {
+export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCallback {
   private owner: WeakRef<Bluetooth>;
   constructor() {
     super();
@@ -16,10 +15,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
 
   onInit(owner: WeakRef<Bluetooth>) {
     this.owner = owner;
-    CLog(
-      CLogTypes.info,
-      `TNS_BluetoothGattCallback.onInit ---- this.owner: ${this.owner}`
-    );
+    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onInit ---- this.owner: ${this.owner}`);
   }
 
   /**
@@ -28,11 +24,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
    * @param status [number] - Status of the connect or disconnect operation. GATT_SUCCESS if the operation succeeds.
    * @param newState [number] - Returns the new connection state. Can be one of STATE_DISCONNECTED or STATE_CONNECTED
    */
-  onConnectionStateChange(
-    gatt: android.bluetooth.BluetoothGatt,
-    status: number,
-    newState: number
-  ) {
+  onConnectionStateChange(gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) {
     CLog(
       CLogTypes.info,
       `TNS_BluetoothGattCallback.onConnectionStateChange ---- gatt: ${gatt}, status: ${status}, newState: ${newState}`
@@ -41,10 +33,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
       newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED &&
       status === android.bluetooth.BluetoothGatt.GATT_SUCCESS
     ) {
-      CLog(
-        CLogTypes.info,
-        "TNS_BluetoothGattCallback.onConnectionStateChange ---- discovering services -----"
-      );
+      CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.onConnectionStateChange ---- discovering services -----');
       // Discovers services offered by a remote device as well as their characteristics and descriptors.
       gatt.discoverServices();
     } else {
@@ -74,22 +63,16 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
       const servicesJs = [];
       const btChar = android.bluetooth.BluetoothGattCharacteristic;
       for (let i = 0; i < services.size(); i++) {
-        const service = services.get(
-          i
-        ) as android.bluetooth.BluetoothGattService;
+        const service = services.get(i) as android.bluetooth.BluetoothGattService;
         const characteristics = service.getCharacteristics();
         const characteristicsJs = [];
         for (let j = 0; j < characteristics.size(); j++) {
-          const characteristic = characteristics.get(
-            j
-          ) as android.bluetooth.BluetoothGattCharacteristic;
+          const characteristic = characteristics.get(j) as android.bluetooth.BluetoothGattCharacteristic;
           const props = characteristic.getProperties();
           const descriptors = characteristic.getDescriptors();
           const descriptorsJs = [];
           for (let k = 0; k < descriptors.size(); k++) {
-            const descriptor = descriptors.get(
-              k
-            ) as android.bluetooth.BluetoothGattCharacteristic;
+            const descriptor = descriptors.get(k) as android.bluetooth.BluetoothGattCharacteristic;
             const descriptorJs = {
               UUID: this.owner.get().uuidToString(descriptor.getUuid()),
               value: descriptor.getValue(), // always empty btw
@@ -99,18 +82,13 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
             if (descPerms > 0) {
               descriptorJs.permissions = {
                 read: (descPerms & btChar.PERMISSION_READ) !== 0,
-                readEncrypted:
-                  (descPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
-                readEncryptedMitm:
-                  (descPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
+                readEncrypted: (descPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
+                readEncryptedMitm: (descPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
                 write: (descPerms & btChar.PERMISSION_WRITE) !== 0,
-                writeEncrypted:
-                  (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
-                writeEncryptedMitm:
-                  (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
+                writeEncrypted: (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
+                writeEncryptedMitm: (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
                 writeSigned: (descPerms & btChar.PERMISSION_WRITE_SIGNED) !== 0,
-                writeSignedMitm:
-                  (descPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
+                writeSignedMitm: (descPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
               };
             }
 
@@ -127,13 +105,11 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
             properties: {
               read: (props & btChar.PROPERTY_READ) !== 0,
               write: (props & btChar.PROPERTY_WRITE) !== 0,
-              writeWithoutResponse:
-                (props & btChar.PROPERTY_WRITE_NO_RESPONSE) !== 0,
+              writeWithoutResponse: (props & btChar.PROPERTY_WRITE_NO_RESPONSE) !== 0,
               notify: (props & btChar.PROPERTY_NOTIFY) !== 0,
               indicate: (props & btChar.PROPERTY_INDICATE) !== 0,
               broadcast: (props & btChar.PROPERTY_BROADCAST) !== 0,
-              authenticatedSignedWrites:
-                (props & btChar.PROPERTY_SIGNED_WRITE) !== 0,
+              authenticatedSignedWrites: (props & btChar.PROPERTY_SIGNED_WRITE) !== 0,
               extendedProperties: (props & btChar.PROPERTY_EXTENDED_PROPS) !== 0
             },
             descriptors: descriptorsJs,
@@ -145,18 +121,13 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
           if (charPerms > 0) {
             characteristicJs.permissions = {
               read: (charPerms & btChar.PERMISSION_READ) !== 0,
-              readEncrypted:
-                (charPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
-              readEncryptedMitm:
-                (charPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
+              readEncrypted: (charPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
+              readEncryptedMitm: (charPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
               write: (charPerms & btChar.PERMISSION_WRITE) !== 0,
-              writeEncrypted:
-                (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
-              writeEncryptedMitm:
-                (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
+              writeEncrypted: (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
+              writeEncryptedMitm: (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
               writeSigned: (charPerms & btChar.PERMISSION_WRITE_SIGNED) !== 0,
-              writeSignedMitm:
-                (charPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
+              writeSignedMitm: (charPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
             };
           }
 
@@ -178,7 +149,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
       stateObject.onConnected({
         UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
         name: device.getName(),
-        state: "connected", // Bluetooth._getState(peripheral.state),
+        state: 'connected', // Bluetooth._getState(peripheral.state),
         services: servicesJs
       });
     }
@@ -320,11 +291,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
    * @param rssi - The RSSI value for the remote device.
    * @param status - GATT_SUCCESS if the RSSI was read successfully.
    */
-  onReadRemoteRssi(
-    gatt: android.bluetooth.BluetoothGatt,
-    rssi: number,
-    status: number
-  ) {
+  onReadRemoteRssi(gatt: android.bluetooth.BluetoothGatt, rssi: number, status: number) {
     CLog(
       CLogTypes.info,
       `TNS_BluetoothGattCallback.onReadRemoteRssi ---- gatt: ${gatt} rssi: ${rssi}, status: ${status}`
@@ -337,14 +304,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth
    * @param mtu - The new MTU size.
    * @param status - GATT_SUCCESS if the MTU has been changed successfully.
    */
-  onMtuChanged(
-    gatt: android.bluetooth.BluetoothGatt,
-    mtu: number,
-    status: number
-  ) {
-    CLog(
-      CLogTypes.info,
-      `TNS_BluetoothGattCallback.onMtuChanged ---- gatt: ${gatt} mtu: ${mtu}, status: ${status}`
-    );
+  onMtuChanged(gatt: android.bluetooth.BluetoothGatt, mtu: number, status: number) {
+    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onMtuChanged ---- gatt: ${gatt} mtu: ${mtu}, status: ${status}`);
   }
 }
