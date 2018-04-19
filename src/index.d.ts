@@ -6,6 +6,11 @@ export class Bluetooth extends COMMON.BluetoothCommon {
    */
   debug: boolean;
 
+  /**
+   * Property to determine if bluetooth is enabled.
+   */
+  readonly enabled: boolean;
+
   isBluetoothEnabled(): Promise<boolean>;
 
   /**

@@ -70,6 +70,15 @@ export class Bluetooth extends BluetoothCommon {
     this.bluetoothGattCallback.onInit(new WeakRef(this));
   }
 
+  // Getter/Setters
+  get enabled() {
+    if (this.adapter !== null && this.adapter.isEnabled()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   public coarseLocationPermissionGranted() {
     let hasPermission = android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M;
     if (!hasPermission) {

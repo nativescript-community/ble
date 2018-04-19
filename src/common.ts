@@ -121,6 +121,11 @@ export class BluetoothCommon extends Observable {
   public events: any /*IBluetoothEvents*/;
 
   /**
+   * Property to determine if bluetooth is enabled.
+   */
+  readonly enabled: boolean;
+
+  /**
    * Takes a Base64 encoded string and decodes it and returns an ArrayBuffer.
    * @param b64 - Base64 Encoded string to be decoded.
    * @returns buffer [ArrayBuffer]

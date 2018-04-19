@@ -34,6 +34,18 @@ export class Bluetooth extends BluetoothCommon {
     CLog(CLogTypes.info, `this._centralManager: ${this._centralManager}`);
   }
 
+
+  // Getters/Setters
+  get enabled(): boolean {
+    const state = this._centralManager.state;
+    if (state === CBManagerState.PoweredOn) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+
   public _getState(state: CBPeripheralState) {
     if (state === CBPeripheralState.Connecting) {
       return 'connecting';
