@@ -114,7 +114,7 @@ export class Bluetooth extends BluetoothCommon {
     });
   }
 
-  public enable() {
+ public enable() {
     return new Promise((resolve, reject) => {
       try {
         // activityResult event
@@ -134,10 +134,8 @@ export class Bluetooth extends BluetoothCommon {
               if (args.resultCode === android.app.Activity.RESULT_OK) {
                 this.sendEvent(Bluetooth.bluetooth_enabled_event);
                 resolve(true);
-                return;
               } else {
-                reject(false);
-                return;
+                resolve(false);
               }
             } catch (ex) {
               CLog(CLogTypes.error, ex);
@@ -148,7 +146,7 @@ export class Bluetooth extends BluetoothCommon {
             }
           } else {
             application.android.off(application.AndroidApplication.activityResultEvent, onBluetoothEnableResult);
-            reject(false);
+            resolve(false);
             return;
           }
         };
@@ -167,7 +165,6 @@ export class Bluetooth extends BluetoothCommon {
       }
     });
   }
-
   public isBluetoothEnabled() {
     return new Promise((resolve, reject) => {
       try {
