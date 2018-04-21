@@ -10,7 +10,6 @@ import {
   StartNotifyingOptions,
   ConnectOptions,
   StartScanningOptions,
-  StartAdvertisingOptions,
   CLogTypes
 } from '../common';
 import { CBPeripheralDelegateImpl } from './CBPeripheralDelegateImpl';
@@ -34,7 +33,6 @@ export class Bluetooth extends BluetoothCommon {
     CLog(CLogTypes.info, `this._centralManager: ${this._centralManager}`);
   }
 
-
   // Getters/Setters
   get enabled(): boolean {
     const state = this._centralManager.state;
@@ -45,7 +43,6 @@ export class Bluetooth extends BluetoothCommon {
     }
   }
 
-
   public _getState(state: CBPeripheralState) {
     if (state === CBPeripheralState.Connecting) {
       return 'connecting';
@@ -54,10 +51,7 @@ export class Bluetooth extends BluetoothCommon {
     } else if (state === CBPeripheralState.Disconnected) {
       return 'disconnected';
     } else {
-      CLog(
-        CLogTypes.warning,
-        `Bluetooth._getState ---- Unexpected state, returning 'disconnected' for state of ${state}`
-      );
+      CLog(CLogTypes.warning, `Bluetooth._getState ---- Unexpected state, returning 'disconnected' for state of ${state}`);
       return 'disconnected';
     }
   }
@@ -316,11 +310,7 @@ export class Bluetooth extends BluetoothCommon {
 
         CLog(CLogTypes.info, 'Bluetooth.writeWithoutResponse ---- Attempting to write (encoded): ' + valueEncoded);
 
-        wrapper.peripheral.writeValueForCharacteristicType(
-          valueEncoded,
-          wrapper.characteristic,
-          CBCharacteristicWriteType.WithoutResponse
-        );
+        wrapper.peripheral.writeValueForCharacteristicType(valueEncoded, wrapper.characteristic, CBCharacteristicWriteType.WithoutResponse);
 
         resolve();
       } catch (ex) {
@@ -344,10 +334,7 @@ export class Bluetooth extends BluetoothCommon {
         const cb =
           args.onNotify ||
           function(result) {
-            CLog(
-              CLogTypes.info,
-              `Bluetooth.startNotifying ---- No 'onNotify' callback function specified for 'startNotifying()'`
-            );
+            CLog(CLogTypes.info, `Bluetooth.startNotifying ---- No 'onNotify' callback function specified for 'startNotifying()'`);
           };
 
         // TODO we could (should?) make this characteristic-specific
@@ -413,9 +400,7 @@ export class Bluetooth extends BluetoothCommon {
   private _findCharacteristic(UUID, service, property) {
     CLog(
       CLogTypes.info,
-      `Bluetooth._findCharacteristic ---- UUID: ${UUID}, service: ${service}, characteristics: ${
-        service.characteristics
-      }`
+      `Bluetooth._findCharacteristic ---- UUID: ${UUID}, service: ${service}, characteristics: ${service.characteristics}`
     );
     // CLog("--- _findCharacteristic characteristics.count: " + service.characteristics.count);
     for (let i = 0; i < service.characteristics.count; i++) {
@@ -489,11 +474,7 @@ export class Bluetooth extends BluetoothCommon {
     // Special handling for INDICATE. If charateristic with notify is not found, check for indicate.
     // if (property === CBCharacteristicPropertyNotify && !characteristic) {
     if (property === CBCharacteristicProperties.PropertyNotify && !characteristic) {
-      characteristic = this._findCharacteristic(
-        characteristicUUID,
-        service,
-        CBCharacteristicProperties.PropertyIndicate
-      );
+      characteristic = this._findCharacteristic(characteristicUUID, service, CBCharacteristicProperties.PropertyIndicate);
       // characteristic = this._findCharacteristic(characteristicUUID, service, CBCharacteristicProperties.PropertyIndicate PropertyIndicate);
     }
 

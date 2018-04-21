@@ -115,7 +115,7 @@ Scanning for peripherals drains the battery quickly, so you better not scan any 
 #### skipPermissionCheck
 Set this to true if you don't want the plugin to check (and request) the required Bluetooth permissions.
 Particularly useful if you're running this function on a non-UI thread (ie. a Worker).
-Relvant on Android only.
+Relevant on Android only.
 
 #### serviceUUIDs
 It's inefficient to scan for all available Bluetooth peripherals and have them report all services they offer.

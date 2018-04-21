@@ -11,7 +11,6 @@ import {
   StartNotifyingOptions,
   ConnectOptions,
   StartScanningOptions,
-  StartAdvertisingOptions,
   DisconnectOptions,
   WriteOptions,
   ReadOptions
@@ -93,27 +92,32 @@ export class Bluetooth extends BluetoothCommon {
     return hasPermission;
   }
 
-  public requestCoarseLocationPermission(): Promise<boolean> {
+  public requestCoarseLocationPermission(callback?: () => void): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      // grab the permission dialog result
-      application.android.on(
-        application.AndroidApplication.activityRequestPermissionsEvent,
-        (args: application.AndroidActivityRequestPermissionsEventData) => {
+      const permissionCb = (args: application.AndroidActivityRequestPermissionsEventData) => {
+        if (args.requestCode === ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
+          application.android.off(application.AndroidApplication.activityRequestPermissionsEvent, permissionCb);
+
           for (let i = 0; i < args.permissions.length; i++) {
             if (args.grantResults[i] === android.content.pm.PackageManager.PERMISSION_DENIED) {
               reject('Permission denied');
               return;
             }
           }
+
+          if (callback) {
+            callback();
+          }
           resolve();
         }
-      );
+      };
 
-      const activity = this._getActivity();
+      // grab the permission dialog result
+      application.android.on(application.AndroidApplication.activityRequestPermissionsEvent, permissionCb);
 
       // invoke the permission dialog
       (android.support.v4.app.ActivityCompat as any).requestPermissions(
-        activity,
+        this._getActivity(),
         [android.Manifest.permission.ACCESS_COARSE_LOCATION],
         ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE
       );
@@ -273,7 +277,7 @@ export class Bluetooth extends BluetoothCommon {
             CLogTypes.info,
             'Bluetooth.startScanning ---- Coarse Location Permission not granted on Android device, will request permission.'
           );
-          this.requestCoarseLocationPermission();
+          this.requestCoarseLocationPermission(onPermissionGranted);
         } else {
           onPermissionGranted();
         }
