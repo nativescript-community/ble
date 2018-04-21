@@ -29,7 +29,7 @@ export class Bluetooth extends COMMON.BluetoothCommon {
    */
   requestCoarseLocationPermission(): Promise<any>;
 
-  startScanning(options: COMMON.StartScanningOptions): Promise<any>;
+  startScanning(options: COMMON.StartScanningOptions): Promise<void>;
 
   stopScanning(): Promise<any>;
 
