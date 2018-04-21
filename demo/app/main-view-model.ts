@@ -1,9 +1,9 @@
 import * as dialogs from 'tns-core-modules/ui/dialogs';
-import { Observable, fromObject } from 'tns-core-modules/data/observable';
+import { Observable } from 'tns-core-modules/data/observable';
 import { ObservableArray } from 'tns-core-modules/data/observable-array';
 import { topmost } from 'tns-core-modules/ui/frame';
 import { Prop } from './utils/obs-prop';
-import { Peripheral, Bluetooth, IBluetoothEvents } from 'nativescript-bluetooth';
+import { Bluetooth, Peripheral } from 'nativescript-bluetooth';
 
 export class DemoAppModel extends Observable {
   @Prop() public isLoading = false;
@@ -17,9 +17,10 @@ export class DemoAppModel extends Observable {
     this._bluetooth.debug = true;
     console.log('enabled', this._bluetooth.enabled);
 
-    this._bluetooth.on(Bluetooth.device_discovered_event, args => {
-      alert('device found');
-      console.log('device', JSON.stringify(args));
+    // using an event listener instead of the 'onDiscovered' callback of 'startScanning'
+    this._bluetooth.on(Bluetooth.device_discovered_event, (eventData: any) => {
+      console.log('Peripheral found: ' + JSON.stringify(eventData.data));
+      this.peripherals.push(<Peripheral>eventData.data);
     });
   }
 
@@ -115,18 +116,23 @@ export class DemoAppModel extends Observable {
     this.isLoading = true;
     // reset the array
     this.peripherals.length = 0;
+    console.log(">>> Bluetooth.device_discovered_event: " + Bluetooth.device_discovered_event);
+    this._bluetooth.addEventListener(Bluetooth.device_discovered_event, data => {
+      console.log("Device discovered: " + JSON.stringify(data));
+    });
     this._bluetooth
       .startScanning({
         serviceUUIDs: [], // pass an empty array to scan for all services
         seconds: 5, // passing in seconds makes the plugin stop scanning after <seconds> seconds
         onDiscovered: peripheral => {
-          this.peripherals.push(peripheral);
+          console.log("peripheral discovered. Not adding it here because we're using a listener.");
+          // this.peripherals.push(peripheral);
         },
         skipPermissionCheck: false
       })
       .then(
-        p => {
-          console.log('p', p);
+          () => {
+          console.log('>>> scanning complete');
           this.isLoading = false;
         },
         err => {
@@ -167,7 +173,7 @@ export class DemoAppModel extends Observable {
         serviceUUID: "B9401000-F5F8-466E-AFF9-25556B57FE6D", // TODO dummy
         characteristicUUID: "B9402001-F5F8-466E-AFF9-25556B57FE6D", // TODO dummy
         value: data.buffer,
-        awaitResponse: true // if false you will not get notified of errors (fire and forget) 
+        awaitResponse: true // if false you will not get notified of errors (fire and forget)
       }
     ).then(
       function(result) {
