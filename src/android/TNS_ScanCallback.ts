@@ -2,7 +2,7 @@
 /// <reference path="../typings/android27.d.ts" />
 
 import { Bluetooth } from './android_main';
-import { CLog, CLogTypes } from '../common';
+import { CLog, CLogTypes, Peripheral } from '../common';
 
 /**
  * Bluetooth LE scan callbacks. Scan results are reported using these callbacks.
@@ -12,6 +12,8 @@ import { CLog, CLogTypes } from '../common';
 // tslint:disable-next-line:class-name
 export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
   private owner: WeakRef<Bluetooth>;
+  onPeripheralDiscovered: (data: Peripheral) => void;
+
   constructor() {
     super();
     return global.__native(this);
@@ -91,15 +93,13 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
         name: result.getDevice().getName(),
         RSSI: result.getRssi(),
         state: 'disconnected',
-        advertisement: android.util.Base64.encodeToString(
-          result.getScanRecord().getBytes(),
-          android.util.Base64.NO_WRAP
-        ),
+        advertisement: android.util.Base64.encodeToString(result.getScanRecord().getBytes(), android.util.Base64.NO_WRAP),
         manufacturerId: manufacturerId,
         manufacturerData: manufacturerData
       };
       CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
-      this.owner.get().sendEvent(Bluetooth.device_discovered_event, { data: payload });
+      this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
+      this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
     }
   }
 }

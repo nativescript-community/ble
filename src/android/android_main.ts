@@ -244,8 +244,13 @@ export class Bluetooth extends BluetoothCommon {
             this.adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), this.scanCallback);
           }
 
-          // TODO: enable this for back compat if people don't like using the event listener approach
-          // onDiscovered = arg.onDiscovered;
+          // added this for backward compatibility (if people don't like using the new event listener approach)
+          if (this.scanCallback) {
+            this.scanCallback.onPeripheralDiscovered = arg.onDiscovered;
+          }
+          if (this.LeScanCallback) {
+            this.LeScanCallback.onPeripheralDiscovered = arg.onDiscovered;
+          }
 
           if (arg.seconds) {
             setTimeout(() => {

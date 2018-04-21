@@ -2,7 +2,7 @@
 /// <reference path="../typings/android27.d.ts" />
 
 import { Bluetooth } from './android_main';
-import { CLog, CLogTypes } from '../common';
+import { CLog, CLogTypes, Peripheral } from '../common';
 
 /**
  * Callback interface used to deliver LE scan results.
@@ -12,6 +12,8 @@ import { CLog, CLogTypes } from '../common';
 // tslint:disable-next-line:class-name
 export class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapter.LeScanCallback {
   private owner: WeakRef<Bluetooth>;
+  onPeripheralDiscovered: (data: Peripheral) => void;
+
   constructor() {
     super({
       /**
@@ -21,10 +23,7 @@ export class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapter.LeSca
        * @param scanRecord [byte[]] - The content of the advertisement record offered by the remote device.
        */
       onLeScan(device: android.bluetooth.BluetoothDevice, rssi: number, scanRecord) {
-        CLog(
-          CLogTypes.info,
-          `TNS_LeScanCallback.onLeScan ---- device: ${device}, rssi: ${rssi}, scanRecord: ${scanRecord}`
-        );
+        CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- device: ${device}, rssi: ${rssi}, scanRecord: ${scanRecord}`);
 
         const stateObject = this.owner.get().connections[device.getAddress()];
         if (!stateObject) {
@@ -53,7 +52,8 @@ export class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapter.LeSca
             manufacturerData: manufacturerData
           };
           CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- payload: ${JSON.stringify(payload)}`);
-          this.owner.get().sendEvent(Bluetooth.device_discovered_event, { data: payload });
+          this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
+          this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
         }
       }
     });
