@@ -116,10 +116,6 @@ export class DemoAppModel extends Observable {
     this.isLoading = true;
     // reset the array
     this.peripherals.length = 0;
-    console.log(">>> Bluetooth.device_discovered_event: " + Bluetooth.device_discovered_event);
-    this._bluetooth.addEventListener(Bluetooth.device_discovered_event, data => {
-      console.log("Device discovered: " + JSON.stringify(data));
-    });
     this._bluetooth
       .startScanning({
         serviceUUIDs: [], // pass an empty array to scan for all services
@@ -130,16 +126,12 @@ export class DemoAppModel extends Observable {
         },
         skipPermissionCheck: false
       })
-      .then(
-          () => {
-          console.log('>>> scanning complete');
-          this.isLoading = false;
-        },
-        err => {
+        .then(() => this.isLoading = false)
+        .catch(err => {
           this.isLoading = false;
           dialogs.alert({
             title: 'Whoops!',
-            message: err,
+            message: err ? err : 'Unknown error',
             okButtonText: 'OK, got it'
           });
         }
