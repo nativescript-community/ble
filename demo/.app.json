@@ -1,0 +1,18 @@
+{
+  "type": "NativeScript",
+  "views": [
+    {
+      "type": "NativeScript:view",
+      "name": "homeView",
+      "components": [],
+      "title": "Home View",
+      "addToNavigation": true,
+      "icon": "home"
+    }
+  ],
+  "dataProviders": [],
+  "name": "nativeScriptApp",
+  "navigation": "listmenu",
+  "transition": "none",
+  "skin": "native"
+}
