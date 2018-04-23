@@ -120,7 +120,7 @@ export class Bluetooth extends BluetoothCommon {
   public enable() {
     return new Promise((resolve, reject) => {
       CLog(CLogTypes.info, 'Bluetooth.enable ---- Not possible on iOS');
-      reject('Not possible - you may want to choose to not call this function on iOS.');
+      resolve(this._isEnabled());
     });
   }
 
