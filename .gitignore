@@ -1,3 +1,12 @@
 .idea/
 .vscode/
 node_modules/
+.DS_Store
+npm-debug.log.*
+
+demo/hooks
+demo/platforms
+demo/app/**/*.js
+
+src/**/*.js
+!src/base64.js
