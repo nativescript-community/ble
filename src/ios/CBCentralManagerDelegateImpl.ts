@@ -39,7 +39,15 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
     CLog(CLogTypes.info, `----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral: ${peripheral}`);
 
     // find the peri in the array and attach the delegate to that
-    const peri = this._owner.get().findPeripheral(peripheral.identifier.UUIDString);
+    let peri = this._owner.get().findPeripheral(peripheral.identifier.UUIDString);
+
+    if( !peri ){
+      // On iOS, some devices need to pair by taking a reading, which can lead to a 
+      // crash looking up the peripheral in onConnect() - GS
+      this._owner.get()._peripheralArray.addObject(peripheral);
+      peri = peripheral
+    }
+
     CLog(
       CLogTypes.info,
       `----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral: cached perio: ${peri}`
