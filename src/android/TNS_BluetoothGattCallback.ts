@@ -35,7 +35,11 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
     ) {
       CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.onConnectionStateChange ---- discovering services -----');
       // Discovers services offered by a remote device as well as their characteristics and descriptors.
-      gatt.discoverServices();
+
+      setTimeout( () => { 
+        // some devices need a delay before discovering services -GS
+        gatt.discoverServices();
+      }, 1000)
     } else {
       CLog(
         CLogTypes.info,

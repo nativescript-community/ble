@@ -54,7 +54,10 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
       CLogTypes.info,
       "----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral, let's discover service"
     );
-    peri.discoverServices(null);
+
+    setTimeout( () => {  // Some devices need a delay before discovering services- GS
+      peri.discoverServices(null);
+    }, 1000)  
   }
 
   /**
