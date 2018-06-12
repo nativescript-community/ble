@@ -585,7 +585,7 @@ export class Bluetooth extends BluetoothCommon {
           const stateObject = this.connections[arg.peripheralUUID];
           stateObject.onNotifyCallback = cb;
           CLog(CLogTypes.info, '--- notifying');
-          resolve();
+          stateObject.onDescriptorWritePromise = resolve;
         } else {
           reject(`Failed to set client characteristic notification for ${characteristicUUID}`);
         }

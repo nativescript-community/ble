@@ -279,10 +279,23 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
     descriptor: android.bluetooth.BluetoothGattDescriptor,
     status: number
   ) {
+    const device = gatt.getDevice();
     CLog(
       CLogTypes.info,
       `TNS_BluetoothGattCallback.onDescriptorWrite ---- gatt: ${gatt}, descriptor: ${descriptor}, status: ${status}`
     );
+
+    const stateObject = this.owner.get().connections[device.getAddress()];
+    if (!stateObject) {
+      this.owner.get().gattDisconnect(gatt, status);
+      return;
+    }
+
+    if (stateObject.onDescriptorWritePromise) {
+      stateObject.onDescriptorWritePromise({
+        descriptorUUID: descriptor.getUuid()
+      });
+    }
   }
 
   /**
