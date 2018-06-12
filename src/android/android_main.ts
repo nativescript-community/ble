@@ -637,7 +637,7 @@ export class Bluetooth extends BluetoothCommon {
     });
   }
 
-  public gattDisconnect(gatt: android.bluetooth.BluetoothGatt) {
+  public gattDisconnect(gatt: android.bluetooth.BluetoothGatt, status: number = null) {
     if (gatt !== null) {
       const device = gatt.getDevice() as android.bluetooth.BluetoothDevice;
       CLog(CLogTypes.info, `Bluetooth.gattDisconnect ---- device: ${device}`);
@@ -646,7 +646,8 @@ export class Bluetooth extends BluetoothCommon {
       if (stateObject && stateObject.onDisconnected) {
         stateObject.onDisconnected({
           UUID: device.getAddress(),
-          name: device.getName()
+          name: device.getName(),
+          status: status
         });
       } else {
         CLog(CLogTypes.info, 'Bluetooth.gattDisconnect ---- no disconnect callback found');

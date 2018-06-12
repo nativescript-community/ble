@@ -42,7 +42,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
         `TNS_BluetoothGattCallback.onConnectionStateChange ---- disconnecting the gatt: ${gatt} ----`
       );
       // perhaps the device was manually disconnected, or in use by another device
-      this.owner.get().gattDisconnect(gatt);
+      this.owner.get().gattDisconnect(gatt, status);
     }
   }
 
@@ -173,7 +173,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
     );
     const stateObject = this.owner.get().connections[device.getAddress()];
     if (!stateObject) {
-      this.owner.get().gattDisconnect(gatt);
+      this.owner.get().gattDisconnect(gatt, status);
       return;
     }
 
@@ -240,7 +240,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
 
     const stateObject = this.owner.get().connections[device.getAddress()];
     if (!stateObject) {
-      this.owner.get().gattDisconnect(gatt);
+      this.owner.get().gattDisconnect(gatt, status);
       return;
     }
 
