@@ -8,5 +8,6 @@ demo/hooks
 demo/platforms
 demo/app/**/*.js
 
-src/**/*.js
+**/*.js.map
+plugin/**/*.js
 !src/base64.js
