@@ -507,7 +507,8 @@ export class Bluetooth extends BluetoothCommon {
   private _encodeValue(value) {
     // if it's not a string assume it's a UintXArray
     if (typeof value !== 'string') {
-      return value.buffer;
+      //return value.buffer;
+      return new Uint8Array(value).buffer;
     }
     const parts = value.split(',');
     if (parts[0].indexOf('x') === -1) {
