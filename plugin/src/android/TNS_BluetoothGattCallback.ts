@@ -82,6 +82,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
           }
 
           const characteristicJs = {
+            serviceUUID: this.owner.get().uuidToString(service.getUuid()),
             UUID: this.owner.get().uuidToString(characteristic.getUuid()),
             name: this.owner.get().uuidToString(characteristic.getUuid()), // there's no sep field on Android
             properties: {
@@ -113,7 +114,10 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
             };
           }
 
-          CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing characteristic: ${characteristicJs}`);
+          CLog(
+            CLogTypes.info,
+            `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing characteristic: ${JSON.stringify(characteristicJs)}`
+          );
           characteristicsJs.push(characteristicJs);
         }
 
