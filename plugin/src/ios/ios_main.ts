@@ -17,7 +17,7 @@ export class Bluetooth extends BluetoothCommon {
   private _centralDelegate = CBCentralManagerDelegateImpl.new().initWithCallback(new WeakRef(this), obj => {
     CLog(CLogTypes.info, `---- centralDelegate ---- obj: ${obj}`);
   });
-  private _centralManager = CBCentralManager.alloc().initWithDelegateQueue(this._centralDelegate, null);
+  private _centralManager: CBCentralManager;
 
   private _data_service: CBMutableService;
   public _peripheralArray = null;
@@ -25,9 +25,14 @@ export class Bluetooth extends BluetoothCommon {
   public _disconnectCallbacks = {};
   public _onDiscovered = null;
 
-  constructor() {
+  constructor(restoreIdentifier?: string) {
     super();
-    CLog(CLogTypes.info, '*** iOS Bluetooth Constructor ***');
+    let options: NSDictionary<any, any> = null;
+    if (restoreIdentifier) {
+      options = new (NSDictionary as any)([restoreIdentifier], [CBCentralManagerOptionRestoreIdentifierKey]);
+    }
+    this._centralManager = CBCentralManager.alloc().initWithDelegateQueueOptions(this._centralDelegate, null, options);
+    CLog(CLogTypes.info, '*** iOS Bluetooth Constructor *** ${restoreIdentifier}');
     CLog(CLogTypes.info, `this._centralManager: ${this._centralManager}`);
   }
 
@@ -65,7 +70,10 @@ export class Bluetooth extends BluetoothCommon {
       }
     });
   }
-
+  scanningReferTimer: {
+    timer?: number;
+    resolve?: Function;
+  };
   public startScanning(arg: StartScanningOptions) {
     return new Promise((resolve, reject) => {
       try {
@@ -77,24 +85,31 @@ export class Bluetooth extends BluetoothCommon {
 
         this._peripheralArray = NSMutableArray.new();
         this._onDiscovered = arg.onDiscovered;
-        const serviceUUIDs = arg.serviceUUIDs || [];
 
-        // let services: NSArray<CBUUID>;
-        const services = [];
-        for (const s in serviceUUIDs) {
-          if (s) {
-            services.push(CBUUID.UUIDWithString(serviceUUIDs[s]));
-          }
+        let services: any[] = null;
+        if (arg.filters) {
+          arg.filters.forEach(f => {
+            if (f.serviceUUID) {
+              services.push(CBUUID.UUIDWithString(f.serviceUUID));
+            }
+          });
         }
+        CLog(CLogTypes.info, `Bluetooth.startScanning ---- services: ${services}`);
 
         // TODO: check on the services as any casting
         this._centralManager.scanForPeripheralsWithServicesOptions(services as any, null);
+        if (this.scanningReferTimer) {
+          clearTimeout(this.scanningReferTimer.timer);
+          this.scanningReferTimer.resolve();
+        }
+        this.scanningReferTimer = {};
         if (arg.seconds) {
-          setTimeout(() => {
+          this.scanningReferTimer.timer = setTimeout(() => {
             // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
             this._centralManager.stopScan();
             resolve();
           }, arg.seconds * 1000);
+          this.scanningReferTimer.resolve = resolve;
         } else {
           resolve();
         }
@@ -121,7 +136,12 @@ export class Bluetooth extends BluetoothCommon {
       resolve(this._isEnabled());
     });
   }
-
+  public isGPSEnabled(): boolean {
+    return true; // we dont need to check for GPS in the bluetooth iOS module
+  }
+  public enableGPS(): Promise<void> {
+    return Promise.resolve(); // we dont need to check for GPS in the bluetooth iOS module
+  }
   public stopScanning(arg) {
     return new Promise((resolve, reject) => {
       try {
@@ -130,6 +150,11 @@ export class Bluetooth extends BluetoothCommon {
           return;
         }
         this._centralManager.stopScan();
+        if (this.scanningReferTimer) {
+          this.scanningReferTimer.resolve && this.scanningReferTimer.resolve();
+          clearTimeout(this.scanningReferTimer.timer);
+          this.scanningReferTimer = null;
+        }
         resolve();
       } catch (ex) {
         CLog(CLogTypes.error, `Bluetooth.stopScanning ---- error: ${ex}`);
@@ -268,7 +293,7 @@ export class Bluetooth extends BluetoothCommon {
           return;
         }
 
-        const valueEncoded = this._encodeValue(arg.value);
+        const valueEncoded = arg.raw === true ? arg.value : this._encodeValue(arg.value);
         if (valueEncoded === null) {
           reject('Invalid value: ' + arg.value);
           return;
@@ -304,7 +329,7 @@ export class Bluetooth extends BluetoothCommon {
           return;
         }
 
-        const valueEncoded = this._encodeValue(arg.value);
+        const valueEncoded = arg.raw === true ? arg.value : this._encodeValue(arg.value);
 
         CLog(CLogTypes.info, 'Bluetooth.writeWithoutResponse ---- Attempting to write (encoded): ' + valueEncoded);
 
@@ -433,7 +458,7 @@ export class Bluetooth extends BluetoothCommon {
   } {
     if (!this._isEnabled()) {
       reject('Bluetooth is not enabled');
-      return;
+      return null;
     }
     if (!arg.peripheralUUID) {
       reject('No peripheralUUID was passed');
