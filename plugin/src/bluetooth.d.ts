@@ -1,6 +1,39 @@
 import * as COMMON from './common';
 
+declare enum ScanMode {
+  LOW_LATENCY,
+  BALANCED,
+  LOW_POWER,
+  OPPORTUNISTIC
+}
+declare enum MatchMode {
+  AGGRESSIVE,
+  STICKY
+}
+
+declare enum MatchNum {
+  MAX_ADVERTISEMENT,
+  FEW_ADVERTISEMENT,
+  ONE_ADVERTISEMENT
+}
+declare enum CallbackType {
+  ALL_MATCHES,
+  FIRST_MATCH,
+  MATCH_LOST
+}
+
 export class Bluetooth extends COMMON.BluetoothCommon {
+  static readonly android?: {
+    ScanMode: typeof ScanMode;
+    MatchMode: typeof MatchMode;
+    MatchNum: typeof MatchNum;
+    CallbackType: typeof CallbackType;
+  };
+
+  /**
+   * restoreIdentifier is optional and only used on iOS
+   */
+  constructor(restoreIndentifier?: string);
   /**
    * If true console logs will be output to help debug NativeScript-Bluetooth.
    */
@@ -18,6 +51,18 @@ export class Bluetooth extends COMMON.BluetoothCommon {
    * @returns {Promise<boolean>}
    */
   enable(): Promise<boolean>;
+
+  /**
+   * Android only. check if GPS is enabled.
+   * @returns {boolean}
+   */
+  isGPSEnabled(): boolean;
+
+  /**
+   * Android only. Will return false if the user denied turning GPS on.
+   * @returns {Promise<boolean>}
+   */
+  enableGPS(): Promise<boolean>;
 
   /**
    * Required for Android 6+ to be able to scan for peripherals in the background.
@@ -80,7 +125,12 @@ export interface StartScanningOptions {
    * Zero or more services which the peripheral needs to broadcast.
    * Default: [], which matches any peripheral.
    */
-  serviceUUIDs?: string[];
+  filters?: {
+    serviceUUID?: string;
+    deviceName?: string;
+    deviceAddress?: string;
+    manufacturerData?: ArrayBuffer;
+  }[];
 
   /**
    * The number of seconds to scan for services.
@@ -111,7 +161,7 @@ export interface StartScanningOptions {
      * or android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY (2).
      * DEFAULT: SCAN_MODE_LOW_LATENCY (2)
      */
-    scanMode?: number;
+    scanMode?: ScanMode;
 
     /**
      * *** Only available on Android 23+ ***
@@ -119,7 +169,7 @@ export interface StartScanningOptions {
      * or android.bluetooth.le.ScanSettings.MATCH_MODE_STICKY (2)
      * DEFAULT: MATCH_MODE_AGGRESSIVE (2).
      */
-    matchMode?: number;
+    matchMode?: MatchMode;
 
     /**
      * *** Only available on Android 23+ ***
@@ -128,14 +178,14 @@ export interface StartScanningOptions {
      * or android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT (3)
      * DEFAULT: MATCH_NUM_MAX_ADVERTISEMENT(3)
      */
-    matchNum?: number;
+    matchNum?: MatchNum;
 
     /**
      * *** Only available on Android 23+ ***
      * The callback type flags for the scan.
      * TODO: Add documentation on the valid values for callbackTypes.
      */
-    callbackType?: number;
+    callbackType?: CallbackType;
   };
 }
 
@@ -196,8 +246,13 @@ export interface Peripheral {
   services?: Service[];
 
   manufacturerId?: number;
-
-  manufacturerData?: ArrayBuffer;
+  advertismentData?: {
+    localName?: string;
+    manufacturerData?: ArrayBuffer;
+    serviceUUIDs?: string[];
+    txPowerLevel?: number;
+    flags?: number;
+  };
 }
 
 /**
