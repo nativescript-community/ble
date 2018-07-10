@@ -75,5 +75,8 @@
     "typescript": "~2.8.1",
     "tns-core-modules": "^4.0.0",
     "tns-platform-declarations": "^4.0.0"
+  },
+  "dependencies": {
+    "p-queue": "^2.4.2"
   }
 }

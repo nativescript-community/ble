@@ -1,5 +1,5 @@
 import * as utils from 'tns-core-modules/utils/utils';
-import * as application from 'tns-core-modules/application';
+import * as application from 'tns-core-modules/application/application';
 import {
   BluetoothCommon,
   CLog,
@@ -16,9 +16,33 @@ import { TNS_BluetoothGattCallback } from './TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './TNS_LeScanCallback';
 import { TNS_ScanCallback } from './TNS_ScanCallback';
 
+import * as Queue from 'p-queue';
+
 const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 const ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 224;
+
+export enum ScanMode {
+  LOW_LATENCY = android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY,
+  BALANCED = android.bluetooth.le.ScanSettings.SCAN_MODE_BALANCED,
+  LOW_POWER = android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_POWER,
+  OPPORTUNISTIC = android.bluetooth.le.ScanSettings.SCAN_MODE_OPPORTUNISTIC
+}
+export enum MatchMode {
+  AGGRESSIVE = android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE,
+  STICKY = android.bluetooth.le.ScanSettings.MATCH_MODE_STICKY
+}
+
+export enum MatchNum {
+  MAX_ADVERTISEMENT = android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT,
+  FEW_ADVERTISEMENT = android.bluetooth.le.ScanSettings.MATCH_NUM_FEW_ADVERTISEMENT,
+  ONE_ADVERTISEMENT = android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT
+}
+export enum CallbackType {
+  ALL_MATCHES = android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES,
+  FIRST_MATCH = android.bluetooth.le.ScanSettings.CALLBACK_TYPE_FIRST_MATCH,
+  MATCH_LOST = android.bluetooth.le.ScanSettings.CALLBACK_TYPE_MATCH_LOST
+}
 
 export class Bluetooth extends BluetoothCommon {
   // @link - https://developer.android.com/reference/android/content/Context.html#BLUETOOTH_SERVICE
@@ -31,6 +55,16 @@ export class Bluetooth extends BluetoothCommon {
   // not initializing here, if the Android API is < 21  use LeScanCallback
   public scanCallback: TNS_ScanCallback;
   public LeScanCallback: TNS_LeScanCallback;
+
+  // with gatt all operations must be queued. Parallel operations will fail
+  private gattQueue = new Queue({ concurrency: 1 });
+
+  static readonly android = {
+    ScanMode: ScanMode,
+    MatchMode: MatchMode,
+    MatchNum: MatchNum,
+    CallbackType: CallbackType
+  };
 
   /**
    * Connections are stored as key-val pairs of UUID-Connection.
@@ -89,12 +123,18 @@ export class Bluetooth extends BluetoothCommon {
     return hasPermission;
   }
 
+  public hasCoarseLocationPermission() {
+    return new Promise(resolve => {
+      resolve(this.coarseLocationPermissionGranted());
+    });
+  }
+
   public requestCoarseLocationPermission(callback?: () => void): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const permissionCb = (args: application.AndroidActivityRequestPermissionsEventData) => {
+      let permissionCb = (args: application.AndroidActivityRequestPermissionsEventData) => {
         if (args.requestCode === ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
           application.android.off(application.AndroidApplication.activityRequestPermissionsEvent, permissionCb);
-
+          permissionCb = null;
           for (let i = 0; i < args.permissions.length; i++) {
             if (args.grantResults[i] === android.content.pm.PackageManager.PERMISSION_DENIED) {
               reject('Permission denied');
@@ -118,6 +158,35 @@ export class Bluetooth extends BluetoothCommon {
         [android.Manifest.permission.ACCESS_COARSE_LOCATION],
         ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE
       );
+    });
+  }
+  getAndroidLocationManager(): android.location.LocationManager {
+    return (<android.content.Context>application.android.context).getSystemService(
+      android.content.Context.LOCATION_SERVICE
+    ) as android.location.LocationManager;
+  }
+  public isGPSEnabled(): boolean {
+    return this.getAndroidLocationManager().isProviderEnabled(android.location.LocationManager.GPS_PROVIDER);
+  }
+  public enableGPS(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let currentContext = <android.app.Activity>application.android.currentContext;
+      if (!this.isGPSEnabled()) {
+        let onActivityResultHandler = (data: application.AndroidActivityResultEventData) => {
+          application.android.off(application.AndroidApplication.activityResultEvent, onActivityResultHandler);
+          if (data.requestCode === 0) {
+            if (this.isGPSEnabled()) {
+              resolve();
+            } else {
+              reject('GPS not enabled');
+            }
+          }
+        };
+        application.android.on(application.AndroidApplication.activityResultEvent, onActivityResultHandler);
+        currentContext.startActivityForResult(new android.content.Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
+      } else {
+        resolve();
+      }
     });
   }
 
@@ -178,7 +247,10 @@ export class Bluetooth extends BluetoothCommon {
       }
     });
   }
-
+  scanningReferTimer: {
+    timer?: number;
+    resolve?: Function;
+  };
   public startScanning(arg: StartScanningOptions) {
     return new Promise((resolve, reject) => {
       try {
@@ -188,18 +260,22 @@ export class Bluetooth extends BluetoothCommon {
         }
 
         const onPermissionGranted = () => {
-          this.connections = {};
-
-          const serviceUUIDs = arg.serviceUUIDs || [];
-          const uuids = [];
-          for (const s in serviceUUIDs) {
-            if (s) {
-              uuids.push(this.stringToUuid(serviceUUIDs[s]));
+          for (let key in this.connections) {
+            if (this.connections[key] && this.connections[key].state === 'disconnected') {
+              delete this.connections[key];
             }
           }
 
+          const filters = arg.filters || [];
+
           // if less than Android21 (Lollipop)
           if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
+            const uuids = [];
+            filters.forEach(f => {
+              if (f.serviceUUID) {
+                uuids.push(this.stringToUuid(f.serviceUUID));
+              }
+            });
             const didStart =
               uuids.length === 0 ? this.adapter.startLeScan(this.LeScanCallback) : this.adapter.startLeScan(uuids, this.LeScanCallback);
             CLog(CLogTypes.info, `Bluetooth.startScanning ---- didStart scanning: ${didStart}`);
@@ -210,39 +286,49 @@ export class Bluetooth extends BluetoothCommon {
               return;
             }
           } else {
-            let scanFilters = null as java.util.ArrayList;
-            if (uuids.length > 0) {
+            let scanFilters = null as java.util.ArrayList<any>;
+            if (filters.length > 0) {
               scanFilters = new java.util.ArrayList();
-              for (const u in uuids) {
-                if (u) {
-                  const theUuid = uuids[u];
-                  const scanFilterBuilder = new android.bluetooth.le.ScanFilter.Builder();
-                  scanFilterBuilder.setServiceUuid(new android.os.ParcelUuid(theUuid));
-                  scanFilters.add(scanFilterBuilder.build());
+              filters.forEach(f => {
+                const scanFilterBuilder = new android.bluetooth.le.ScanFilter.Builder();
+                if (f.serviceUUID) {
+                  scanFilterBuilder.setServiceUuid(new android.os.ParcelUuid(this.stringToUuid(f.serviceUUID)));
                 }
-              }
+                if (f.deviceName) {
+                  scanFilterBuilder.setDeviceName(f.deviceName);
+                }
+                if (f.deviceAddress) {
+                  scanFilterBuilder.setDeviceAddress(f.deviceAddress);
+                }
+                if (f.manufacturerData) {
+                  const manufacturerId = new DataView(f.manufacturerData, 0).getUint16(0, true);
+                  scanFilterBuilder.setManufacturerData(manufacturerId, this.encodeValue(f.manufacturerData));
+                }
+                scanFilters.add(scanFilterBuilder.build());
+              });
             }
 
             // ga hier verder: https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L775
             const scanSettings = new android.bluetooth.le.ScanSettings.Builder();
             scanSettings.setReportDelay(0);
 
-            const scanMode = (arg.android && arg.android.scanMode) || android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
+            const scanMode = (arg.android && arg.android.scanMode) || ScanMode.LOW_LATENCY;
             scanSettings.setScanMode(scanMode);
 
             // if >= Android23 (Marshmallow)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-              const matchMode = (arg.android && arg.android.matchMode) || android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE;
+              const matchMode = (arg.android && arg.android.matchMode) || MatchMode.AGGRESSIVE;
               scanSettings.setMatchMode(matchMode);
 
-              const matchNum = (arg.android && arg.android.matchNum) || android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;
+              const matchNum = (arg.android && arg.android.matchNum) || MatchNum.MAX_ADVERTISEMENT;
               scanSettings.setNumOfMatches(matchNum);
 
-              const callbackType = (arg.android && arg.android.callbackType) || android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
+              const callbackType = (arg.android && arg.android.callbackType) || CallbackType.ALL_MATCHES;
               scanSettings.setCallbackType(callbackType);
             }
 
             this.adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), this.scanCallback);
+            CLog(CLogTypes.info, `Bluetooth.startScanning ---- didStart scanning: ${filters}`);
           }
 
           // added this for backward compatibility (if people don't like using the new event listener approach)
@@ -252,9 +338,13 @@ export class Bluetooth extends BluetoothCommon {
           if (this.LeScanCallback) {
             this.LeScanCallback.onPeripheralDiscovered = arg.onDiscovered;
           }
-
+          if (this.scanningReferTimer) {
+            clearTimeout(this.scanningReferTimer.timer);
+            this.scanningReferTimer.resolve();
+          }
+          this.scanningReferTimer = {};
           if (arg.seconds) {
-            setTimeout(() => {
+            this.scanningReferTimer.timer = setTimeout(() => {
               // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
               // if < Android21 (Lollipop)
               if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
@@ -264,6 +354,7 @@ export class Bluetooth extends BluetoothCommon {
               }
               resolve();
             }, arg.seconds * 1000);
+            this.scanningReferTimer.resolve = resolve;
           } else {
             resolve();
           }
@@ -292,12 +383,18 @@ export class Bluetooth extends BluetoothCommon {
           reject('Bluetooth is not enabled');
           return;
         }
+        CLog(CLogTypes.error, `Bluetooth.stopScanning: ${!!this.scanningReferTimer}`);
 
         // if less than Android21(Lollipop)
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
           this.adapter.stopLeScan(this.LeScanCallback);
         } else {
           this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
+        }
+        if (this.scanningReferTimer) {
+          this.scanningReferTimer.resolve && this.scanningReferTimer.resolve();
+          clearTimeout(this.scanningReferTimer.timer);
+          this.scanningReferTimer = null;
         }
         resolve();
       } catch (ex) {
@@ -346,6 +443,7 @@ export class Bluetooth extends BluetoothCommon {
             onDisconnected: arg.onDisconnected,
             device: gatt // TODO rename device to gatt?
           };
+          resolve();
         }
       } catch (ex) {
         CLog(CLogTypes.error, `Bluetooth.connect ---- error: ${ex}`);
@@ -378,259 +476,270 @@ export class Bluetooth extends BluetoothCommon {
   }
 
   public read(arg: ReadOptions) {
-    return new Promise((resolve, reject) => {
-      try {
-        const wrapper = this._getWrapper(arg, reject);
-        if (!wrapper) {
-          // no need to reject, this has already been done
-          return;
-        }
+    return this.gattQueue.add(() => {
+      return new Promise((resolve, reject) => {
+        try {
+          const wrapper = this._getWrapper(arg, reject);
+          if (!wrapper) {
+            // no need to reject, this has already been done
+            return;
+          }
 
-        const gatt = wrapper.gatt;
-        CLog(CLogTypes.info, `Bluetooth.read ---- gatt: ${gatt}`);
-        const bluetoothGattService = wrapper.bluetoothGattService;
-        CLog(CLogTypes.info, `Bluetooth.read ---- bluetoothGattService: ${bluetoothGattService}`);
-        const characteristicUUID = this.stringToUuid(arg.characteristicUUID);
-        CLog(CLogTypes.info, `Bluetooth.read ---- characteristicUUID: ${characteristicUUID}`);
+          const gatt = wrapper.gatt;
+          CLog(CLogTypes.info, `Bluetooth.read ---- gatt: ${gatt}`);
+          const bluetoothGattService = wrapper.bluetoothGattService;
+          CLog(CLogTypes.info, `Bluetooth.read ---- bluetoothGattService: ${bluetoothGattService}`);
+          const characteristicUUID = this.stringToUuid(arg.characteristicUUID);
+          CLog(CLogTypes.info, `Bluetooth.read ---- characteristicUUID: ${characteristicUUID}`);
 
-        const bluetoothGattCharacteristic = this._findCharacteristicOfType(
-          bluetoothGattService,
-          characteristicUUID,
-          android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ
-        );
-        CLog(CLogTypes.info, `Bluetooth.read ---- bluetoothGattCharacteristic: ${bluetoothGattCharacteristic}`);
-
-        if (!bluetoothGattCharacteristic) {
-          reject(
-            `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
-              arg.serviceUUID
-            } on peripheral with UUID ${arg.peripheralUUID}`
+          const bluetoothGattCharacteristic = this._findCharacteristicOfType(
+            bluetoothGattService,
+            characteristicUUID,
+            android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ
           );
-          return;
-        }
+          CLog(CLogTypes.info, `Bluetooth.read ---- bluetoothGattCharacteristic: ${bluetoothGattCharacteristic}`);
 
-        const stateObject = this.connections[arg.peripheralUUID];
-        stateObject.onReadPromise = resolve;
-        if (!gatt.readCharacteristic(bluetoothGattCharacteristic)) {
-          reject('Failed to set client characteristic read for ' + characteristicUUID);
+          if (!bluetoothGattCharacteristic) {
+            reject(
+              `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
+                arg.serviceUUID
+              } on peripheral with UUID ${arg.peripheralUUID}`
+            );
+            return;
+          }
+
+          const stateObject = this.connections[arg.peripheralUUID];
+          stateObject.onReadPromise = resolve;
+          if (!gatt.readCharacteristic(bluetoothGattCharacteristic)) {
+            reject('Failed to read client characteristic read for ' + characteristicUUID);
+          }
+        } catch (ex) {
+          CLog(CLogTypes.error, `Bluetooth.read ---- error: ${ex}`);
+          reject(ex);
         }
-      } catch (ex) {
-        CLog(CLogTypes.error, `Bluetooth.read ---- error: ${ex}`);
-        reject(ex);
-      }
+      });
     });
   }
 
   public write(arg: WriteOptions) {
-    return new Promise((resolve, reject) => {
-      try {
-        if (!arg.value) {
-          reject("You need to provide some data to write in the 'value' property");
-          return;
-        }
-        const wrapper = this._getWrapper(arg, reject);
-        if (wrapper === null) {
-          // no need to reject, this has already been done
-          return;
-        }
+    return this.gattQueue.add(() => {
+      return new Promise((resolve, reject) => {
+        try {
+          if (!arg.value) {
+            reject("You need to provide some data to write in the 'value' property");
+            return;
+          }
+          const wrapper = this._getWrapper(arg, reject);
+          if (wrapper === null) {
+            // no need to reject, this has already been done
+            return;
+          }
 
-        const characteristic = this._findCharacteristicOfType(
-          wrapper.bluetoothGattService,
-          this.stringToUuid(arg.characteristicUUID),
-          android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE
-        );
-        CLog(CLogTypes.info, `Bluetooth.write ---- characteristic: ${characteristic}`);
-
-        if (!characteristic) {
-          reject(
-            `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
-              arg.serviceUUID
-            } on peripheral with UUID ${arg.peripheralUUID}`
+          const characteristic = this._findCharacteristicOfType(
+            wrapper.bluetoothGattService,
+            this.stringToUuid(arg.characteristicUUID),
+            android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE
           );
-          return;
-        }
+          CLog(CLogTypes.info, `Bluetooth.write ---- characteristic: ${characteristic}`);
 
-        const val = this.encodeValue(arg.value);
-        if (val === null) {
-          reject('Invalid value: ' + arg.value);
-          return;
-        }
+          if (!characteristic) {
+            reject(
+              `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
+                arg.serviceUUID
+              } on peripheral with UUID ${arg.peripheralUUID}`
+            );
+            return;
+          }
 
-        characteristic.setValue(val);
-        characteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+          const val = arg.raw === true ? arg.value : this.encodeValue(arg.value);
+          CLog(CLogTypes.info, `Bluetooth.write ---- encodedValue: ${val}`);
+          if (val === null) {
+            reject('Invalid value: ' + arg.value);
+            return;
+          }
 
-        this.connections[arg.peripheralUUID].onWritePromise = resolve;
-        if (!wrapper.gatt.writeCharacteristic(characteristic)) {
-          reject(`Failed to write to characteristic ${arg.characteristicUUID}`);
+          characteristic.setValue(val);
+          characteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+
+          this.connections[arg.peripheralUUID].onWritePromise = resolve;
+          if (!wrapper.gatt.writeCharacteristic(characteristic)) {
+            reject(`Failed to write to characteristic ${arg.characteristicUUID}, ${val}`);
+          }
+        } catch (ex) {
+          CLog(CLogTypes.error, `Bluetooth.write ---- error: ${ex}`);
+          reject(ex);
         }
-      } catch (ex) {
-        CLog(CLogTypes.error, `Bluetooth.write ---- error: ${ex}`);
-        reject(ex);
-      }
+      });
     });
   }
 
   public writeWithoutResponse(arg: WriteOptions) {
-    return new Promise((resolve, reject) => {
-      try {
-        if (!arg.value) {
-          reject("You need to provide some data to write in the 'value' property");
-          return;
-        }
-        const wrapper = this._getWrapper(arg, reject);
-        if (!wrapper) {
-          // no need to reject, this has already been done
-          return;
-        }
+    return this.gattQueue.add(() => {
+      return new Promise((resolve, reject) => {
+        try {
+          if (!arg.value) {
+            reject("You need to provide some data to write in the 'value' property");
+            return;
+          }
+          const wrapper = this._getWrapper(arg, reject);
+          if (!wrapper) {
+            // no need to reject, this has already been done
+            return;
+          }
 
-        const characteristic = this._findCharacteristicOfType(
-          wrapper.bluetoothGattService,
-          this.stringToUuid(arg.characteristicUUID),
-          android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE
-        );
-        CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse ---- characteristic: ${characteristic}`);
-        if (!characteristic) {
-          reject(
-            `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
-              arg.serviceUUID
-            } on peripheral with UUID ${arg.peripheralUUID}`
+          const characteristic = this._findCharacteristicOfType(
+            wrapper.bluetoothGattService,
+            this.stringToUuid(arg.characteristicUUID),
+            android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE
           );
-          return;
-        }
+          CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse ---- characteristic: ${characteristic}`);
+          if (!characteristic) {
+            reject(
+              `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
+                arg.serviceUUID
+              } on peripheral with UUID ${arg.peripheralUUID}`
+            );
+            return;
+          }
 
-        const val = this.encodeValue(arg.value);
-        CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse ---- encodedValue: ${val}`);
-        if (!val) {
-          reject(`Invalid value: ${arg.value}`);
-          return;
-        }
+          const val = arg.raw === true ? arg.value : this.encodeValue(arg.value);
+          CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse ---- encodedValue: ${val}`);
+          if (!val) {
+            reject(`Invalid value: ${arg.value}`);
+            return;
+          }
 
-        characteristic.setValue(val);
-        characteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+          characteristic.setValue(val);
+          characteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
 
-        if (wrapper.gatt.writeCharacteristic(characteristic)) {
-          resolve();
-        } else {
-          reject(`Failed to write to characteristic ${arg.characteristicUUID}`);
+          if (wrapper.gatt.writeCharacteristic(characteristic)) {
+            resolve();
+          } else {
+            reject(`Failed to write to characteristic ${arg.characteristicUUID}, ${val}`);
+          }
+        } catch (ex) {
+          CLog(CLogTypes.error, `Bluetooth.writeWithoutResponse ---- error: ${ex}`);
+          reject(ex);
         }
-      } catch (ex) {
-        CLog(CLogTypes.error, `Bluetooth.writeWithoutResponse ---- error: ${ex}`);
-        reject(ex);
-      }
+      });
     });
   }
 
   public startNotifying(arg: StartNotifyingOptions) {
-    return new Promise((resolve, reject) => {
-      try {
-        const wrapper = this._getWrapper(arg, reject);
-        if (!wrapper) {
-          // no need to reject, this has already been done
-          return;
-        }
+    return this.gattQueue.add(() => {
+      return new Promise((resolve, reject) => {
+        try {
+          const wrapper = this._getWrapper(arg, reject);
+          if (!wrapper) {
+            // no need to reject, this has already been done
+            return;
+          }
 
-        const gatt = wrapper.gatt;
-        const bluetoothGattService = wrapper.bluetoothGattService;
-        const characteristicUUID = this.stringToUuid(arg.characteristicUUID);
+          const gatt = wrapper.gatt;
+          const bluetoothGattService = wrapper.bluetoothGattService;
+          const characteristicUUID = this.stringToUuid(arg.characteristicUUID);
 
-        const characteristic = this._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
-        CLog(CLogTypes.info, `Bluetooth.startNotifying ---- characteristic: ${characteristic}`);
-        if (!characteristic) {
-          reject(
-            `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
-              arg.serviceUUID
-            } on peripheral with UUID ${arg.peripheralUUID}`
-          );
-          return;
-        }
+          const characteristic = this._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
+          CLog(CLogTypes.info, `Bluetooth.startNotifying ---- characteristic: ${characteristic}`);
+          if (!characteristic) {
+            reject(
+              `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
+                arg.serviceUUID
+              } on peripheral with UUID ${arg.peripheralUUID}`
+            );
+            return;
+          }
 
-        if (!gatt.setCharacteristicNotification(characteristic, true)) {
-          reject(`Failed to register notification for characteristic ${arg.characteristicUUID}`);
-          return;
-        }
+          if (!gatt.setCharacteristicNotification(characteristic, true)) {
+            reject(`Failed to register notification for characteristic ${arg.characteristicUUID}`);
+            return;
+          }
 
-        const clientCharacteristicConfigId = this.stringToUuid('2902');
-        let bluetoothGattDescriptor = characteristic.getDescriptor(
-          clientCharacteristicConfigId
-        ) as android.bluetooth.BluetoothGattDescriptor;
-        if (!bluetoothGattDescriptor) {
-          bluetoothGattDescriptor = new android.bluetooth.BluetoothGattDescriptor(
-            clientCharacteristicConfigId,
-            android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE
-          );
-          characteristic.addDescriptor(bluetoothGattDescriptor);
-          CLog(CLogTypes.info, `Bluetooth.startNotifying ---- descriptor: ${bluetoothGattDescriptor}`);
-          // Any creation error will trigger the global catch. Ok.
-        }
+          const clientCharacteristicConfigId = this.stringToUuid('2902');
+          let bluetoothGattDescriptor = characteristic.getDescriptor(
+            clientCharacteristicConfigId
+          ) as android.bluetooth.BluetoothGattDescriptor;
+          if (!bluetoothGattDescriptor) {
+            bluetoothGattDescriptor = new android.bluetooth.BluetoothGattDescriptor(
+              clientCharacteristicConfigId,
+              android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE
+            );
+            characteristic.addDescriptor(bluetoothGattDescriptor);
+            CLog(CLogTypes.info, `Bluetooth.startNotifying ---- descriptor: ${bluetoothGattDescriptor}`);
+            // Any creation error will trigger the global catch. Ok.
+          }
 
-        // prefer notify over indicate
-        if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY) !== 0) {
-          bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        } else if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE) !== 0) {
-          bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
-        } else {
-          reject(`Characteristic ${characteristicUUID} does not have NOTIFY or INDICATE property set.`);
-          return;
-        }
+          // prefer notify over indicate
+          if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY) !== 0) {
+            bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+          } else if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE) !== 0) {
+            bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+          } else {
+            reject(`Characteristic ${characteristicUUID} does not have NOTIFY or INDICATE property set.`);
+            return;
+          }
 
-        if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
-          const cb =
-            arg.onNotify ||
-            function(result) {
-              CLog(CLogTypes.warning, "No 'onNotify' callback function specified for 'startNotifying'");
-            };
-          const stateObject = this.connections[arg.peripheralUUID];
-          stateObject.onNotifyCallback = cb;
-          CLog(CLogTypes.info, '--- notifying');
-          resolve();
-        } else {
-          reject(`Failed to set client characteristic notification for ${characteristicUUID}`);
+          if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
+            const cb =
+              arg.onNotify ||
+              function(result) {
+                CLog(CLogTypes.warning, "No 'onNotify' callback function specified for 'startNotifying'");
+              };
+            const stateObject = this.connections[arg.peripheralUUID];
+            stateObject.onNotifyCallback = cb;
+            CLog(CLogTypes.info, '--- notifying');
+            resolve();
+          } else {
+            reject(`Failed to set client characteristic notification for ${characteristicUUID}`);
+          }
+        } catch (ex) {
+          CLog(CLogTypes.error, `Bluetooth.startNotifying ---- error: ${ex}`);
+          reject(ex);
         }
-      } catch (ex) {
-        CLog(CLogTypes.error, `Bluetooth.startNotifying ---- error: ${ex}`);
-        reject(ex);
-      }
+      });
     });
   }
 
   // TODO lot of reuse between this and .startNotifying
   public stopNotifying(arg: StopNotifyingOptions) {
-    return new Promise((resolve, reject) => {
-      try {
-        const wrapper = this._getWrapper(arg, reject);
-        if (!wrapper) {
-          // no need to reject, this has already been done
-          return;
+    return this.gattQueue.add(() => {
+      return new Promise((resolve, reject) => {
+        try {
+          const wrapper = this._getWrapper(arg, reject);
+          if (!wrapper) {
+            // no need to reject, this has already been done
+            return;
+          }
+
+          const gatt = wrapper.gatt;
+          const gattService = wrapper.bluetoothGattService;
+          const characteristicUUID = this.stringToUuid(arg.characteristicUUID);
+
+          const characteristic = this._findNotifyCharacteristic(gattService, characteristicUUID);
+          CLog(CLogTypes.info, `Bluetooth.stopNotifying ---- service characteristic: ${characteristic}`);
+
+          if (!characteristic) {
+            reject(
+              `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
+                arg.serviceUUID
+              } on peripheral with UUID ${arg.peripheralUUID}`
+            );
+            return;
+          }
+
+          const stateObject = this.connections[arg.peripheralUUID];
+          stateObject.onNotifyCallback = null;
+
+          if (gatt.setCharacteristicNotification(characteristic, false)) {
+            resolve();
+          } else {
+            reject('Failed to remove client characteristic notification for ' + characteristicUUID);
+          }
+        } catch (ex) {
+          CLog(CLogTypes.error, `Bluetooth.stopNotifying: ${ex}`);
+          reject(ex);
         }
-
-        const gatt = wrapper.gatt;
-        const gattService = wrapper.bluetoothGattService;
-        const characteristicUUID = this.stringToUuid(arg.characteristicUUID);
-
-        const characteristic = this._findNotifyCharacteristic(gattService, characteristicUUID);
-        CLog(CLogTypes.info, `Bluetooth.stopNotifying ---- service characteristic: ${characteristic}`);
-
-        if (!characteristic) {
-          reject(
-            `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
-              arg.serviceUUID
-            } on peripheral with UUID ${arg.peripheralUUID}`
-          );
-          return;
-        }
-
-        const stateObject = this.connections[arg.peripheralUUID];
-        stateObject.onNotifyCallback = null;
-
-        if (gatt.setCharacteristicNotification(characteristic, false)) {
-          resolve();
-        } else {
-          reject('Failed to remove client characteristic notification for ' + characteristicUUID);
-        }
-      } catch (ex) {
-        CLog(CLogTypes.error, `Bluetooth.stopNotifying: ${ex}`);
-        reject(ex);
-      }
+      });
     });
   }
 
@@ -701,23 +810,71 @@ export class Bluetooth extends BluetoothCommon {
     return java.util.UUID.fromString(uuidStr);
   }
 
-  public extractManufacturerRawData(scanRecord) {
-    let offset = 0;
-    while (offset < scanRecord.length - 2) {
-      const len = scanRecord[offset++] & 0xff;
-      if (len === 0) {
+  // public extractManufacturerRawData(scanRecord) {
+  //   let offset = 0;
+  //   while (offset < scanRecord.length - 2) {
+  //     const len = scanRecord[offset++] & 0xff;
+  //     if (len === 0) {
+  //       break;
+  //     }
+
+  //     const type = scanRecord[offset++] & 0xff;
+  //     switch (type) {
+  //       case 0xff: // Manufacturer Specific Data
+  //         return this.decodeValue(java.util.Arrays.copyOfRange(scanRecord, offset, offset + len - 1));
+  //       default:
+  //         offset += len - 1;
+  //         break;
+  //     }
+  //   }
+  // }
+  public extractAdvertismentData(scanRecord) {
+    // console.log('extractAdvertismentData', scanRecord, scanRecord.length);
+    let result = {};
+    let index = 0,
+      length,
+      type,
+      data;
+    while (index < scanRecord.length) {
+      length = scanRecord[index++];
+      // Done once we run out of records
+      if (length === 0) {
         break;
       }
 
-      const type = scanRecord[offset++] & 0xff;
+      type = scanRecord[index] & 0xff;
+
+      // Done if our record isn't a valid type
+      if (type === 0) {
+        break;
+      }
+
+      data = java.util.Arrays.copyOfRange(scanRecord, index + 1, index + length);
       switch (type) {
         case 0xff: // Manufacturer Specific Data
-          return this.decodeValue(java.util.Arrays.copyOfRange(scanRecord, offset, offset + len - 1));
+          result['manufacturerData'] = this.encodeValue(data);
+          break;
+        case 0x0a:
+          result['txPowerLevel'] = this.encodeValue(data);
+          break;
+        case 0x09:
+          result['localName'] = new java.lang.String(data, 'UTF-8');
+          break;
+        case 0x01:
+          result['flags'] = this.encodeValue(data);
+          break;
+        case 0x02:
+          result['uuids'] = this.encodeValue(data);
+          break;
+        case 0x0d:
+          result['class'] = this.encodeValue(data);
+          break;
         default:
-          offset += len - 1;
           break;
       }
+      index += length;
     }
+    return result;
   }
 
   // This guards against peripherals reusing char UUID's. We prefer notify.
@@ -766,19 +923,19 @@ export class Bluetooth extends BluetoothCommon {
   private _getWrapper(arg, reject) {
     if (!this._isEnabled()) {
       reject('Bluetooth is not enabled');
-      return;
+      return null;
     }
     if (!arg.peripheralUUID) {
       reject('No peripheralUUID was passed');
-      return;
+      return null;
     }
     if (!arg.serviceUUID) {
       reject('No serviceUUID was passed');
-      return;
+      return null;
     }
     if (!arg.characteristicUUID) {
       reject('No characteristicUUID was passed');
-      return;
+      return null;
     }
 
     const serviceUUID = this.stringToUuid(arg.serviceUUID);
@@ -786,7 +943,7 @@ export class Bluetooth extends BluetoothCommon {
     const stateObject = this.connections[arg.peripheralUUID];
     if (!stateObject) {
       reject('The peripheral is disconnected');
-      return;
+      return null;
     }
 
     const gatt = stateObject.device;
@@ -794,7 +951,7 @@ export class Bluetooth extends BluetoothCommon {
 
     if (!bluetoothGattService) {
       reject(`Could not find service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`);
-      return;
+      return null;
     }
 
     // with that all being checked, let's return a wrapper object containing all the stuff we found here
