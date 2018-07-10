@@ -86,6 +86,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
     for (let i = 0; i < service.characteristics.count; i++) {
       const characteristic = service.characteristics.objectAtIndex(i);
       const result = {
+        serviceUUID: service.UUID.UUIDString,
         UUID: characteristic.UUID.UUIDString,
         name: characteristic.UUID,
         // see serviceAndCharacteristicInfo in CBPer+Ext of Cordova plugin
