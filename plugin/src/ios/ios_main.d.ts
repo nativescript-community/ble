@@ -7,13 +7,19 @@ export declare class Bluetooth extends BluetoothCommon {
   _connectCallbacks: {};
   _disconnectCallbacks: {};
   _onDiscovered: any;
-  constructor();
+  constructor(restoreIdentifier?: string);
   readonly enabled: boolean;
   _getState(state: CBPeripheralState): 'connecting' | 'connected' | 'disconnected';
   isBluetoothEnabled(): Promise<{}>;
+  scanningReferTimer: {
+    timer?: number;
+    resolve?: Function;
+  };
   startScanning(arg: StartScanningOptions): Promise<{}>;
   toArrayBuffer(value: any): ArrayBuffer;
   enable(): Promise<{}>;
+  isGPSEnabled(): boolean;
+  enableGPS(): Promise<void>;
   stopScanning(arg: any): Promise<{}>;
   connect(args: ConnectOptions): Promise<{}>;
   disconnect(arg: any): Promise<{}>;

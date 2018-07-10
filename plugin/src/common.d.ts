@@ -1,4 +1,4 @@
-import { Observable } from 'tns-core-modules/data/observable';
+import { Observable } from 'tns-core-modules/data/observable/observable';
 export declare class BluetoothUtil {
   static debug: boolean;
 }
@@ -35,7 +35,12 @@ export declare class BluetoothCommon extends Observable {
   sendEvent(eventName: string, data?: any, msg?: string): void;
 }
 export interface StartScanningOptions {
-  serviceUUIDs?: string[];
+  filters?: {
+    serviceUUID?: string;
+    deviceName?: string;
+    deviceAddress?: string;
+    manufacturerData?: ArrayBuffer;
+  }[];
   seconds?: number;
   onDiscovered?: (data: Peripheral) => void;
   skipPermissionCheck?: boolean;
@@ -61,6 +66,7 @@ export interface Peripheral {
   services?: Service[];
   manufacturerId?: number;
   manufacturerData?: ArrayBuffer;
+  localName?: string;
 }
 export interface Service {
   UUID: string;
@@ -91,6 +97,7 @@ export interface CRUDOptions {
 export interface ReadOptions extends CRUDOptions {}
 export interface WriteOptions extends CRUDOptions {
   value: any;
+  raw?: boolean;
 }
 export interface StopNotifyingOptions extends CRUDOptions {}
 export interface StartNotifyingOptions extends CRUDOptions {
