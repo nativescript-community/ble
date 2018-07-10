@@ -1,4 +1,4 @@
-import { Observable, EventData } from 'tns-core-modules/data/observable';
+import { Observable, EventData } from 'tns-core-modules/data/observable/observable';
 
 declare var require;
 
@@ -173,8 +173,13 @@ export interface StartScanningOptions {
    * Zero or more services which the peripheral needs to broadcast.
    * Default: [], which matches any peripheral.
    */
-  serviceUUIDs?: string[];
-
+  // serviceUUIDs?: string[];
+  filters?: {
+    serviceUUID?: string;
+    deviceName?: string;
+    deviceAddress?: string;
+    manufacturerData?: ArrayBuffer;
+  }[];
   /**
    * The number of seconds to scan for services.
    * Default: unlimited, which is not really recommended. You should stop scanning manually by calling 'stopScanning'.
@@ -291,6 +296,7 @@ export interface Peripheral {
   manufacturerId?: number;
 
   manufacturerData?: ArrayBuffer;
+  localName?: string;
 }
 
 /**
@@ -363,6 +369,7 @@ export interface ReadOptions extends CRUDOptions {}
 
 export interface WriteOptions extends CRUDOptions {
   value: any;
+  raw?: boolean;
 }
 
 // tslint:disable-next-line:no-empty-interface

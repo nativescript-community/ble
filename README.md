@@ -117,10 +117,11 @@ Set this to true if you don't want the plugin to check (and request) the require
 Particularly useful if you're running this function on a non-UI thread (ie. a Worker).
 Relevant on Android only.
 
-#### serviceUUIDs
+#### filters
 It's inefficient to scan for all available Bluetooth peripherals and have them report all services they offer.
+Moreover on Android if we don't use filters we must have location permissions and have GPS enabled
 
-If you're only interested in finding a heartrate peripheral for instance, pass in service UUID `'180d'` like this: serviceUUIDs: ['180d']. If you add 2 or more (comma separated) services then only peripherals supporting ALL those services will match.
+If you're only interested in finding a heartrate peripheral for instance, pass in service UUID `'180d'` like this: filters: [{serviceUUID:'180d'}]. If you add 2 or more (comma separated) services then only peripherals supporting ALL those services will match.
 
 Note that UUID's are ALWAYS strings; don't pass integers.
 
@@ -133,7 +134,13 @@ This function will receive an object representing the peripheral which contains 
 * `RSSI: number` (relative signal strength, can be used for distance measurement)
 * `services?:` (optional - this is set once connected to the peripheral)
 * `manufacturerId?: number` (optional)
-* `manufacturerData?: ArrayBuffer` (optional)
+* `advertismentData?:  {
+    localName?:string
+    manufacturerData?: ArrayBuffer;
+    serviceUUIDs?: string[];
+    txPowerLevel?:number,
+    flags?:number
+  }` (optional)
 
 ```js
 bluetooth.startScanning({
