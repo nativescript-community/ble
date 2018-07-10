@@ -62,41 +62,33 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
       this.owner.get().connections[result.getDevice().getAddress()] = {
         state: 'disconnected'
       };
-      let manufacturerId;
-      let manufacturerData;
-      if (
-        result
-          .getScanRecord()
-          .getManufacturerSpecificData()
-          .size() > 0
-      ) {
-        manufacturerId = result
-          .getScanRecord()
-          .getManufacturerSpecificData()
-          .keyAt(0);
-        CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- manufacturerId: ${manufacturerId}`);
-        manufacturerData = this.owner.get().decodeValue(
-          result
-            .getScanRecord()
-            .getManufacturerSpecificData()
-            .valueAt(0)
-        );
-        CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- manufacturerData: ${manufacturerData}`);
-      }
-
-      const payload = {
-        type: 'scanResult', // TODO or use different callback functions?
-        UUID: result.getDevice().getAddress(),
-        name: result.getDevice().getName(),
-        RSSI: result.getRssi(),
-        state: 'disconnected',
-        advertisement: android.util.Base64.encodeToString(result.getScanRecord().getBytes(), android.util.Base64.NO_WRAP),
-        manufacturerId: manufacturerId,
-        manufacturerData: manufacturerData
-      };
-      CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
-      this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
-      this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
     }
+    let manufacturerId;
+    // let manufacturerData;
+    const scanRecord = result.getScanRecord();
+    const manufacturerData = scanRecord.getManufacturerSpecificData();
+    if (manufacturerData.size() > 0) {
+      manufacturerId = manufacturerData.keyAt(0);
+      CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- manufacturerId: ${manufacturerId}`);
+    }
+
+    const advertismentData = this.owner.get().extractAdvertismentData(scanRecord.getBytes());
+
+    CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- advertismentData: ${JSON.stringify(advertismentData)}`);
+
+    const payload = {
+      type: 'scanResult', // TODO or use different callback functions?
+      UUID: result.getDevice().getAddress(),
+      name: result.getDevice().getName(),
+      RSSI: result.getRssi(),
+      state: 'disconnected',
+      advertisement: this.owner.get().decodeValue(scanRecord.getBytes()),
+      manufacturerId: manufacturerId,
+      advertismentData: advertismentData
+    };
+    CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
+    this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
+    this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
   }
+  // }
 }

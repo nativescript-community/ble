@@ -105,20 +105,22 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
   ) {
     CLog(
       CLogTypes.info,
-      `CBCentralManagerDelegateImpl.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI ---- ${peripheral.name} @ ${RSSI}`
+      `CBCentralManagerDelegateImpl.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI ---- ${peripheral.name} @ ${RSSI} @ ${advData}`
     );
     const peri = this._owner.get().findPeripheral(peripheral.identifier.UUIDString);
     if (!peri) {
       this._owner.get()._peripheralArray.addObject(peripheral);
       if (this._owner.get()._onDiscovered) {
         let manufacturerId;
-        let manufacturerData;
+        let localName;
+        let advertismentData = {};
+
         if (advData.objectForKey(CBAdvertisementDataManufacturerDataKey)) {
           const manufacturerIdBuffer = this._owner
             .get()
             .toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(0, 2)));
           manufacturerId = new DataView(manufacturerIdBuffer, 0).getUint16(0, true);
-          manufacturerData = this._owner
+          advertismentData['manufacturerData'] = this._owner
             .get()
             .toArrayBuffer(
               advData
@@ -126,14 +128,30 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
                 .subdataWithRange(NSMakeRange(2, advData.objectForKey(CBAdvertisementDataManufacturerDataKey).length - 2))
             );
         }
+        if (advData.objectForKey(CBAdvertisementDataLocalNameKey)) {
+          advertismentData['localName'] = advData.objectForKey(CBAdvertisementDataLocalNameKey);
+        }
+        if (advData.objectForKey(CBAdvertisementDataServiceUUIDsKey)) {
+          advertismentData['uuids'] = advData.objectForKey(CBAdvertisementDataServiceUUIDsKey);
+        }
+        if (advData.objectForKey(CBAdvertisementDataIsConnectable)) {
+          advertismentData['connectable'] = advData.objectForKey(CBAdvertisementDataIsConnectable);
+        }
+        if (advData.objectForKey(CBAdvertisementDataServiceDataKey)) {
+          advertismentData['services'] = advData.objectForKey(CBAdvertisementDataServiceDataKey);
+        }
+        if (advData.objectForKey(CBAdvertisementDataTxPowerLevelKey)) {
+          advertismentData['txPowerLevel'] = advData.objectForKey(CBAdvertisementDataTxPowerLevelKey);
+        }
 
         this._owner.get()._onDiscovered({
           UUID: peripheral.identifier.UUIDString,
           name: peripheral.name,
+          localName: localName,
           RSSI: RSSI,
+          advertismentData: advertismentData,
           state: this._owner.get()._getState(peripheral.state),
-          manufacturerId: manufacturerId,
-          manufacturerData: manufacturerData
+          manufacturerId: manufacturerId
         });
       } else {
         CLog(

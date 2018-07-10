@@ -19,7 +19,7 @@ export class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapter.LeSca
        * @param rssi [number] - The RSSI value for the remote device as reported by the Bluetooth hardware. 0 if no RSSI value is available.
        * @param scanRecord [byte[]] - The content of the advertisement record offered by the remote device.
        */
-      onLeScan(device: android.bluetooth.BluetoothDevice, rssi: number, scanRecord) {
+      onLeScan(device: android.bluetooth.BluetoothDevice, rssi: number, scanRecord: number[]) {
         CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- device: ${device}, rssi: ${rssi}, scanRecord: ${scanRecord}`);
 
         const stateObject = this.owner.get().connections[device.getAddress()];
@@ -28,15 +28,13 @@ export class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapter.LeSca
             state: 'disconnected'
           };
 
+          const advertismentData = this.owner.get().extractAdvertismentData(scanRecord);
           let manufacturerId;
-          let manufacturerData;
-          const manufacturerDataRaw = this.owner.get().extractManufacturerRawData(scanRecord);
-          CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- manufacturerDataRaw: ${manufacturerDataRaw}`);
-          if (manufacturerDataRaw) {
-            manufacturerId = new DataView(manufacturerDataRaw, 0).getUint16(0, true);
+          CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- advertismentData: ${advertismentData}`);
+          if (advertismentData.manufacturerData) {
+            manufacturerId = new DataView(advertismentData.manufacturerData, 0).getUint16(0, true);
             CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- manufacturerId: ${manufacturerId}`);
-            manufacturerData = manufacturerDataRaw.slice(2);
-            CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- manufacturerData: ${manufacturerData}`);
+            CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- manufacturerData: ${advertismentData.manufacturerData}`);
           }
 
           const payload = {
@@ -45,8 +43,8 @@ export class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapter.LeSca
             name: device.getName(),
             RSSI: rssi,
             state: 'disconnected',
-            manufacturerId: manufacturerId,
-            manufacturerData: manufacturerData
+            advertismentData: advertismentData,
+            manufacturerId: manufacturerId
           };
           CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- payload: ${JSON.stringify(payload)}`);
           this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
