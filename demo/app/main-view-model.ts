@@ -86,12 +86,12 @@ export class DemoAppModel extends Observable {
         this._bluetooth
           .startScanning({
             // beware: the peripheral must advertise ALL these services
-            serviceUUIDs: [omegaService],
+            filters: [{serviceUUID:omegaService}],
             seconds: 4,
             onDiscovered: peripheral => {
               this.peripherals.push(peripheral);
             },
-            skipPermissionCheck: false
+            skipPermissionCheck: true // we can skip permissions as we use filters:   https://developer.android.com/guide/topics/connectivity/bluetooth-le
           })
           .then(
             p => {
@@ -118,13 +118,12 @@ export class DemoAppModel extends Observable {
     this.peripherals.length = 0;
     this._bluetooth
       .startScanning({
-        serviceUUIDs: [], // pass an empty array to scan for all services
         seconds: 5, // passing in seconds makes the plugin stop scanning after <seconds> seconds
         onDiscovered: peripheral => {
           console.log("peripheral discovered. Not adding it here because we're using a listener.");
           // this.peripherals.push(peripheral);
         },
-        skipPermissionCheck: false
+        skipPermissionCheck: false //we can't skip permissions and we need enabled location as we dont use filters: https://developer.android.com/guide/topics/connectivity/bluetooth-le
       })
         .then(() => this.isLoading = false)
         .catch(err => {
