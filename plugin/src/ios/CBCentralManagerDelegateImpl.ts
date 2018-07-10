@@ -143,8 +143,7 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
         if (advData.objectForKey(CBAdvertisementDataTxPowerLevelKey)) {
           advertismentData['txPowerLevel'] = advData.objectForKey(CBAdvertisementDataTxPowerLevelKey);
         }
-
-        this._owner.get()._onDiscovered({
+        const payload = {
           UUID: peripheral.identifier.UUIDString,
           name: peripheral.name,
           localName: localName,
@@ -152,7 +151,9 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
           advertismentData: advertismentData,
           state: this._owner.get()._getState(peripheral.state),
           manufacturerId: manufacturerId
-        });
+        };
+        this._owner.get()._onDiscovered(payload);
+        this._owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
       } else {
         CLog(
           CLogTypes.warning,
@@ -179,6 +180,9 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
         `CBCentralManagerDelegateImpl.centralManagerDidUpdateState ---- This hardware does not support Bluetooth Low Energy.`
       );
     }
+    this._owner.get().sendEvent(Bluetooth.bluetooth_status_event, {
+      state: central.state === CBManagerState.Unsupported ? 'unsupported' : central.state === CBManagerState.PoweredOn ? 'on' : 'off'
+    });
   }
 
   /**

@@ -46,6 +46,7 @@ export declare class Bluetooth extends BluetoothCommon {
     CallbackType: typeof CallbackType;
   };
   connections: {};
+  private broadcastReceiver;
   constructor();
   readonly enabled: boolean;
   coarseLocationPermissionGranted(): boolean;

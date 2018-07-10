@@ -39,9 +39,9 @@ export class BluetoothCommon extends Observable {
   public static error_event = 'error_event';
 
   /*
-   * String value for hooking into the peripheral_connected_event. This event fires when a peripheral is connected to Bluetooth.
+   * String value for hooking into the bluetooth_status_event. This event fires when the bluetooth state changes.
    */
-  public static peripheral_connected_event = 'peripheral_connected_event';
+  public static bluetooth_status_event = 'bluetooth_status_event';
 
   /*
    * String value for hooking into the bluetooth_enabled_event. This event fires when the bluetooth is enabled.

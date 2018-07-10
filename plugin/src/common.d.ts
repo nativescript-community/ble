@@ -11,7 +11,7 @@ export declare const CLog: (type?: CLogTypes, ...args: any[]) => void;
 export declare class BluetoothCommon extends Observable {
   debug: boolean;
   static error_event: string;
-  static peripheral_connected_event: string;
+  static bluetooth_status_event: string;
   static bluetooth_enabled_event: string;
   static bluetooth_discoverable_event: string;
   static bluetooth_advertise_success_event: string;

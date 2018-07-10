@@ -81,7 +81,7 @@ export class Bluetooth extends BluetoothCommon {
    * }, ..]
    */
   public connections = {};
-
+  private broadcastReceiver;
   constructor() {
     super();
     CLog(CLogTypes.info, '*** Android Bluetooth Constructor ***');
@@ -98,6 +98,18 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     this.bluetoothGattCallback.onInit(new WeakRef(this));
+
+    this.broadcastReceiver = application.android.registerBroadcastReceiver(
+      android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED,
+      (context, intent) => {
+        const state = intent.getIntExtra(android.bluetooth.BluetoothAdapter.EXTRA_STATE, android.bluetooth.BluetoothAdapter.ERROR);
+        if (state === android.bluetooth.BluetoothAdapter.STATE_ON || state === android.bluetooth.BluetoothAdapter.STATE_OFF) {
+          this.sendEvent(Bluetooth.bluetooth_status_event, {
+            state: state === android.bluetooth.BluetoothAdapter.STATE_ON ? 'on' : 'off'
+          });
+        }
+      }
+    );
   }
 
   // Getter/Setters
