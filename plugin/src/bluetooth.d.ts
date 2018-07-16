@@ -59,10 +59,10 @@ export class Bluetooth extends COMMON.BluetoothCommon {
   isGPSEnabled(): boolean;
 
   /**
-   * Android only. Will return false if the user denied turning GPS on.
-   * @returns {Promise<boolean>}
+   * Android only. Will reject if the user denied turning GPS on.
+   * @returns {Promise<void>}
    */
-  enableGPS(): Promise<boolean>;
+  enableGPS(): Promise<void>;
 
   /**
    * Required for Android 6+ to be able to scan for peripherals in the background.
