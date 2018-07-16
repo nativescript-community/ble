@@ -129,6 +129,10 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
 
       const device = gatt.getDevice();
       const stateObject = this.owner.get().connections[device.getAddress()];
+      if (!stateObject) {
+        this.owner.get().gattDisconnect(gatt);
+        return;
+      }
       stateObject.onConnected({
         UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
         name: device.getName(),
