@@ -22,9 +22,9 @@ const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 const ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 224;
 
-// const sdkVer = android.os.Build.VERSION.SDK_INT;
-// const android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP;
-// const android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M;
+const SDK_INT = android.os.Build.VERSION.SDK_INT;
+// const SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP = SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP;
+// const SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */ = SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */;
 
 export enum ScanMode {
   LOW_LATENCY, // = android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY,
@@ -137,7 +137,7 @@ export class Bluetooth extends BluetoothCommon {
     CLog(CLogTypes.info, 'this.adapter', this.adapter);
 
     // if >= Android21 (Lollipop)
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+    if (SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
       this.scanCallback = new TNS_ScanCallback();
       this.scanCallback.onInit(new WeakRef(this));
     } else {
@@ -170,7 +170,7 @@ export class Bluetooth extends BluetoothCommon {
   }
 
   public coarseLocationPermissionGranted() {
-    let hasPermission = android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M;
+    let hasPermission = SDK_INT < 23 /* android.os.Build.VERSION_CODES.M */;
     if (!hasPermission) {
       const ctx = this._getContext();
       CLog(CLogTypes.info, `app context ${ctx}`);
@@ -329,7 +329,7 @@ export class Bluetooth extends BluetoothCommon {
           const filters = arg.filters || [];
 
           // if less than Android21 (Lollipop)
-          if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
+          if (SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
             const uuids = [];
             filters.forEach(f => {
               if (f.serviceUUID) {
@@ -376,7 +376,7 @@ export class Bluetooth extends BluetoothCommon {
             scanSettings.setScanMode(androidMatchMode(scanMode));
 
             // if >= Android23 (Marshmallow)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */) {
               const matchMode = (arg.android && arg.android.matchMode) || MatchMode.AGGRESSIVE;
               scanSettings.setMatchMode(androidMatchMode(matchMode));
 
@@ -407,7 +407,7 @@ export class Bluetooth extends BluetoothCommon {
             this.scanningReferTimer.timer = setTimeout(() => {
               // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
               // if < Android21 (Lollipop)
-              if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+              if (SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 this.adapter.stopLeScan(this.LeScanCallback);
               } else {
                 this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
@@ -446,7 +446,7 @@ export class Bluetooth extends BluetoothCommon {
         CLog(CLogTypes.error, `Bluetooth.stopScanning: ${!!this.scanningReferTimer}`);
 
         // if less than Android21(Lollipop)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+        if (SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
           this.adapter.stopLeScan(this.LeScanCallback);
         } else {
           this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
@@ -482,7 +482,7 @@ export class Bluetooth extends BluetoothCommon {
           let gatt;
 
           // if less than Android23(Marshmallow)
-          if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+          if (SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */) {
             gatt = bluetoothDevice.connectGatt(
               utils.ad.getApplicationContext(), // context
               false, // autoconnect
@@ -889,7 +889,7 @@ export class Bluetooth extends BluetoothCommon {
   //   }
   // }
   public extractAdvertismentData(scanRecord) {
-    // console.log('extractAdvertandroid.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.MentData', scanRecord, scanRecord.length);
+    // console.log('extractAdvertSDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */entData', scanRecord, scanRecord.length);
     let result = {};
     let index = 0,
       length,
