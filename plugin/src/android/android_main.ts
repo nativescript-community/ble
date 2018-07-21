@@ -22,26 +22,74 @@ const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 const ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 224;
 
+// const sdkVer = android.os.Build.VERSION.SDK_INT;
+// const android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP;
+// const android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M;
+
 export enum ScanMode {
-  LOW_LATENCY = android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY,
-  BALANCED = android.bluetooth.le.ScanSettings.SCAN_MODE_BALANCED,
-  LOW_POWER = android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_POWER,
-  OPPORTUNISTIC = android.bluetooth.le.ScanSettings.SCAN_MODE_OPPORTUNISTIC
+  LOW_LATENCY, // = android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY,
+  BALANCED, // = android.bluetooth.le.ScanSettings.SCAN_MODE_BALANCED,
+  LOW_POWER, // = android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_POWER,
+  OPPORTUNISTIC // = android.bluetooth.le.ScanSettings.SCAN_MODE_OPPORTUNISTIC
+}
+
+function androidScanMode(mode: ScanMode) {
+  switch (mode) {
+    case ScanMode.BALANCED:
+      return android.bluetooth.le.ScanSettings.SCAN_MODE_BALANCED;
+    case ScanMode.LOW_POWER:
+      return android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_POWER;
+    case ScanMode.OPPORTUNISTIC:
+      return android.bluetooth.le.ScanSettings.SCAN_MODE_OPPORTUNISTIC;
+    case ScanMode.LOW_LATENCY:
+    default:
+      return android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
+  }
 }
 export enum MatchMode {
-  AGGRESSIVE = android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE,
-  STICKY = android.bluetooth.le.ScanSettings.MATCH_MODE_STICKY
+  AGGRESSIVE, // = android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE,
+  STICKY // = android.bluetooth.le.ScanSettings.MATCH_MODE_STICKY
+}
+
+function androidMatchMode(mode: MatchMode) {
+  switch (mode) {
+    case MatchMode.STICKY:
+      return android.bluetooth.le.ScanSettings.MATCH_MODE_STICKY;
+    default:
+      return android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE;
+  }
 }
 
 export enum MatchNum {
-  MAX_ADVERTISEMENT = android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT,
-  FEW_ADVERTISEMENT = android.bluetooth.le.ScanSettings.MATCH_NUM_FEW_ADVERTISEMENT,
-  ONE_ADVERTISEMENT = android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT
+  MAX_ADVERTISEMENT, // = android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT,
+  FEW_ADVERTISEMENT, // = android.bluetooth.le.ScanSettings.MATCH_NUM_FEW_ADVERTISEMENT,
+  ONE_ADVERTISEMENT // = android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT
+}
+
+function androidMatchNum(mode: MatchNum) {
+  switch (mode) {
+    case MatchNum.ONE_ADVERTISEMENT:
+      return android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT;
+    case MatchNum.FEW_ADVERTISEMENT:
+      return android.bluetooth.le.ScanSettings.MATCH_NUM_FEW_ADVERTISEMENT;
+    default:
+      return android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;
+  }
 }
 export enum CallbackType {
-  ALL_MATCHES = android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES,
-  FIRST_MATCH = android.bluetooth.le.ScanSettings.CALLBACK_TYPE_FIRST_MATCH,
-  MATCH_LOST = android.bluetooth.le.ScanSettings.CALLBACK_TYPE_MATCH_LOST
+  ALL_MATCHES, // = android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES,
+  FIRST_MATCH, // = android.bluetooth.le.ScanSettings.CALLBACK_TYPE_FIRST_MATCH,
+  MATCH_LOST // = android.bluetooth.le.ScanSettings.CALLBACK_TYPE_MATCH_LOST
+}
+function androidCallbackType(mode: CallbackType) {
+  switch (mode) {
+    case CallbackType.MATCH_LOST:
+      return android.bluetooth.le.ScanSettings.CALLBACK_TYPE_MATCH_LOST;
+    case CallbackType.FIRST_MATCH:
+      return android.bluetooth.le.ScanSettings.CALLBACK_TYPE_FIRST_MATCH;
+    default:
+      return android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
+  }
 }
 
 export class Bluetooth extends BluetoothCommon {
@@ -325,18 +373,18 @@ export class Bluetooth extends BluetoothCommon {
             scanSettings.setReportDelay(0);
 
             const scanMode = (arg.android && arg.android.scanMode) || ScanMode.LOW_LATENCY;
-            scanSettings.setScanMode(scanMode);
+            scanSettings.setScanMode(androidMatchMode(scanMode));
 
             // if >= Android23 (Marshmallow)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
               const matchMode = (arg.android && arg.android.matchMode) || MatchMode.AGGRESSIVE;
-              scanSettings.setMatchMode(matchMode);
+              scanSettings.setMatchMode(androidMatchMode(matchMode));
 
               const matchNum = (arg.android && arg.android.matchNum) || MatchNum.MAX_ADVERTISEMENT;
-              scanSettings.setNumOfMatches(matchNum);
+              scanSettings.setNumOfMatches(androidMatchNum(matchNum));
 
               const callbackType = (arg.android && arg.android.callbackType) || CallbackType.ALL_MATCHES;
-              scanSettings.setCallbackType(callbackType);
+              scanSettings.setCallbackType(androidCallbackType(callbackType));
             }
 
             this.adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), this.scanCallback);
@@ -359,7 +407,7 @@ export class Bluetooth extends BluetoothCommon {
             this.scanningReferTimer.timer = setTimeout(() => {
               // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
               // if < Android21 (Lollipop)
-              if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
+              if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 this.adapter.stopLeScan(this.LeScanCallback);
               } else {
                 this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
@@ -398,7 +446,7 @@ export class Bluetooth extends BluetoothCommon {
         CLog(CLogTypes.error, `Bluetooth.stopScanning: ${!!this.scanningReferTimer}`);
 
         // if less than Android21(Lollipop)
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
           this.adapter.stopLeScan(this.LeScanCallback);
         } else {
           this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
@@ -434,7 +482,7 @@ export class Bluetooth extends BluetoothCommon {
           let gatt;
 
           // if less than Android23(Marshmallow)
-          if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) {
+          if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             gatt = bluetoothDevice.connectGatt(
               utils.ad.getApplicationContext(), // context
               false, // autoconnect
@@ -841,7 +889,7 @@ export class Bluetooth extends BluetoothCommon {
   //   }
   // }
   public extractAdvertismentData(scanRecord) {
-    // console.log('extractAdvertismentData', scanRecord, scanRecord.length);
+    // console.log('extractAdvertandroid.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.MentData', scanRecord, scanRecord.length);
     let result = {};
     let index = 0,
       length,

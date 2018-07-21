@@ -12,24 +12,24 @@ import { TNS_BluetoothGattCallback } from './TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './TNS_LeScanCallback';
 import { TNS_ScanCallback } from './TNS_ScanCallback';
 export declare enum ScanMode {
-  LOW_LATENCY,
-  BALANCED,
-  LOW_POWER,
-  OPPORTUNISTIC
+  LOW_LATENCY = 0,
+  BALANCED = 1,
+  LOW_POWER = 2,
+  OPPORTUNISTIC = 3
 }
 export declare enum MatchMode {
-  AGGRESSIVE,
-  STICKY
+  AGGRESSIVE = 0,
+  STICKY = 1
 }
 export declare enum MatchNum {
-  MAX_ADVERTISEMENT,
-  FEW_ADVERTISEMENT,
-  ONE_ADVERTISEMENT
+  MAX_ADVERTISEMENT = 0,
+  FEW_ADVERTISEMENT = 1,
+  ONE_ADVERTISEMENT = 2
 }
 export declare enum CallbackType {
-  ALL_MATCHES,
-  FIRST_MATCH,
-  MATCH_LOST
+  ALL_MATCHES = 0,
+  FIRST_MATCH = 1,
+  MATCH_LOST = 2
 }
 export declare class Bluetooth extends BluetoothCommon {
   bluetoothManager: android.bluetooth.BluetoothManager;
