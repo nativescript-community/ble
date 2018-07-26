@@ -115,13 +115,16 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
 
     if (this._services.length === 0) {
       if (this._callback) {
+        const UUID = peripheral.identifier.UUIDString;
         this._callback({
-          UUID: peripheral.identifier.UUIDString,
+          UUID: UUID,
           name: peripheral.name,
           state: this._owner.get()._getState(peripheral.state),
-          services: this._servicesWithCharacteristics
+          services: this._servicesWithCharacteristics,
+          advertismentData: this._owner.get()._advData[UUID]
         });
         this._callback = null;
+        delete this._owner.get()._advData[UUID];
       }
     }
   }
