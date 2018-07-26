@@ -2,6 +2,7 @@ declare var NSMakeRange; // not recognized by platform-declarations
 
 import { CLog, CLogTypes } from '../common';
 import { Bluetooth } from './ios_main';
+import { CBPeripheralDelegateImpl } from './CBPeripheralDelegateImpl';
 
 /**
  * @link - https://developer.apple.com/documentation/corebluetooth/cbcentralmanagerdelegate
@@ -36,13 +37,14 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
    */
   public centralManagerDidConnectPeripheral(central: CBCentralManager, peripheral: CBPeripheral) {
     CLog(CLogTypes.info, `----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral: ${peripheral}`);
-
+    const UUID = peripheral.identifier.UUIDString;
     // find the peri in the array and attach the delegate to that
-    const peri = this._owner.get().findPeripheral(peripheral.identifier.UUIDString);
+    const peri = this._owner.get().findPeripheral(UUID);
     CLog(CLogTypes.info, `----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral: cached perio: ${peri}`);
 
-    const cb = this._owner.get()._connectCallbacks[peripheral.identifier.UUIDString];
-    const delegate = CBCentralManagerDelegateImpl.new().initWithCallback(this._owner, cb);
+    const cb = this._owner.get()._connectCallbacks[UUID];
+    delete this._owner.get()._connectCallbacks[UUID];
+    const delegate = CBPeripheralDelegateImpl.new().initWithCallback(this._owner, cb);
     CFRetain(delegate);
     peri.delegate = delegate;
 
@@ -62,17 +64,20 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
    */
   public centralManagerDidDisconnectPeripheralError(central: CBCentralManager, peripheral: CBPeripheral, error?: NSError) {
     // this event needs to be honored by the client as any action afterwards crashes the app
-    const cb = this._owner.get()._disconnectCallbacks[peripheral.identifier.UUIDString];
+    const UUID = peripheral.identifier.UUIDString;
+    const cb = this._owner.get()._disconnectCallbacks[UUID];
     if (cb) {
       cb({
         UUID: peripheral.identifier.UUIDString,
         name: peripheral.name
       });
+      delete this._owner.get()._disconnectCallbacks[UUID];
     } else {
       CLog(CLogTypes.info, `***** centralManagerDidDisconnectPeripheralError() no disconnect callback found *****`);
     }
     const foundAt = this._owner.get()._peripheralArray.indexOfObject(peripheral);
     this._owner.get()._peripheralArray.removeObject(foundAt);
+    peripheral.delegate = null;
   }
 
   /**
@@ -152,6 +157,7 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
           state: this._owner.get()._getState(peripheral.state),
           manufacturerId: manufacturerId
         };
+        this._owner.get()._advData[payload.UUID] = advertismentData;
         this._owner.get()._onDiscovered(payload);
         this._owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
       } else {

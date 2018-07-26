@@ -22,6 +22,7 @@ export class Bluetooth extends BluetoothCommon {
   private _data_service: CBMutableService;
   public _peripheralArray = null;
   public _connectCallbacks = {};
+  public _advData = {};
   public _disconnectCallbacks = {};
   public _onDiscovered = null;
 
@@ -88,6 +89,7 @@ export class Bluetooth extends BluetoothCommon {
 
         let services: any[] = null;
         if (arg.filters) {
+          services = [];
           arg.filters.forEach(f => {
             if (f.serviceUUID) {
               services.push(CBUUID.UUIDWithString(f.serviceUUID));
@@ -214,7 +216,7 @@ export class Bluetooth extends BluetoothCommon {
           // no need to send an error when already disconnected, but it's wise to check it
           if (peripheral.state !== CBPeripheralState.Disconnected) {
             this._centralManager.cancelPeripheralConnection(peripheral);
-            peripheral.delegate = null;
+            // peripheral.delegate = null;
             // TODO remove from the peripheralArray as well
           }
           resolve();
@@ -329,9 +331,12 @@ export class Bluetooth extends BluetoothCommon {
           return;
         }
 
-        const valueEncoded = arg.raw === true ? arg.value : this._encodeValue(arg.value);
+        const valueEncoded = arg.raw === true ? this.valueToNSData(arg.value) : this._encodeValue(arg.value);
 
-        CLog(CLogTypes.info, 'Bluetooth.writeWithoutResponse ---- Attempting to write (encoded): ' + valueEncoded);
+        CLog(
+          CLogTypes.info,
+          `Bluetooth.writeWithoutResponse ---- Attempting to write (${arg.raw === true ? 'raw' : 'encoded'}): ${valueEncoded}`
+        );
 
         wrapper.peripheral.writeValueForCharacteristicType(valueEncoded, wrapper.characteristic, CBCharacteristicWriteType.WithoutResponse);
 
@@ -548,5 +553,21 @@ export class Bluetooth extends BluetoothCommon {
       result[i] = parts[i];
     }
     return result.buffer;
+  }
+
+  private valueToNSData(value) {
+    if (typeof value === 'string') {
+      return NSString.stringWithString(value).dataUsingEncoding(NSUTF8StringEncoding);
+      // called within this class
+    } else if (Array.isArray(value)) {
+      let data = NSMutableData.alloc().initWithCapacity(value.length);
+      for (let index = 0; index < value.length; index++) {
+        const element = value[index];
+        data.appendBytesLength(new Number(element).valueOf() as any, 1);
+      }
+      return data;
+    } else {
+      return null;
+    }
   }
 }
