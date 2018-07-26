@@ -5,6 +5,7 @@ export declare class Bluetooth extends BluetoothCommon {
   private _data_service;
   _peripheralArray: any;
   _connectCallbacks: {};
+  _advData: {};
   _disconnectCallbacks: {};
   _onDiscovered: any;
   constructor(restoreIdentifier?: string);
@@ -36,4 +37,5 @@ export declare class Bluetooth extends BluetoothCommon {
   private _findCharacteristic(UUID, service, property);
   private _getWrapper(arg, property, reject);
   private _encodeValue(value);
+  private valueToNSData(value);
 }
