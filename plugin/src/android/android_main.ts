@@ -918,7 +918,7 @@ export class Bluetooth extends BluetoothCommon {
           result['txPowerLevel'] = this.encodeValue(data);
           break;
         case 0x09:
-          result['localName'] = new java.lang.String(data, 'UTF-8');
+          result['localName'] = String.fromCharCode.apply(String, data);
           break;
         case 0x01:
           result['flags'] = this.encodeValue(data);
