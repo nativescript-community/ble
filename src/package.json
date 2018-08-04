@@ -18,9 +18,8 @@
   },
   "scripts": {
     "tsc": "tsc -skipLibCheck",
-    "build": "npm i && tsc && npm run build.native",
-    "build.native": "node scripts/build-native.js",
-    "postclone": "npm i && node scripts/postclone.js && cd ../demo && npm i && cd ../src && npm run plugin.link",
+
+    "build": "npm i && tsc",
     "test.android": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build android && tns test android --justlaunch",
     "test.ios": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build ios && tns test ios --justlaunch",
     "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\"",
@@ -32,16 +31,27 @@
     "plugin.prepare": "npm run build && cd ../demo && tns plugin remove nativescript-bluetooth && tns plugin add ../src",
     "clean": "cd ../demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
     "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'",
-    "prepack": "npm run build.native"
+    "precommit": "lint-staged"
   },
   "lint-staged": {
-    "*.ts": ["prettier --write", "git add"]
+    "*.ts": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/eddyverbruggen/nativescript-bluetooth.git"
   },
-  "keywords": ["ecosystem:NativeScript", "NativeScript", "BLE", "Bluetooth", "Bluetooth LE", "Bluetooth Smart", "Bluetooth Low Energy"],
+  "keywords": [
+    "ecosystem:NativeScript",
+    "NativeScript",
+    "BLE",
+    "Bluetooth",
+    "Bluetooth LE",
+    "Bluetooth Smart",
+    "Bluetooth Low Energy"
+  ],
   "author": {
     "name": "Eddy Verbruggen",
     "email": "eddyverbruggen@gmail.com"
