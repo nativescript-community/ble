@@ -137,7 +137,8 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
         UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
         name: device.getName(),
         state: 'connected', // Bluetooth._getState(peripheral.state),
-        services: servicesJs
+        services: servicesJs,
+        advertismentData: stateObject.advertismentData
       });
     }
   }

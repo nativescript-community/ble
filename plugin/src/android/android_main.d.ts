@@ -45,7 +45,25 @@ export declare class Bluetooth extends BluetoothCommon {
     MatchNum: typeof MatchNum;
     CallbackType: typeof CallbackType;
   };
-  connections: {};
+  connections: {
+    [k: string]: {
+      state: 'connected' | 'connecting' | 'disconnected';
+      onConnected?;
+      onDisconnected?;
+      device?;
+      onReadPromise?;
+      onWritePromise?;
+      onNotifyCallback?;
+      advertismentData?: {
+        manufacturerData?;
+        txPowerLevel?;
+        localName?;
+        flags?;
+        uuids?;
+        class?;
+      };
+    };
+  };
   private broadcastReceiver;
   constructor();
   readonly enabled: boolean;
@@ -61,6 +79,7 @@ export declare class Bluetooth extends BluetoothCommon {
     timer?: number;
     resolve?: Function;
   };
+  private stopCurrentScan();
   startScanning(arg: StartScanningOptions): Promise<{}>;
   stopScanning(): Promise<{}>;
   connect(arg: ConnectOptions): Promise<{}>;
