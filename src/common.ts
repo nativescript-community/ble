@@ -182,6 +182,12 @@ export interface StartScanningOptions {
   seconds?: number;
 
   /**
+   * The number of milliseconds to to wait before discovering services.
+   * Default: 0.
+   */
+  discoveryDelay?: number;
+
+  /**
    * This callback is invoked when a peripheral is found.
    */
   onDiscovered?: (data: Peripheral) => void;

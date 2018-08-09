@@ -29,24 +29,33 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
       CLogTypes.info,
       `TNS_BluetoothGattCallback.onConnectionStateChange ---- gatt: ${gatt}, status: ${status}, newState: ${newState}`
     );
+
+    let owner = this.owner.get();
+    
     if (
       newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED &&
       status === android.bluetooth.BluetoothGatt.GATT_SUCCESS
     ) {
       CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.onConnectionStateChange ---- discovering services -----');
       // Discovers services offered by a remote device as well as their characteristics and descriptors.
-
-      setTimeout( () => { 
-        // some devices need a delay before discovering services -GS
+      if( owner && owner.discoveryDelay != null && owner.discoveryDelay > 0 ){
+        setTimeout( () => { 
+          // some devices need a delay before discovering services -GS
+          gatt.discoverServices();
+        }, owner.discoveryDelay)
+      } else {
         gatt.discoverServices();
-      }, 1000)
+      }
+
     } else {
       CLog(
         CLogTypes.info,
         `TNS_BluetoothGattCallback.onConnectionStateChange ---- disconnecting the gatt: ${gatt} ----`
       );
       // perhaps the device was manually disconnected, or in use by another device
-      this.owner.get().gattDisconnect(gatt, status);
+      if( owner ) {
+        owner.gattDisconnect(gatt, status);
+      }
     }
   }
 
@@ -150,6 +159,11 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
 
       const device = gatt.getDevice();
       const stateObject = this.owner.get().connections[device.getAddress()];
+      if (!stateObject) {
+        this.owner.get().gattDisconnect(gatt);
+        return;
+      }
+
       stateObject.onConnected({
         UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
         name: device.getName(),
