@@ -128,7 +128,25 @@ export class Bluetooth extends BluetoothCommon {
    *   }
    * }, ..]
    */
-  public connections = {};
+  public connections: {
+    [k: string]: {
+      state: 'connected' | 'connecting' | 'disconnected';
+      onConnected?;
+      onDisconnected?;
+      device?;
+      onReadPromise?;
+      onWritePromise?;
+      onNotifyCallback?;
+      advertismentData?: {
+        manufacturerData?;
+        txPowerLevel?;
+        localName?;
+        flags?;
+        uuids?;
+        class?;
+      };
+    };
+  } = {};
   private broadcastReceiver;
   constructor() {
     super();
@@ -311,6 +329,23 @@ export class Bluetooth extends BluetoothCommon {
     timer?: number;
     resolve?: Function;
   };
+
+  private stopCurrentScan() {
+    CLog(CLogTypes.info, 'Bluetooth.stopCurrentScan');
+    // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
+    // if less than Android21 (Lollipop)
+    if (SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
+      this.adapter.stopLeScan(this.LeScanCallback);
+    } else {
+      this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
+    }
+    this.scanCallback.onPeripheralDiscovered = null;
+    if (this.scanningReferTimer) {
+      clearTimeout(this.scanningReferTimer.timer);
+      this.scanningReferTimer.resolve();
+      this.scanningReferTimer = null;
+    }
+  }
   public startScanning(arg: StartScanningOptions) {
     return new Promise((resolve, reject) => {
       try {
@@ -399,22 +434,11 @@ export class Bluetooth extends BluetoothCommon {
             this.LeScanCallback.onPeripheralDiscovered = arg.onDiscovered;
           }
           if (this.scanningReferTimer) {
-            clearTimeout(this.scanningReferTimer.timer);
-            this.scanningReferTimer.resolve();
+            this.stopCurrentScan();
           }
-          this.scanningReferTimer = {};
+          this.scanningReferTimer = { resolve: resolve };
           if (arg.seconds) {
-            this.scanningReferTimer.timer = setTimeout(() => {
-              // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
-              // if < Android21 (Lollipop)
-              if (SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                this.adapter.stopLeScan(this.LeScanCallback);
-              } else {
-                this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
-              }
-              resolve();
-            }, arg.seconds * 1000);
-            this.scanningReferTimer.resolve = resolve;
+            this.scanningReferTimer.timer = setTimeout(() => this.stopCurrentScan(), arg.seconds * 1000);
           } else {
             resolve();
           }

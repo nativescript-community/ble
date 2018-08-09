@@ -22,13 +22,13 @@ export class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapter.LeSca
       onLeScan(device: android.bluetooth.BluetoothDevice, rssi: number, scanRecord: number[]) {
         CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- device: ${device}, rssi: ${rssi}, scanRecord: ${scanRecord}`);
 
-        const stateObject = this.owner.get().connections[device.getAddress()];
+        let stateObject = this.owner.get().connections[device.getAddress()];
         if (!stateObject) {
-          this.owner.get().connections[device.getAddress()] = {
+          stateObject = this.owner.get().connections[device.getAddress()] = {
             state: 'disconnected'
           };
 
-          const advertismentData = this.owner.get().extractAdvertismentData(scanRecord);
+          const advertismentData = (stateObject.advertismentData = this.owner.get().extractAdvertismentData(scanRecord));
           let manufacturerId;
           CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- advertismentData: ${advertismentData}`);
           if (advertismentData.manufacturerData) {

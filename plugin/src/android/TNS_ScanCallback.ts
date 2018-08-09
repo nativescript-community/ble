@@ -57,9 +57,9 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
    */
   onScanResult(callbackType: number, result: android.bluetooth.le.ScanResult) {
     CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- callbackType: ${callbackType}, result: ${result}`);
-    const stateObject = this.owner.get().connections[result.getDevice().getAddress()];
+    let stateObject = this.owner.get().connections[result.getDevice().getAddress()];
     if (!stateObject) {
-      this.owner.get().connections[result.getDevice().getAddress()] = {
+      stateObject = this.owner.get().connections[result.getDevice().getAddress()] = {
         state: 'disconnected'
       };
     }
@@ -72,7 +72,7 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
       CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- manufacturerId: ${manufacturerId}`);
     }
 
-    const advertismentData = this.owner.get().extractAdvertismentData(scanRecord.getBytes());
+    const advertismentData = (stateObject.advertismentData = this.owner.get().extractAdvertismentData(scanRecord.getBytes()));
 
     CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- advertismentData: ${JSON.stringify(advertismentData)}`);
 
