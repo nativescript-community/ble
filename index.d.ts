@@ -19,6 +19,11 @@ declare module "nativescript-bluetooth" {
      * This callback is invoked when a peripheral is found.
      */
     onDiscovered: (data: Peripheral) => void;
+
+    /**
+     * If set to true, onDiscovered is called not just once per peripheral but for each advertising packet
+     */
+    continuous?: boolean;
   }
 
   /**

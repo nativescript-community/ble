@@ -6,7 +6,8 @@ Bluetooth._state = {
   peripheralArray: null,
   connectCallbacks: {},
   disconnectCallbacks: {},
-  onDiscovered: null
+  onDiscovered: null,
+  continuousScan: false
 };
 
 var CBPeripheralDelegateImpl = (function (_super) {
@@ -242,9 +243,11 @@ var CBCentralManagerDelegateImpl = (function (_super) {
   // fires when a peripheral is discovered after executing the 'scan' function
   CBCentralManagerDelegateImpl.prototype.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI = function (central, peripheral, advData, RSSI) {
     console.log("----- delegate centralManager:didDiscoverPeripheral: " + peripheral.name + " @ " + RSSI);
-    var peri = Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
-    if (!peri) {
+    var newPeripheral = !Bluetooth._findPeripheral(peripheral.identifier.UUIDString);
+    if (newPeripheral) {
       Bluetooth._state.peripheralArray.addObject(peripheral);
+    }
+    if (newPeripheral || Bluetooth._state.continuousScan) {
       if (Bluetooth._state.onDiscovered) {
         var manufacturerId, manufacturerData;
         if (advData.objectForKey(CBAdvertisementDataManufacturerDataKey)) {
@@ -385,6 +388,7 @@ Bluetooth.startScanning = function (arg) {
         return;
       }
       Bluetooth._state.peripheralArray = NSMutableArray.new();
+      Bluetooth._state.continuousScan = arg.continuous;
 
       // TODO actualy, should init the delegate here with this as the callback (see 'onConnected') --> but first test if that works
       Bluetooth._state.onDiscovered = arg.onDiscovered;
@@ -394,7 +398,13 @@ Bluetooth.startScanning = function (arg) {
       for (var s in serviceUUIDs) {
         services.push(CBUUID.UUIDWithString(serviceUUIDs[s]));
       }
-      Bluetooth._state.manager.scanForPeripheralsWithServicesOptions(services, null);
+      var options = null;
+      if (Bluetooth._state.continuousScan) {
+        options = NSDictionary.dictionaryWithDictionary({
+          CBCentralManagerScanOptionAllowDuplicatesKey: 1
+        });
+      }
+      Bluetooth._state.manager.scanForPeripheralsWithServicesOptions(services, options);
       if (arg.seconds) {
         setTimeout(function () {
           // note that by now a manual 'stop' may have been invoked, but that doesn't hurt

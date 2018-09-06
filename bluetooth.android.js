@@ -111,11 +111,13 @@ Bluetooth._connections = {};
         console.log("------- scanCallback.onScanFailed errorMessage: " + errorMessage);
       },
       onScanResult: function (callbackType, result) {
-        var stateObject = Bluetooth._connections[result.getDevice().getAddress()];
-        if (!stateObject) {
+        var newPeripheral = !Bluetooth._connections[result.getDevice().getAddress()];
+        if (newPeripheral) {
           Bluetooth._connections[result.getDevice().getAddress()] = {
             state: 'disconnected'
           };
+        }
+        if (newPeripheral || Bluetooth._continuousScan) {
           var manufacturerId, manufacturerData;
           if (result.getScanRecord().getManufacturerSpecificData().size() > 0) {
             manufacturerId = result.getScanRecord().getManufacturerSpecificData().keyAt(0);
@@ -161,12 +163,13 @@ Bluetooth._connections = {};
     Bluetooth._scanCallback = new android.bluetooth.BluetoothAdapter.LeScanCallback({
       // see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L2181
       onLeScan: function (device, rssi, scanRecord) {
-        var stateObject = Bluetooth._connections[device.getAddress()];
-        if (!stateObject) {
+        var newPeripheral = !Bluetooth._connections[device.getAddress()];
+        if (newPeripheral) {
           Bluetooth._connections[device.getAddress()] = {
             state: 'disconnected'
           };
-
+        }
+        if (newPeripheral || Bluetooth._continuousScan) {
           var manufacturerId, manufacturerData;
           var manufacturerDataRaw = extractManufacturerRawData(scanRecord);
           if (manufacturerDataRaw) {
@@ -450,6 +453,7 @@ Bluetooth.startScanning = function (arg) {
 
       _onPermissionGranted = function () {
         Bluetooth._connections = {};
+        Bluetooth._continuousScan = arg.continuous;
 
         var serviceUUIDs = arg.serviceUUIDs || [];
         var uuids = [];
@@ -491,7 +495,7 @@ Bluetooth.startScanning = function (arg) {
             var matchNum = arg.matchNum || android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;
             scanSettings.setNumOfMatches(matchNum);
 
-            var callbackType = arg.callbackType || android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
+            var callbackType = arg.callbackType || (Bluetooth._continuousScan ? android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES : android.bluetooth.le.ScanSettings.CALLBACK_TYPE_FIRST_MATCH);
             scanSettings.setCallbackType(callbackType);
           }
           adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), Bluetooth._scanCallback);
