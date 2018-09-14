@@ -149,6 +149,11 @@ bluetooth.startScanning({
 });
 ```
 
+#### continuous
+By default, the `onDiscovered` callback is called only once for each discovered peripheral. If the `continuous` option is set to true, onDiscovered is called
+continuously, for each received advertising on Android or as often as iOS reports it.
+
+
 ### stopScanning
 At any time during a scan, being one where you passed in a number or seconds or not, you can stop the scan by calling this function.
 

@@ -187,6 +187,11 @@ export interface StartScanningOptions {
   onDiscovered?: (data: Peripheral) => void;
 
   /**
+   * If set to true, onDiscovered is called not just once per peripheral but for each advertising packet
+   */
+  continuous?: boolean;
+
+  /**
    * *** ANDROID ONLY ***
    * Set this to true if you don't want the plugin to check (and request) the required Bluetooth permissions.
    * Particularly useful if you're running this function on a non-UI thread (ie. a Worker).

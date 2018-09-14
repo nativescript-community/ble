@@ -60,11 +60,13 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
    */
   onScanResult(callbackType: number, result: android.bluetooth.le.ScanResult) {
     CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- callbackType: ${callbackType}, result: ${result}`);
-    const stateObject = this.owner.get().connections[result.getDevice().getAddress()];
-    if (!stateObject) {
+    const newPeripheral = !this.owner.get().connections[result.getDevice().getAddress()];
+    if (newPeripheral) {
       this.owner.get().connections[result.getDevice().getAddress()] = {
         state: 'disconnected'
       };
+    }
+    if (newPeripheral || this.owner.get().continuousScan) {
       let manufacturerId;
       let manufacturerData;
       if (

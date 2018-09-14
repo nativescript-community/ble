@@ -51,6 +51,8 @@ export class Bluetooth extends BluetoothCommon {
    */
   public connections = {};
 
+  public continuousScan = false;
+
   constructor() {
     super();
     CLog(CLogTypes.info, '*** Android Bluetooth Constructor ***');
@@ -192,6 +194,7 @@ export class Bluetooth extends BluetoothCommon {
 
         const onPermissionGranted = () => {
           this.connections = {};
+          this.continuousScan = arg.continuous;
 
           const serviceUUIDs = arg.serviceUUIDs || [];
           const uuids = [];
@@ -241,7 +244,11 @@ export class Bluetooth extends BluetoothCommon {
               const matchNum = (arg.android && arg.android.matchNum) || android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;
               scanSettings.setNumOfMatches(matchNum);
 
-              const callbackType = (arg.android && arg.android.callbackType) || android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
+              const callbackType =
+                (arg.android && arg.android.callbackType) ||
+                (this.continuousScan
+                  ? android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES
+                  : android.bluetooth.le.ScanSettings.CALLBACK_TYPE_FIRST_MATCH);
               scanSettings.setCallbackType(callbackType);
             }
 

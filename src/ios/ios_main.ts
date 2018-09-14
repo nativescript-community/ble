@@ -26,6 +26,7 @@ export class Bluetooth extends BluetoothCommon {
   public _connectCallbacks = {};
   public _disconnectCallbacks = {};
   public _onDiscovered = null;
+  public _continuousScan = false;
 
   constructor() {
     super();
@@ -79,6 +80,7 @@ export class Bluetooth extends BluetoothCommon {
 
         this._peripheralArray = NSMutableArray.new();
         this._onDiscovered = arg.onDiscovered;
+        this._continuousScan = arg.continuous;
         const serviceUUIDs = arg.serviceUUIDs || [];
 
         // let services: NSArray<CBUUID>;
@@ -89,8 +91,15 @@ export class Bluetooth extends BluetoothCommon {
           }
         }
 
+        let options = null;
+        if (this._continuousScan) {
+          options = NSDictionary.dictionaryWithObjectsAndKeys({
+            CBCentralManagerScanOptionAllowDuplicatesKey: 1
+          });
+        }
+
         // TODO: check on the services as any casting
-        this._centralManager.scanForPeripheralsWithServicesOptions(services as any, null);
+        this._centralManager.scanForPeripheralsWithServicesOptions(services as any, options);
         if (arg.seconds) {
           setTimeout(() => {
             // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
