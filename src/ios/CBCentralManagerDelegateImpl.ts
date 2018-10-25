@@ -3,6 +3,7 @@ declare var NSMakeRange; // not recognized by platform-declarations
 
 import { CLog, CLogTypes } from '../common';
 import { Bluetooth } from './ios_main';
+import { CBPeripheralDelegateImpl } from './CBPeripheralDelegateImpl';
 
 /**
  * @link - https://developer.apple.com/documentation/corebluetooth/cbcentralmanagerdelegate
@@ -43,7 +44,7 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
     CLog(CLogTypes.info, `----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral: cached perio: ${peri}`);
 
     const cb = this._owner.get()._connectCallbacks[peripheral.identifier.UUIDString];
-    const delegate = CBCentralManagerDelegateImpl.new().initWithCallback(this._owner, cb);
+    const delegate = CBPeripheralDelegateImpl.new().initWithCallback(this._owner, cb);
     CFRetain(delegate);
     peri.delegate = delegate;
 
