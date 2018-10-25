@@ -192,6 +192,8 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
 
     const result = {
       type: characteristic.isNotifying ? 'notification' : 'read',
+      peripheralUUID: peripheral.identifier.UUIDString,
+      serviceUUID: characteristic.service.UUID.UUIDString,
       characteristicUUID: characteristic.UUID.UUIDString,
       valueRaw: characteristic.value,
       value: this._owner.get().toArrayBuffer(characteristic.value)
@@ -232,6 +234,8 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
     );
     if (this._onWritePromise) {
       this._onWritePromise({
+        peripheralUUID: peripheral.identifier.UUIDString,
+        serviceUUID: characteristic.service.UUID.UUIDString,
         characteristicUUID: characteristic.UUID.UUIDString
       });
     } else {

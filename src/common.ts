@@ -375,10 +375,9 @@ export interface StartNotifyingOptions extends CRUDOptions {
 /**
  * Response object for the read function
  */
-export interface ReadResult {
+export interface ReadResult extends CRUDOptions {
   value: any;
   valueRaw: any;
-  characteristicUUID: string;
 }
 
 export interface StartAdvertisingOptions {
