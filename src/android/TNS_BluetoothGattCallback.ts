@@ -29,10 +29,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
     if (newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED && status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
       this.select2MPHY(gatt);
     } else {
-      CLog(
-        CLogTypes.info,
-        `TNS_BluetoothGattCallback.onConnectionStateChange ---- disconnecting the gatt: ${gatt} ----`
-      );
+      CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onConnectionStateChange ---- disconnecting the gatt: ${gatt} ----`);
       // perhaps the device was manually disconnected, or in use by another device
       this.owner.get().gattDisconnect(gatt);
     }
@@ -44,10 +41,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
    * @param status [number] - GATT_SUCCESS if the remote device has been explored successfully.
    */
   onServicesDiscovered(gatt: android.bluetooth.BluetoothGatt, status: number) {
-    CLog(
-      CLogTypes.info,
-      `TNS_BluetoothGattCallback.onServicesDiscovered ---- gatt: ${gatt}, status (0=success): ${status}`
-    );
+    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- gatt: ${gatt}, status (0=success): ${status}`);
 
     if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
       // TODO grab from cached object and extend with services data?
@@ -84,10 +78,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
               };
             }
 
-            CLog(
-              CLogTypes.info,
-              `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing descriptor: ${descriptor}`
-            );
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing descriptor: ${descriptor}`);
             descriptorsJs.push(descriptorJs);
           }
 
@@ -123,10 +114,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
             };
           }
 
-          CLog(
-            CLogTypes.info,
-            `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing characteristic: ${characteristicJs}`
-          );
+          CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing characteristic: ${characteristicJs}`);
           characteristicsJs.push(characteristicJs);
         }
 
@@ -184,10 +172,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
    * @param gatt [android.bluetooth.BluetoothGatt] - GATT client the characteristic is associated with.
    * @param characteristic [android.bluetooth.BluetoothGattCharacteristic] - Characteristic that has been updated as a result of a remote notification event.
    */
-  onCharacteristicChanged(
-    gatt: android.bluetooth.BluetoothGatt,
-    characteristic: android.bluetooth.BluetoothGattCharacteristic
-  ) {
+  onCharacteristicChanged(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic) {
     const device = gatt.getDevice();
     CLog(
       CLogTypes.info,
@@ -249,15 +234,8 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
    * @param descriptor - Descriptor that was read from the associated remote device.
    * @param status - GATT_SUCCESS if the read operation was completed successfully
    */
-  onDescriptorRead(
-    gatt: android.bluetooth.BluetoothGatt,
-    descriptor: android.bluetooth.BluetoothGattDescriptor,
-    status: number
-  ) {
-    CLog(
-      CLogTypes.info,
-      `TNS_BluetoothGattCallback.onDescriptorRead ---- gatt: ${gatt}, descriptor: ${descriptor}, status: ${status}`
-    );
+  onDescriptorRead(gatt: android.bluetooth.BluetoothGatt, descriptor: android.bluetooth.BluetoothGattDescriptor, status: number) {
+    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onDescriptorRead ---- gatt: ${gatt}, descriptor: ${descriptor}, status: ${status}`);
   }
 
   /**
@@ -304,10 +282,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
    * @param status - GATT_SUCCESS if the RSSI was read successfully.
    */
   onReadRemoteRssi(gatt: android.bluetooth.BluetoothGatt, rssi: number, status: number) {
-    CLog(
-      CLogTypes.info,
-      `TNS_BluetoothGattCallback.onReadRemoteRssi ---- gatt: ${gatt} rssi: ${rssi}, status: ${status}`
-    );
+    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onReadRemoteRssi ---- gatt: ${gatt} rssi: ${rssi}, status: ${status}`);
   }
 
   private select2MPHY(gatt: android.bluetooth.BluetoothGatt) {

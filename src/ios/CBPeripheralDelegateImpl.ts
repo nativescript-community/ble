@@ -41,10 +41,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
    * @param error [NSError] - If an error occurred, the cause of the failure.
    */
   public peripheralDidDiscoverServices(peripheral: CBPeripheral, error?: NSError) {
-    CLog(
-      CLogTypes.info,
-      `CBPeripheralDelegateImpl.peripheralDidDiscoverServices ---- peripheral: ${peripheral}, ${error}`
-    );
+    CLog(CLogTypes.info, `CBPeripheralDelegateImpl.peripheralDidDiscoverServices ---- peripheral: ${peripheral}, ${error}`);
     // map native services to a JS object
     this._services = [];
     for (let i = 0; i < peripheral.services.count; i++) {
@@ -64,11 +61,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
    * @param service [CBService] - The CBService object containing the included service.
    * @param error [NSError] - If an error occurred, the cause of the failure.
    */
-  public peripheralDidDiscoverIncludedServicesForServiceError(
-    peripheral: CBPeripheral,
-    service: CBService,
-    error?: NSError
-  ) {
+  public peripheralDidDiscoverIncludedServicesForServiceError(peripheral: CBPeripheral, service: CBService, error?: NSError) {
     CLog(
       CLogTypes.info,
       `CBPeripheralDelegateImpl.peripheralDidDiscoverIncludedServicesForServiceError ---- peripheral: ${peripheral}, service: ${service}, error: ${error}`
@@ -81,11 +74,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
    * @param service [CBService] - The CBService object containing the included service.
    * @param error [NSError] - If an error occurred, the cause of the failure.
    */
-  public peripheralDidDiscoverCharacteristicsForServiceError(
-    peripheral: CBPeripheral,
-    service: CBService,
-    error?: NSError
-  ) {
+  public peripheralDidDiscoverCharacteristicsForServiceError(peripheral: CBPeripheral, service: CBService, error?: NSError) {
     CLog(
       CLogTypes.info,
       `CBPeripheralDelegateImpl.peripheralDidDiscoverCharacteristicsForServiceError ---- peripheral: ${peripheral}, service: ${service}, error: ${error}`
@@ -166,9 +155,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
       const descriptor = characteristic.descriptors.objectAtIndex(i);
       CLog(
         CLogTypes.info,
-        `CBPeripheralDelegateImpl.peripheralDidDiscoverDescriptorsForCharacteristicError ---- char desc UUID: ${
-          descriptor.UUID.UUIDString
-        }`
+        `CBPeripheralDelegateImpl.peripheralDidDiscoverDescriptorsForCharacteristicError ---- char desc UUID: ${descriptor.UUID.UUIDString}`
       );
     }
 
@@ -191,16 +178,9 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
    * the peripheral device notifies your app that the characteristic’s
    * value has changed.
    */
-  public peripheralDidUpdateValueForCharacteristicError(
-    peripheral: CBPeripheral,
-    characteristic: CBCharacteristic,
-    error?: NSError
-  ) {
+  public peripheralDidUpdateValueForCharacteristicError(peripheral: CBPeripheral, characteristic: CBCharacteristic, error?: NSError) {
     if (!characteristic) {
-      CLog(
-        CLogTypes.warning,
-        `CBPeripheralDelegateImpl.peripheralDidUpdateValueForCharacteristicError ---- No CBCharacteristic.`
-      );
+      CLog(CLogTypes.warning, `CBPeripheralDelegateImpl.peripheralDidUpdateValueForCharacteristicError ---- No CBCharacteristic.`);
       return;
     }
 
@@ -235,11 +215,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
   /**
    * Invoked when you retrieve a specified characteristic descriptor’s value.
    */
-  public peripheralDidUpdateValueForDescriptorError(
-    peripheral: CBPeripheral,
-    descriptor: CBDescriptor,
-    error?: NSError
-  ) {
+  public peripheralDidUpdateValueForDescriptorError(peripheral: CBPeripheral, descriptor: CBDescriptor, error?: NSError) {
     CLog(
       CLogTypes.info,
       `CBPeripheralDelegateImpl.peripheralDidUpdateValueForDescriptorError ---- peripheral: ${peripheral}, descriptor: ${descriptor}, error: ${error}`
@@ -249,11 +225,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
   /**
    * Invoked when you write data to a characteristic’s value.
    */
-  public peripheralDidWriteValueForCharacteristicError(
-    peripheral: CBPeripheral,
-    characteristic: CBCharacteristic,
-    error?: NSError
-  ) {
+  public peripheralDidWriteValueForCharacteristicError(peripheral: CBPeripheral, characteristic: CBCharacteristic, error?: NSError) {
     CLog(
       CLogTypes.info,
       `CBPeripheralDelegateImpl.peripheralDidWriteValueForCharacteristicError ---- peripheral: ${peripheral}, characteristic: ${characteristic}, error: ${error}`
@@ -263,10 +235,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
         characteristicUUID: characteristic.UUID.UUIDString
       });
     } else {
-      CLog(
-        CLogTypes.warning,
-        'CBPeripheralDelegateImpl.peripheralDidWriteValueForCharacteristicError ---- No _onWritePromise found!'
-      );
+      CLog(CLogTypes.warning, 'CBPeripheralDelegateImpl.peripheralDidWriteValueForCharacteristicError ---- No _onWritePromise found!');
     }
   }
 
@@ -284,10 +253,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
       `CBPeripheralDelegateImpl.peripheralDidUpdateNotificationStateForCharacteristicError ---- peripheral: ${peripheral}, characteristic: ${characteristic}, error: ${error}`
     );
     if (error) {
-      CLog(
-        CLogTypes.error,
-        `CBPeripheralDelegateImpl.peripheralDidUpdateNotificationStateForCharacteristicError ---- ${error}`
-      );
+      CLog(CLogTypes.error, `CBPeripheralDelegateImpl.peripheralDidUpdateNotificationStateForCharacteristicError ---- ${error}`);
     } else {
       if (characteristic.isNotifying) {
         CLog(
@@ -307,11 +273,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
   /**
    * IInvoked when you write data to a characteristic descriptor’s value.
    */
-  public peripheralDidWriteValueForDescriptorError(
-    peripheral: CBPeripheral,
-    descriptor: CBDescriptor,
-    error?: NSError
-  ) {
+  public peripheralDidWriteValueForDescriptorError(peripheral: CBPeripheral, descriptor: CBDescriptor, error?: NSError) {
     CLog(
       CLogTypes.info,
       `CBPeripheralDelegateImpl.peripheralDidWriteValueForDescriptorError ---- peripheral: ${peripheral}, descriptor: ${descriptor}, error: ${error}`
@@ -322,24 +284,20 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
     const props = characteristic.properties;
     return {
       // broadcast: (props & CBCharacteristicPropertyBroadcast) === CBCharacteristicPropertyBroadcast,
-      broadcast:
-        (props & CBCharacteristicProperties.PropertyBroadcast) === CBCharacteristicProperties.PropertyBroadcast,
+      broadcast: (props & CBCharacteristicProperties.PropertyBroadcast) === CBCharacteristicProperties.PropertyBroadcast,
       read: (props & CBCharacteristicProperties.PropertyRead) === CBCharacteristicProperties.PropertyRead,
-      broadcast2:
-        (props & CBCharacteristicProperties.PropertyBroadcast) === CBCharacteristicProperties.PropertyBroadcast,
+      broadcast2: (props & CBCharacteristicProperties.PropertyBroadcast) === CBCharacteristicProperties.PropertyBroadcast,
       read2: (props & CBCharacteristicProperties.PropertyRead) === CBCharacteristicProperties.PropertyRead,
       write: (props & CBCharacteristicProperties.PropertyWrite) === CBCharacteristicProperties.PropertyWrite,
       writeWithoutResponse:
-        (props & CBCharacteristicProperties.PropertyWriteWithoutResponse) ===
-        CBCharacteristicProperties.PropertyWriteWithoutResponse,
+        (props & CBCharacteristicProperties.PropertyWriteWithoutResponse) === CBCharacteristicProperties.PropertyWriteWithoutResponse,
       notify: (props & CBCharacteristicProperties.PropertyNotify) === CBCharacteristicProperties.PropertyNotify,
       indicate: (props & CBCharacteristicProperties.PropertyIndicate) === CBCharacteristicProperties.PropertyIndicate,
       authenticatedSignedWrites:
         (props & CBCharacteristicProperties.PropertyAuthenticatedSignedWrites) ===
         CBCharacteristicProperties.PropertyAuthenticatedSignedWrites,
       extendedProperties:
-        (props & CBCharacteristicProperties.PropertyExtendedProperties) ===
-        CBCharacteristicProperties.PropertyExtendedProperties,
+        (props & CBCharacteristicProperties.PropertyExtendedProperties) === CBCharacteristicProperties.PropertyExtendedProperties,
       notifyEncryptionRequired:
         (props & CBCharacteristicProperties.PropertyNotifyEncryptionRequired) ===
         CBCharacteristicProperties.PropertyNotifyEncryptionRequired,
