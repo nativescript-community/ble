@@ -25,17 +25,9 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
    * @param newState [number] - Returns the new connection state. Can be one of STATE_DISCONNECTED or STATE_CONNECTED
    */
   onConnectionStateChange(gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) {
-    CLog(
-      CLogTypes.info,
-      `TNS_BluetoothGattCallback.onConnectionStateChange ---- gatt: ${gatt}, status: ${status}, newState: ${newState}`
-    );
-    if (
-      newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED &&
-      status === android.bluetooth.BluetoothGatt.GATT_SUCCESS
-    ) {
-      CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.onConnectionStateChange ---- discovering services -----');
-      // Discovers services offered by a remote device as well as their characteristics and descriptors.
-      gatt.discoverServices();
+    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onConnectionStateChange ---- gatt: ${gatt}, status: ${status}, newState: ${newState}`);
+    if (newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED && status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
+      this.select2MPHY(gatt);
     } else {
       CLog(
         CLogTypes.info,
@@ -274,15 +266,35 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
    * @param descriptor - Descriptor that was written to the associated remote device.
    * @param status - The result of the write operation GATT_SUCCESS if the operation succeeds.
    */
-  onDescriptorWrite(
-    gatt: android.bluetooth.BluetoothGatt,
-    descriptor: android.bluetooth.BluetoothGattDescriptor,
-    status: number
-  ) {
-    CLog(
-      CLogTypes.info,
-      `TNS_BluetoothGattCallback.onDescriptorWrite ---- gatt: ${gatt}, descriptor: ${descriptor}, status: ${status}`
-    );
+  onDescriptorWrite(gatt: android.bluetooth.BluetoothGatt, descriptor: android.bluetooth.BluetoothGattDescriptor, status: number) {
+    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onDescriptorWrite ---- gatt: ${gatt}, descriptor: ${descriptor}, status: ${status}`);
+  }
+
+  /**
+   * Callback indicating the MTU for a given device connection has changed.
+   * This callback is triggered in response to the requestMtu(int) function, or in response to a connection event.
+   * @param gatt - GATT client invoked requestMtu(int).
+   * @param mtu - The new MTU size.
+   * @param status - GATT_SUCCESS if the MTU has been changed successfully.
+   */
+  onMtuChanged(gatt: android.bluetooth.BluetoothGatt, mtu: number, status: number) {
+    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onMtuChanged ---- gatt: ${gatt} mtu: ${mtu}, status: ${status}`);
+
+    this.discoverServices(gatt);
+  }
+
+  /**
+   * Callback indicating the PHY selection for a given device connection has changed.
+   * This callback is triggered in response to the setPreferredPhy(tx,rx,opts) function.
+   * @param gatt - GATT client invoked setPreferredPhy(tx,rx,opts).
+   * @param txPhy - The new Tx PHY.
+   * @param rxPhy - The new Rx PHY.
+   * @param status - GATT_SUCCESS if the PHY has been changed successfully.
+   */
+  onPhyUpdate(gatt: android.bluetooth.BluetoothGatt, txPhy: number, rxPhy: number, status: number) {
+    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onPhyUpdate ---- gatt: ${gatt} txPhy: ${txPhy}, rxPhy: ${rxPhy}, status: ${status}`);
+
+    this.selectMaxMTU(gatt);
   }
 
   /**
@@ -298,13 +310,28 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
     );
   }
 
-  /**
-   * Callback indicating the MTU for a given device connection has changed. This callback is triggered in response to the requestMtu(int) function, or in response to a connection event.
-   * @param gatt - GATT client invoked requestMtu(int).
-   * @param mtu - The new MTU size.
-   * @param status - GATT_SUCCESS if the MTU has been changed successfully.
-   */
-  onMtuChanged(gatt: android.bluetooth.BluetoothGatt, mtu: number, status: number) {
-    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onMtuChanged ---- gatt: ${gatt} mtu: ${mtu}, status: ${status}`);
+  private select2MPHY(gatt: android.bluetooth.BluetoothGatt) {
+    if (this.owner.get().adapter.isLe2MPhySupported()) {
+      CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.select2MPHY ---- selecting 2M PHY -----');
+      gatt.setPreferredPhy(
+        android.bluetooth.BluetoothDevice.PHY_LE_2M_MASK,
+        android.bluetooth.BluetoothDevice.PHY_LE_2M_MASK,
+        android.bluetooth.BluetoothDevice.PHY_OPTION_NO_PREFERRED
+      );
+    } else {
+      CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.select2MPHY ---- skipping 2M PHY selection: not supported -----');
+      this.selectMaxMTU(gatt);
+    }
+  }
+
+  private selectMaxMTU(gatt: android.bluetooth.BluetoothGatt) {
+    CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.selectMaxMTU ---- requesting max MTU (247) -----');
+    gatt.requestMtu(247);
+  }
+
+  private discoverServices(gatt: android.bluetooth.BluetoothGatt) {
+    // Discovers services offered by a remote device as well as their characteristics and descriptors.
+    CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.___ ---- discovering services -----');
+    gatt.discoverServices();
   }
 }
