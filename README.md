@@ -141,7 +141,8 @@ bluetooth.startScanning({
   seconds: 4,
   onDiscovered: function (peripheral) {
   	console.log("Periperhal found with UUID: " + peripheral.UUID);
-  }
+  },
+  skipPermissionCheck: false,
 }).then(function() {
   console.log("scanning complete");
 }, function (err) {
