@@ -1,0 +1,6 @@
+demo/
+*.png
+*.log
+*.map
+*.ts
+!*.d.ts

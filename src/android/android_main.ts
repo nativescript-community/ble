@@ -10,7 +10,8 @@ import {
   StartScanningOptions,
   DisconnectOptions,
   WriteOptions,
-  ReadOptions
+  ReadOptions,
+  BluetoothUtil
 } from '../common';
 import { TNS_BluetoothGattCallback } from './TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './TNS_LeScanCallback';
@@ -195,7 +196,7 @@ export class Bluetooth extends BluetoothCommon {
 
       hasPermission =
         android.content.pm.PackageManager.PERMISSION_GRANTED ===
-        (android.support.v4.content.ContextCompat as any).checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
+        android.support.v4.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
     }
     CLog(CLogTypes.info, 'Bluetooth.coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
     return hasPermission;
@@ -231,7 +232,7 @@ export class Bluetooth extends BluetoothCommon {
       application.android.on(application.AndroidApplication.activityRequestPermissionsEvent, permissionCb);
 
       // invoke the permission dialog
-      (android.support.v4.app.ActivityCompat as any).requestPermissions(
+      android.support.v4.app.ActivityCompat.requestPermissions(
         this._getActivity(),
         [android.Manifest.permission.ACCESS_COARSE_LOCATION],
         ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE
@@ -244,9 +245,16 @@ export class Bluetooth extends BluetoothCommon {
     ) as android.location.LocationManager;
   }
   public isGPSEnabled(): boolean {
-    return this.getAndroidLocationManager().isProviderEnabled(android.location.LocationManager.GPS_PROVIDER);
+    const result = this.getAndroidLocationManager().isProviderEnabled(android.location.LocationManager.GPS_PROVIDER);
+    if (BluetoothUtil.debug) {
+      const providers = this.getAndroidLocationManager().getProviders(false);
+      CLog(CLogTypes.info, 'Bluetooth.isGPSEnabled providers', providers);
+      CLog(CLogTypes.info, 'Bluetooth.isGPSEnabled: ' + result);
+    }
+    return result;
   }
   public enableGPS(): Promise<void> {
+    CLog(CLogTypes.info, 'Bluetooth.enableGPS');
     return new Promise((resolve, reject) => {
       let currentContext = <android.app.Activity>application.android.currentContext;
       if (!this.isGPSEnabled()) {

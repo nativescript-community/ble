@@ -2,8 +2,8 @@
   "name": "nativescript-akylas-bluetooth",
   "version": "1.0.0",
   "description": "Connect to and interact with Bluetooth LE peripherals",
-  "main": "src/bluetooth",
-  "typings": "src/bluetooth.d.ts",
+  "main": "./bluetooth",
+  "typings": "./bluetooth.d.ts",
   "nativescript": {
     "platforms": {
       "android": "3.0.0",
@@ -16,22 +16,6 @@
       "category": "Processing"
     }
   },
-  "scripts": {
-    "tsc": "tsc -skipLibCheck",
-    "build": "npm i && tsc",
-    "test.android": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build android && tns test android --justlaunch",
-    "test.ios": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build ios && tns test ios --justlaunch",
-    "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\"",
-    "plugin.link": "npm link && cd ../demo && npm link nativescript-bluetooth && cd ../src",
-    "plugin.tscwatch": "npm run tsc -- -w",
-    "demo.ios": "npm i && npm run tsc && cd ../demo && tns run ios --syncAllFiles",
-    "demo.android": "npm i && npm run tsc && cd ../demo && tns run android --syncAllFiles",
-    "demo.reset": "cd ../demo && rimraf platforms",
-    "plugin.prepare": "npm run tsc && cd ../demo && tns plugin remove nativescript-bluetooth && tns plugin add ../src",
-    "clean": "cd ../demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
-    "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'",
-    "precommit": "lint-staged"
-  },
   "lint-staged": {
     "*.ts": [
       "prettier --write",
@@ -40,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/eddyverbruggen/nativescript-bluetooth.git"
+    "url": "https://github.com/Akylas/nativescript-bluetooth.git"
   },
   "keywords": [
     "ecosystem:NativeScript",
@@ -60,23 +44,18 @@
       "name": "Brad Martin",
       "email": "bmartin@nstudio.io",
       "url": "https://github.com/bradmartin"
+    },
+    {
+      "name": "Martin Guillon",
+      "email": "martin.guillon@akyasl.fr"
     }
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/eddyverbruggen/nativescript-bluetooth/issues"
+    "url": "https://github.com/Akylas/nativescript-bluetooth/issues"
   },
-  "homepage": "https://github.com/eddyverbruggen/nativescript-bluetooth",
-  "devDependencies": {
-    "husky": "^0.14.3",
-    "lint-staged": "^7.0.4",
-    "prettier": "^1.12.0",
-    "tslint": "~5.9.1",
-    "typescript": "~2.8.1",
-    "tns-core-modules": "^4.1.0",
-    "tns-platform-declarations": "^4.1.0"
-  },
+  "homepage": "https://github.com/Akylas/nativescript-bluetooth",
   "dependencies": {
-    "p-queue": "^2.4.2"
+    "p-queue": "^3.0.0"
   }
 }
