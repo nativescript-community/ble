@@ -35,12 +35,12 @@ export declare class BluetoothCommon extends Observable {
     sendEvent(eventName: string, data?: any, msg?: string): void;
 }
 export interface StartScanningOptions {
-    filters?: {
+    filters?: Array<{
         serviceUUID?: string;
         deviceName?: string;
         deviceAddress?: string;
         manufacturerData?: ArrayBuffer;
-    }[];
+    }>;
     seconds?: number;
     onDiscovered?: (data: Peripheral) => void;
     skipPermissionCheck?: boolean;

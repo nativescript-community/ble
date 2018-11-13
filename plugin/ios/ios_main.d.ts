@@ -1,4 +1,4 @@
-import { BluetoothCommon, StopNotifyingOptions, StartNotifyingOptions, ConnectOptions, StartScanningOptions } from '../common';
+import { BluetoothCommon, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions } from '../common';
 export declare class Bluetooth extends BluetoothCommon {
     private _centralDelegate;
     private _centralManager;
@@ -10,7 +10,7 @@ export declare class Bluetooth extends BluetoothCommon {
     _onDiscovered: any;
     constructor(restoreIdentifier?: string);
     readonly enabled: boolean;
-    _getState(state: CBPeripheralState): "connected" | "disconnected" | "connecting";
+    _getState(state: CBPeripheralState): "connecting" | "connected" | "disconnected";
     isBluetoothEnabled(): Promise<{}>;
     scanningReferTimer: {
         timer?: number;
@@ -19,7 +19,7 @@ export declare class Bluetooth extends BluetoothCommon {
     startScanning(arg: StartScanningOptions): Promise<{}>;
     toArrayBuffer(value: any): ArrayBuffer;
     enable(): Promise<{}>;
-    isGPSEnabled(): boolean;
+    isGPSEnabled(): Promise<boolean>;
     enableGPS(): Promise<void>;
     stopScanning(arg: any): Promise<{}>;
     connect(args: ConnectOptions): Promise<{}>;

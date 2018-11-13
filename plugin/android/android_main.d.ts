@@ -1,4 +1,4 @@
-import { BluetoothCommon, StopNotifyingOptions, StartNotifyingOptions, ConnectOptions, StartScanningOptions, DisconnectOptions, WriteOptions, ReadOptions } from '../common';
+import { BluetoothCommon, ConnectOptions, DisconnectOptions, ReadOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from '../common';
 import { TNS_BluetoothGattCallback } from './TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './TNS_LeScanCallback';
 import { TNS_ScanCallback } from './TNS_ScanCallback';
@@ -62,7 +62,7 @@ export declare class Bluetooth extends BluetoothCommon {
     hasCoarseLocationPermission(): Promise<{}>;
     requestCoarseLocationPermission(callback?: () => void): Promise<boolean>;
     getAndroidLocationManager(): android.location.LocationManager;
-    isGPSEnabled(): boolean;
+    isGPSEnabled(): any;
     enableGPS(): Promise<void>;
     enable(): Promise<{}>;
     isBluetoothEnabled(): Promise<{}>;
