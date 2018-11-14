@@ -3,7 +3,12 @@ export declare class Bluetooth extends BluetoothCommon {
     private _centralDelegate;
     private _centralManager;
     private _data_service;
-    _peripheralArray: any;
+    _discoverPeripherals: {
+        [k: string]: CBPeripheral;
+    };
+    _connectedPeripherals: {
+        [k: string]: CBPeripheral;
+    };
     _connectCallbacks: {};
     _advData: {};
     _disconnectCallbacks: {};
@@ -11,6 +16,8 @@ export declare class Bluetooth extends BluetoothCommon {
     constructor(restoreIdentifier?: string);
     readonly enabled: boolean;
     _getState(state: CBPeripheralState): "connecting" | "connected" | "disconnected";
+    onPeripheralDisconnected(peripheral: CBPeripheral): void;
+    onPeripheralConnected(peripheral: CBPeripheral): void;
     isBluetoothEnabled(): Promise<{}>;
     scanningReferTimer: {
         timer?: number;

@@ -12,7 +12,8 @@ export class Bluetooth extends BluetoothCommon {
     private _centralManager: CBCentralManager;
 
     private _data_service: CBMutableService;
-    public _peripheralArray = null;
+    public _discoverPeripherals: { [k: string]: CBPeripheral } = {};
+    public _connectedPeripherals: { [k: string]: CBPeripheral } = {};
     public _connectCallbacks = {};
     public _advData = {};
     public _disconnectCallbacks = {};
@@ -52,6 +53,15 @@ export class Bluetooth extends BluetoothCommon {
         }
     }
 
+    public onPeripheralDisconnected(peripheral: CBPeripheral) {
+        const UUID = peripheral.identifier.UUIDString;
+        delete this._connectedPeripherals[UUID];
+    }
+    public onPeripheralConnected(peripheral: CBPeripheral) {
+        const UUID = peripheral.identifier.UUIDString;
+        this._connectedPeripherals[UUID] = peripheral;
+    }
+
     public isBluetoothEnabled() {
         return new Promise((resolve, reject) => {
             try {
@@ -76,7 +86,7 @@ export class Bluetooth extends BluetoothCommon {
                     return;
                 }
 
-                this._peripheralArray = NSMutableArray.new();
+                this._discoverPeripherals = {};
                 this._onDiscovered = arg.onDiscovered;
 
                 let services: any[] = null;
@@ -246,13 +256,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public findPeripheral(UUID): CBPeripheral {
-        for (let i = 0; i < this._peripheralArray.count; i++) {
-            const peripheral = this._peripheralArray.objectAtIndex(i);
-            if (UUID === peripheral.identifier.UUIDString) {
-                return peripheral;
-            }
-        }
-        return null;
+        return this._connectedPeripherals[UUID] || this._discoverPeripherals[UUID];
     }
 
     public read(arg) {
