@@ -16,7 +16,6 @@ import {
 import { TNS_BluetoothGattCallback } from './TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './TNS_LeScanCallback';
 import { TNS_ScanCallback } from './TNS_ScanCallback';
-
 import * as Queue from 'p-queue';
 
 const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
@@ -155,10 +154,11 @@ export class Bluetooth extends BluetoothCommon {
 
         // if >= Android21 (Lollipop)
         if (SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            this.scanCallback = new TNS_ScanCallback();
+            this.scanCallback = new (require('./TNS_ScanCallback').TNS_ScanCallback)();
+
             this.scanCallback.onInit(new WeakRef(this));
         } else {
-            this.LeScanCallback = new TNS_LeScanCallback();
+            this.LeScanCallback = new (require('./TNS_LeScanCallback').TNS_LeScanCallback)();
             this.LeScanCallback.onInit(new WeakRef(this));
         }
 
