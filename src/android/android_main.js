@@ -316,7 +316,7 @@ var Bluetooth = (function (_super) {
                         var scanSettings = new android.bluetooth.le.ScanSettings.Builder();
                         scanSettings.setReportDelay(0);
                         var scanMode = (arg.android && arg.android.scanMode) || ScanMode.LOW_LATENCY;
-                        scanSettings.setScanMode(androidMatchMode(scanMode));
+                        scanSettings.setScanMode(androidScanMode(scanMode));
                         if (SDK_INT >= 23) {
                             var matchMode = (arg.android && arg.android.matchMode) || MatchMode.AGGRESSIVE;
                             scanSettings.setMatchMode(androidMatchMode(matchMode));
