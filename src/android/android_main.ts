@@ -411,7 +411,7 @@ export class Bluetooth extends BluetoothCommon {
                         scanSettings.setReportDelay(0);
 
                         const scanMode = (arg.android && arg.android.scanMode) || ScanMode.LOW_LATENCY;
-                        scanSettings.setScanMode(androidMatchMode(scanMode));
+                        scanSettings.setScanMode(androidScanMode(scanMode));
 
                         // if >= Android23 (Marshmallow)
                         if (android.os.Build.VERSION.SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */) {
