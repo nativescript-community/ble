@@ -4,5 +4,6 @@ export declare class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapt
     private owner;
     onPeripheralDiscovered: (data: Peripheral) => void;
     constructor();
+    onLeScan(device: android.bluetooth.BluetoothDevice, rssi: number, scanRecord: number[]): void;
     onInit(owner: WeakRef<Bluetooth>): void;
 }

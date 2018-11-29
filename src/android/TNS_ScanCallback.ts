@@ -63,14 +63,14 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
                 state: 'disconnected'
             };
         }
-        let manufacturerId;
+        // let manufacturerId;
         // let manufacturerData;
         const scanRecord = result.getScanRecord();
-        const manufacturerData = scanRecord.getManufacturerSpecificData();
-        if (manufacturerData.size() > 0) {
-            manufacturerId = manufacturerData.keyAt(0);
-            CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- manufacturerId: ${manufacturerId}`);
-        }
+        // const manufacturerData = scanRecord.getManufacturerSpecificData();
+        // if (manufacturerData.size() > 0) {
+        //     manufacturerId = manufacturerData.keyAt(0);
+        //     CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- manufacturerId: ${manufacturerId}`);
+        // }
 
         const advertismentData = (stateObject.advertismentData = this.owner.get().extractAdvertismentData(scanRecord.getBytes()));
 
@@ -83,7 +83,7 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
             RSSI: result.getRssi(),
             state: 'disconnected',
             advertisement: this.owner.get().decodeValue(scanRecord.getBytes()),
-            manufacturerId,
+            manufacturerId: advertismentData.manufacturerId,
             advertismentData
         };
         CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);

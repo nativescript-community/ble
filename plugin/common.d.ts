@@ -1,4 +1,5 @@
 import { Observable } from 'tns-core-modules/data/observable/observable';
+import { AdvertismentData, ConnectionState } from './bluetooth';
 export declare class BluetoothUtil {
     static debug: boolean;
 }
@@ -56,8 +57,17 @@ export interface DisconnectOptions {
 }
 export interface ConnectOptions {
     UUID: string;
-    onConnected: (data: Peripheral) => void;
-    onDisconnected: (data: Peripheral) => void;
+    onConnected: (data: {
+        UUID;
+        name: string;
+        state: ConnectionState;
+        services: any[];
+        advertismentData: AdvertismentData;
+    }) => void;
+    onDisconnected: (data: {
+        UUID;
+        name: string;
+    }) => void;
 }
 export interface Peripheral {
     UUID: string;

@@ -1,8 +1,9 @@
 import { Observable } from 'tns-core-modules/data/observable/observable';
 
-declare var require;
+// declare var require;
 
 import { atob } from './base64';
+import { AdvertismentData, ConnectionState } from './bluetooth';
 
 export class BluetoothUtil {
     public static debug = false;
@@ -259,12 +260,24 @@ export interface ConnectOptions {
     /**
      * Once the peripheral is connected this callback function is invoked.
      */
-    onConnected: (data: Peripheral) => void;
+    onConnected: (
+        data: {
+            UUID;
+            name: string;
+            state: ConnectionState;
+            services: any[];
+            advertismentData: AdvertismentData;
+        }
+    ) => void;
 
     /**
      * Once the peripheral is disconnected this callback function is invoked.
      */
-    onDisconnected: (data: Peripheral) => void;
+    onDisconnected: (data: {
+        UUID;
+        name: string;
+    }
+) => void;
 }
 
 /**

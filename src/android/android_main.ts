@@ -17,6 +17,7 @@ import { TNS_BluetoothGattCallback } from './TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './TNS_LeScanCallback';
 import { TNS_ScanCallback } from './TNS_ScanCallback';
 import * as Queue from 'p-queue';
+import { AdvertismentData, ConnectionState } from '../bluetooth';
 
 const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
@@ -128,21 +129,22 @@ export class Bluetooth extends BluetoothCommon {
      */
     public connections: {
         [k: string]: {
-            state: 'connected' | 'connecting' | 'disconnected';
-            onConnected?;
-            onDisconnected?;
-            device?;
+            state: ConnectionState;
+            onConnected?: (
+                e: {
+                    UUID: string;
+                    name: string;
+                    state: string;
+                    services: any[];
+                    advertismentData: AdvertismentData;
+                }
+            ) => void;
+            onDisconnected?: (e: { UUID: string; name: string }) => void;
+            device?: android.bluetooth.BluetoothGatt;
             onReadPromise?;
             onWritePromise?;
             onNotifyCallback?;
-            advertismentData?: {
-                manufacturerData?;
-                txPowerLevel?;
-                localName?;
-                flags?;
-                uuids?;
-                class?;
-            };
+            advertismentData?: AdvertismentData;
         };
     } = {};
     private broadcastReceiver;
@@ -154,11 +156,10 @@ export class Bluetooth extends BluetoothCommon {
 
         // if >= Android21 (Lollipop)
         if (android.os.Build.VERSION.SDK_INT >= LOLLIPOP) {
-            this.scanCallback = new (require('./TNS_ScanCallback').TNS_ScanCallback)();
-
+            this.scanCallback = new (require('./TNS_ScanCallback')).TNS_ScanCallback();
             this.scanCallback.onInit(new WeakRef(this));
         } else {
-            this.LeScanCallback = new (require('./TNS_LeScanCallback').TNS_LeScanCallback)();
+            this.LeScanCallback = new (require('./TNS_LeScanCallback')).TNS_LeScanCallback();
             this.LeScanCallback.onInit(new WeakRef(this));
         }
 
@@ -268,7 +269,11 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public enable() {
+        CLog(CLogTypes.info, 'Bluetooth.enable');
         return new Promise((resolve, reject) => {
+            if (this.isBluetoothEnabled()) {
+                return resolve(true);
+            }
             try {
                 // activityResult event
                 const onBluetoothEnableResult = (args: application.AndroidActivityResultEventData) => {
@@ -324,6 +329,29 @@ export class Bluetooth extends BluetoothCommon {
             }
         });
     }
+
+    public openBluetoothSettings() {
+        return new Promise((resolve, reject) => {
+            const currentContext = application.android.currentContext as android.app.Activity;
+            if (!this._isEnabled()) {
+                const that = this;
+                const onActivityResultHandler = function(data: application.AndroidActivityResultEventData) {
+                    application.android.off(application.AndroidApplication.activityResultEvent, onActivityResultHandler);
+                    if (data.requestCode === 0) {
+                        if (that._isEnabled()) {
+                            resolve();
+                        } else {
+                            reject('bluetooth_not_enabled');
+                        }
+                    }
+                };
+                application.android.on(application.AndroidApplication.activityResultEvent, onActivityResultHandler);
+                currentContext.startActivityForResult(new android.content.Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS), 0);
+            } else {
+                resolve();
+            }
+        });
+    }
     scanningReferTimer: {
         timer?: number;
         resolve?: Function;
@@ -331,17 +359,13 @@ export class Bluetooth extends BluetoothCommon {
 
     private stopCurrentScan() {
         CLog(CLogTypes.info, 'Bluetooth.stopCurrentScan');
-        // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
-        // if less than Android21 (Lollipop)
-        if (android.os.Build.VERSION.SDK_INT < LOLLIPOP) {
-            this.adapter.stopLeScan(this.LeScanCallback);
-        } else {
-            this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
-        }
+
         if (this.scanCallback) {
+            this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
             this.scanCallback.onPeripheralDiscovered = null;
         }
         if (this.LeScanCallback) {
+            this.adapter.stopLeScan(this.LeScanCallback);
             this.LeScanCallback.onPeripheralDiscovered = null;
         }
         if (this.scanningReferTimer) {
@@ -354,7 +378,7 @@ export class Bluetooth extends BluetoothCommon {
         return new Promise((resolve, reject) => {
             try {
                 if (!this._isEnabled()) {
-                    reject('Bluetooth is not enabled');
+                    reject('bluetooth_not_enabled');
                     return;
                 }
 
@@ -367,20 +391,24 @@ export class Bluetooth extends BluetoothCommon {
 
                     const filters = arg.filters || [];
 
+                    if (this.scanningReferTimer) {
+                        this.stopCurrentScan();
+                    }
                     // if less than Android21 (Lollipop)
-                    if (android.os.Build.VERSION.SDK_INT < LOLLIPOP) {
+                    if (this.LeScanCallback) {
                         const uuids = [];
                         filters.forEach(f => {
                             if (f.serviceUUID) {
                                 uuids.push(this.stringToUuid(f.serviceUUID));
                             }
                         });
+                        this.LeScanCallback.onPeripheralDiscovered = arg.onDiscovered;
                         const didStart = uuids.length === 0 ? this.adapter.startLeScan(this.LeScanCallback) : this.adapter.startLeScan(uuids, this.LeScanCallback);
-                        CLog(CLogTypes.info, `Bluetooth.startScanning ---- didStart scanning: ${didStart}`);
+                        CLog(CLogTypes.info, `Bluetooth.startScanning ---- PreLollipop ---- didStart scanning: ${didStart}, ${JSON.stringify(uuids)}`);
 
                         if (!didStart) {
                             // TODO error msg, see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L758
-                            reject("Scanning didn't start");
+                            reject('couldnt_start_scanning');
                             return;
                         }
                     } else {
@@ -425,20 +453,11 @@ export class Bluetooth extends BluetoothCommon {
                             scanSettings.setCallbackType(androidCallbackType(callbackType));
                         }
 
+                        this.scanCallback.onPeripheralDiscovered = arg.onDiscovered;
                         this.adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), this.scanCallback);
-                        CLog(CLogTypes.info, `Bluetooth.startScanning ---- didStart scanning: ${filters}`);
+                        CLog(CLogTypes.info, `Bluetooth.startScanning ---- PostLollipop ---- didStart scanning: ${JSON.stringify(filters)}`);
                     }
 
-                    // added this for backward compatibility (if people don't like using the new event listener approach)
-                    if (this.scanCallback) {
-                        this.scanCallback.onPeripheralDiscovered = arg.onDiscovered;
-                    }
-                    if (this.LeScanCallback) {
-                        this.LeScanCallback.onPeripheralDiscovered = arg.onDiscovered;
-                    }
-                    if (this.scanningReferTimer) {
-                        this.stopCurrentScan();
-                    }
                     this.scanningReferTimer = { resolve };
                     if (arg.seconds) {
                         this.scanningReferTimer.timer = setTimeout(() => this.stopCurrentScan(), arg.seconds * 1000);
@@ -467,12 +486,14 @@ export class Bluetooth extends BluetoothCommon {
                     reject('Bluetooth is not enabled');
                     return;
                 }
-                CLog(CLogTypes.error, `Bluetooth.stopScanning: ${!!this.scanningReferTimer}`);
+                CLog(CLogTypes.info, `Bluetooth.stopScanning: ${!!this.scanningReferTimer}`);
 
                 // if less than Android21(Lollipop)
-                if (android.os.Build.VERSION.SDK_INT >= LOLLIPOP) {
+                if (this.LeScanCallback) {
+                    CLog(CLogTypes.info, `Bluetooth.stopScanning preLollipop`);
                     this.adapter.stopLeScan(this.LeScanCallback);
-                } else {
+                } else if (this.scanCallback) {
+                    CLog(CLogTypes.info, `Bluetooth.stopScanning postLollipop`);
                     this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
                 }
                 if (this.scanningReferTimer) {
@@ -482,7 +503,7 @@ export class Bluetooth extends BluetoothCommon {
                 }
                 resolve();
             } catch (ex) {
-                CLog(CLogTypes.error, `Bluetooth.stopScanning: ${ex}`);
+                CLog(CLogTypes.info, `Bluetooth.stopScanning: ${ex}`);
                 reject(ex);
             }
         });
@@ -506,7 +527,7 @@ export class Bluetooth extends BluetoothCommon {
                     let gatt;
 
                     // if less than Android23(Marshmallow)
-                    if (android.os.Build.VERSION.SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */) {
+                    if (android.os.Build.VERSION.SDK_INT < 23 /* android.os.Build.VERSION_CODES.M */) {
                         gatt = bluetoothDevice.connectGatt(
                             utils.ad.getApplicationContext(), // context
                             false, // autoconnect
@@ -623,8 +644,10 @@ export class Bluetooth extends BluetoothCommon {
                         return;
                     }
 
-                    const val = arg.raw === true ? arg.value : this.encodeValue(arg.value);
-                    CLog(CLogTypes.info, `Bluetooth.write ---- encodedValue: ${val}`);
+                    const val = arg.raw === true ? this.valueToByteArray(arg.value) : this.encodeValue(arg.value);
+                    if (BluetoothUtil.debug) {
+                        CLog(CLogTypes.info, `Bluetooth.write: val:"${this.valueToString(val)}", arg.value"${arg.value}"`);
+                    }
                     if (val === null) {
                         reject('Invalid value: ' + arg.value);
                         return;
@@ -670,8 +693,10 @@ export class Bluetooth extends BluetoothCommon {
                         return;
                     }
 
-                    const val = arg.raw === true ? arg.value : this.encodeValue(arg.value);
-                    CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse ---- encodedValue: ${val}`);
+                    const val = arg.raw === true ? this.valueToByteArray(arg.value) : this.encodeValue(arg.value);
+                    if (BluetoothUtil.debug) {
+                        CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: val:"${this.valueToString(val)}", arg.value"${arg.value}"`);
+                    }
                     if (!val) {
                         reject(`Invalid value: ${arg.value}`);
                         return;
@@ -857,6 +882,32 @@ export class Bluetooth extends BluetoothCommon {
         return this.base64ToArrayBuffer(b);
     }
 
+    private valueToByteArray(value) {
+        if (typeof value === 'string') {
+            const bytes = Array.create('byte', value.length);
+            for (let i = 0; i < value.length; i++) {
+                bytes[i] = value.charCodeAt(i);
+            }
+            return bytes;
+            // called within this class
+        } else if (Array.isArray(value)) {
+            return value;
+        }
+        return null;
+    }
+
+    private valueToString(value) {
+        if (value instanceof java.lang.Object) {
+            const array = [];
+            const bytes = value as any;
+            for (let i = 0; i < bytes.length; i++) {
+                array.push(new Number(bytes[i]).valueOf());
+            }
+            return array;
+        }
+        return value;
+    }
+
     // JS UUID -> Java
     public stringToUuid(uuidStr) {
         if (uuidStr.length === 4) {
@@ -885,7 +936,15 @@ export class Bluetooth extends BluetoothCommon {
     // }
     public extractAdvertismentData(scanRecord) {
         // console.log('extractAdvertSDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */entData', scanRecord, scanRecord.length);
-        const result = {};
+        const result: {
+            manufacturerData?: any;
+            manufacturerId?: number;
+            txPowerLevel?: any;
+            localName?: string;
+            flags?: any;
+            uuids?: any;
+            class?: any;
+        } = {};
         let index = 0,
             length,
             type,
@@ -907,22 +966,23 @@ export class Bluetooth extends BluetoothCommon {
             data = java.util.Arrays.copyOfRange(scanRecord, index + 1, index + length);
             switch (type) {
                 case 0xff: // Manufacturer Specific Data
-                    result['manufacturerData'] = this.encodeValue(data);
+                    result.manufacturerData = this.encodeValue(data);
+                    result.manufacturerId = result.manufacturerData[0];
                     break;
                 case 0x0a:
-                    result['txPowerLevel'] = this.encodeValue(data);
+                    result.txPowerLevel = this.encodeValue(data);
                     break;
                 case 0x09:
-                    result['localName'] = String.fromCharCode.apply(String, data);
+                    result.localName = String.fromCharCode.apply(String, data);
                     break;
                 case 0x01:
-                    result['flags'] = this.encodeValue(data);
+                    result.flags = this.encodeValue(data);
                     break;
                 case 0x02:
-                    result['uuids'] = this.encodeValue(data);
+                    result.uuids = this.encodeValue(data);
                     break;
                 case 0x0d:
-                    result['class'] = this.encodeValue(data);
+                    result.class = this.encodeValue(data);
                     break;
                 default:
                     break;

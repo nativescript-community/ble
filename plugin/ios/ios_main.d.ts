@@ -28,6 +28,7 @@ export declare class Bluetooth extends BluetoothCommon {
     enable(): Promise<{}>;
     isGPSEnabled(): Promise<boolean>;
     enableGPS(): Promise<void>;
+    openBluetoothSettings(url?: string): Promise<void>;
     stopScanning(arg: any): Promise<{}>;
     connect(args: ConnectOptions): Promise<{}>;
     disconnect(arg: any): Promise<{}>;
@@ -45,4 +46,5 @@ export declare class Bluetooth extends BluetoothCommon {
     private _getWrapper(arg, property, reject);
     private _encodeValue(value);
     private valueToNSData(value);
+    private valueToString(value);
 }

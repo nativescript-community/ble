@@ -2,6 +2,7 @@ import { BluetoothCommon, ConnectOptions, DisconnectOptions, ReadOptions, StartN
 import { TNS_BluetoothGattCallback } from './TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './TNS_LeScanCallback';
 import { TNS_ScanCallback } from './TNS_ScanCallback';
+import { AdvertismentData, ConnectionState } from '../bluetooth';
 export declare enum ScanMode {
     LOW_LATENCY = 0,
     BALANCED = 1,
@@ -38,21 +39,23 @@ export declare class Bluetooth extends BluetoothCommon {
     };
     connections: {
         [k: string]: {
-            state: 'connected' | 'connecting' | 'disconnected';
-            onConnected?;
-            onDisconnected?;
-            device?;
+            state: ConnectionState;
+            onConnected?: (e: {
+                UUID: string;
+                name: string;
+                state: string;
+                services: any[];
+                advertismentData: AdvertismentData;
+            }) => void;
+            onDisconnected?: (e: {
+                UUID: string;
+                name: string;
+            }) => void;
+            device?: android.bluetooth.BluetoothGatt;
             onReadPromise?;
             onWritePromise?;
             onNotifyCallback?;
-            advertismentData?: {
-                manufacturerData?;
-                txPowerLevel?;
-                localName?;
-                flags?;
-                uuids?;
-                class?;
-            };
+            advertismentData?: AdvertismentData;
         };
     };
     private broadcastReceiver;
@@ -66,6 +69,7 @@ export declare class Bluetooth extends BluetoothCommon {
     enableGPS(): Promise<void>;
     enable(): Promise<{}>;
     isBluetoothEnabled(): Promise<{}>;
+    openBluetoothSettings(): Promise<{}>;
     scanningReferTimer: {
         timer?: number;
         resolve?: Function;
@@ -84,8 +88,18 @@ export declare class Bluetooth extends BluetoothCommon {
     uuidToString(uuid: any): any;
     encodeValue(val: any): any;
     decodeValue(value: any): ArrayBuffer;
+    private valueToByteArray(value);
+    private valueToString(value);
     stringToUuid(uuidStr: any): java.util.UUID;
-    extractAdvertismentData(scanRecord: any): {};
+    extractAdvertismentData(scanRecord: any): {
+        manufacturerData?: any;
+        manufacturerId?: number;
+        txPowerLevel?: any;
+        localName?: string;
+        flags?: any;
+        uuids?: any;
+        class?: any;
+    };
     private _findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
     private _findCharacteristicOfType(bluetoothGattService, characteristicUUID, charType);
     private _getWrapper(arg, reject);

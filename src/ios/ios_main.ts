@@ -1,7 +1,7 @@
 declare var NSMakeRange;
 
 import { ios as iOS_Utils } from 'tns-core-modules/utils/utils';
-import { BluetoothCommon, CLog, CLogTypes, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions } from '../common';
+import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions } from '../common';
 import { CBPeripheralDelegateImpl } from './CBPeripheralDelegateImpl';
 import { CBCentralManagerDelegateImpl } from './CBCentralManagerDelegateImpl';
 
@@ -145,6 +145,31 @@ export class Bluetooth extends BluetoothCommon {
     }
     public enableGPS(): Promise<void> {
         return Promise.resolve(); // we dont need to check for GPS in the bluetooth iOS module
+    }
+
+    public openBluetoothSettings(url?: string): Promise<void> {
+        console.log('openBluetoothSettings', this._isEnabled());
+        if (!this._isEnabled()) {
+            return Promise.resolve().then(() => {
+                const settingsUrl = NSURL.URLWithString(url || 'App-prefs:root=General&path=BLUETOOTH');
+                console.log('openBluetoothSettings url ', settingsUrl.absoluteString, UIApplication.sharedApplication.canOpenURL(settingsUrl));
+                if (UIApplication.sharedApplication.canOpenURL(settingsUrl)) {
+                    UIApplication.sharedApplication.openURLOptionsCompletionHandler(settingsUrl, null, function(success) {
+                        // we get the callback for opening the URL, not enabling the GPS!
+                        if (success) {
+                            // if (isEnabled()) {
+                            //     return Promise.resolve();
+                            // } else {
+                            return Promise.reject(undefined);
+                            // }
+                        } else {
+                            return Promise.reject('cant_open_settings');
+                        }
+                    });
+                }
+            });
+        }
+        return Promise.resolve();
     }
     public stopScanning(arg) {
         return new Promise((resolve, reject) => {
@@ -291,7 +316,10 @@ export class Bluetooth extends BluetoothCommon {
                     return;
                 }
 
-                const valueEncoded = arg.raw === true ? arg.value : this._encodeValue(arg.value);
+                const valueEncoded = arg.raw === true ? this.valueToNSData(arg.value) : this._encodeValue(arg.value);
+                if (BluetoothUtil.debug) {
+                    CLog(CLogTypes.info, `Bluetooth.write: "${arg.value}", "${this.valueToString(valueEncoded)}"`);
+                }
                 if (valueEncoded === null) {
                     reject('Invalid value: ' + arg.value);
                     return;
@@ -328,8 +356,13 @@ export class Bluetooth extends BluetoothCommon {
                 }
 
                 const valueEncoded = arg.raw === true ? this.valueToNSData(arg.value) : this._encodeValue(arg.value);
-
-                CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse ---- Attempting to write (${arg.raw === true ? 'raw' : 'encoded'}): ${valueEncoded}`);
+                if (BluetoothUtil.debug) {
+                    CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: "${arg.value}", "${this.valueToString(valueEncoded)}"`);
+                }
+                if (valueEncoded === null) {
+                    reject('Invalid value: ' + arg.value);
+                    return;
+                }
 
                 wrapper.peripheral.writeValueForCharacteristicType(valueEncoded, wrapper.characteristic, CBCharacteristicWriteType.WithoutResponse);
 
@@ -543,17 +576,32 @@ export class Bluetooth extends BluetoothCommon {
 
     private valueToNSData(value) {
         if (typeof value === 'string') {
-            return NSString.stringWithString(value).dataUsingEncoding(NSUTF8StringEncoding);
+            const intRef = new interop.Reference(interop.types.int8, interop.alloc(value.length));
+            for (let i = 0; i < value.length; i++) {
+                intRef[i] = value.charCodeAt(i);
+            }
+            return NSData.dataWithBytesLength(intRef, value.length);
             // called within this class
         } else if (Array.isArray(value)) {
-            const data = NSMutableData.alloc().initWithCapacity(value.length);
-            for (let index = 0; index < value.length; index++) {
-                const element = value[index];
-                data.appendBytesLength(new Number(element).valueOf() as any, 1);
+            const intRef = new interop.Reference(interop.types.int8, interop.alloc(value.length));
+            for (let i = 0; i < value.length; i++) {
+                intRef[i] = value[i];
             }
-            return data;
+            return NSData.dataWithBytesLength(intRef, value.length);
         } else {
             return null;
         }
+    }
+
+    private valueToString(value) {
+        if (value instanceof NSData) {
+            const array = [];
+            const bytes = value.bytes;
+            for (let i = 0; i < value.length; i++) {
+                array.push(new Number(bytes[i]).valueOf());
+            }
+            return array;
+        }
+        return value;
     }
 }

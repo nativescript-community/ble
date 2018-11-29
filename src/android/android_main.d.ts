@@ -11,6 +11,7 @@ import {
 import { TNS_BluetoothGattCallback } from './TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './TNS_LeScanCallback';
 import { TNS_ScanCallback } from './TNS_ScanCallback';
+import { AdvertismentData } from '../../plugin/bluetooth';
 export declare enum ScanMode {
   LOW_LATENCY = 0,
   BALANCED = 1,
@@ -54,14 +55,7 @@ export declare class Bluetooth extends BluetoothCommon {
       onReadPromise?;
       onWritePromise?;
       onNotifyCallback?;
-      advertismentData?: {
-        manufacturerData?;
-        txPowerLevel?;
-        localName?;
-        flags?;
-        uuids?;
-        class?;
-      };
+      advertismentData?: AdvertismentData;
     };
   };
   private broadcastReceiver;
