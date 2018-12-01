@@ -132,7 +132,12 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
                 advertismentData['connectable'] = advData.objectForKey(CBAdvertisementDataIsConnectable);
             }
             if (advData.objectForKey(CBAdvertisementDataServiceDataKey)) {
-                advertismentData['services'] = advData.objectForKey(CBAdvertisementDataServiceDataKey);
+                const result = {};
+                const obj = advData.objectForKey(CBAdvertisementDataServiceDataKey) as NSDictionary<string, NSData>;
+                obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
+                    result[key] = interop.bufferFromData(data);
+                });
+                advertismentData['serviceData'] = result;
             }
             if (advData.objectForKey(CBAdvertisementDataTxPowerLevelKey)) {
                 advertismentData['txPowerLevel'] = advData.objectForKey(CBAdvertisementDataTxPowerLevelKey);
