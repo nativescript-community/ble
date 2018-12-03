@@ -59,6 +59,7 @@ export class DemoAppModel extends Observable {
     }
 
     public onPeripheralTap(args) {
+        this.doStopScanning();
         console.log('!!&&&&***** Clicked item with index ' + args.index);
         const peri = this.peripherals.getItem(args.index);
         console.log('--- peripheral selected: ' + peri.UUID);

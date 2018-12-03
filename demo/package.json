@@ -3,6 +3,9 @@
     "id": "org.nativescript.bluetoothdemo",
     "tns-android": {
       "version": "5.0.0"
+    },
+    "tns-ios": {
+      "version": "5.0.1-rc-2018-11-30-133527-01"
     }
   },
   "dependencies": {

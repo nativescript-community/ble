@@ -37,27 +37,32 @@ export class ServicesViewModel extends Observable {
     public connect() {
         console.log('connecting to peripheral', this.peripheral.UUID);
         this.isLoading = true;
-        this._bluetooth.connect({
-            UUID: this.peripheral.UUID,
-            // NOTE: we could just use the promise as this cb is only invoked once
-            onConnected: peripheral => {
-                this.connected = true;
-                console.log('------- Peripheral connected: ' + JSON.stringify(peripheral));
-                peripheral.services.forEach(value => {
-                    console.log('---- ###### adding service: ' + value.UUID);
-                    this.discoveredServices.push(value);
-                });
-                this.isLoading = false;
-            },
-            onDisconnected: peripheral => {
+        this._bluetooth
+            .connect({
+                UUID: this.peripheral.UUID,
+                // NOTE: we could just use the promise as this cb is only invoked once
+                onConnected: peripheral => {
+                    this.connected = true;
+                    console.log('------- Peripheral connected: ' + JSON.stringify(peripheral));
+                    peripheral.services.forEach(value => {
+                        console.log('---- ###### adding service: ' + value.UUID);
+                        this.discoveredServices.push(value);
+                    });
+                    this.isLoading = false;
+                },
+                onDisconnected: peripheral => {
+                    this.connected = false;
+                    dialogs.alert({
+                        title: 'Disconnected',
+                        message: 'Disconnected from peripheral: ' + JSON.stringify(peripheral),
+                        okButtonText: 'Okay'
+                    });
+                }
+            })
+            .catch(err => {
                 this.connected = false;
-                dialogs.alert({
-                    title: 'Disconnected',
-                    message: 'Disconnected from peripheral: ' + JSON.stringify(peripheral),
-                    okButtonText: 'Okay'
-                });
-            }
-        });
+                console.log('error connecting to peripheral', err);
+            });
     }
 
     public onServiceTap(args) {
