@@ -27,7 +27,7 @@
                       <Label horizontalAlignment="right" width="30" text="{{ RSSI }}" class="rssi-label" />
                     </StackLayout>
                     <StackLayout class="padded-label-stack">
-                      <Label text="{{ name }}" class="title-label" textWrap="true" />
+                      <Label text="{{ localName || name }}" class="title-label" textWrap="true" />
                       <Label text="{{ UUID }}" class="uuid-label" textWrap="true" />
                     </StackLayout>
                   </StackLayout>
