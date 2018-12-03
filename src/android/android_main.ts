@@ -23,7 +23,16 @@ const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 const ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 224;
 
+let ANDROID_SDK = -1;
+function getAndroidSDK() {
+    if (ANDROID_SDK === -1) {
+        ANDROID_SDK = android.os.Build.VERSION.SDK_INT;
+    }
+    return ANDROID_SDK;
+}
+
 const LOLLIPOP = 21;
+const MARSHMALLOW = 23;
 // const SDK_INT >= LOLLIPOP = SDK_INT >= LOLLIPOP;
 // const SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */ = SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */;
 
@@ -91,6 +100,101 @@ function androidCallbackType(mode: CallbackType) {
         default:
             return android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
     }
+}
+
+export enum Phy {
+    LE_1M, // = android.bluetooth.BluetoothDevice.PHY_LE_1M,
+    LE_CODED, // = android.bluetooth.BluetoothDevice.PHY_LE_CODED,
+    LE_ALL_SUPPORTED // = android.bluetooth.le.ScanSettings.PHY_LE_ALL_SUPPORTED
+}
+function androidPhy(mode: Phy) {
+    switch (mode) {
+        case Phy.LE_1M:
+            return android.bluetooth.BluetoothDevice.PHY_LE_1M;
+        case Phy.LE_CODED:
+            return android.bluetooth.BluetoothDevice.PHY_LE_CODED;
+        default: // PHY_LE_ALL_SUPPORTED
+            return android.bluetooth.le.ScanSettings.PHY_LE_ALL_SUPPORTED;
+    }
+}
+
+export function uuidToString(uuid) {
+    const uuidStr = uuid.toString();
+    const pattern = java.util.regex.Pattern.compile('0000(.{4})-0000-1000-8000-00805f9b34fb', 2);
+    const matcher = pattern.matcher(uuidStr);
+    return matcher.matches() ? matcher.group(1) : uuidStr;
+}
+
+// val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
+export function encodeValue(val) {
+    let parts = val;
+    // if it's not a string assume it's a byte array already
+    if (typeof val === 'string') {
+        parts = val.split(',');
+
+        if (parts[0].indexOf('x') === -1) {
+            return null;
+        }
+    }
+
+    const result = Array.create('byte', parts.length);
+
+    for (let i = 0; i < parts.length; i++) {
+        result[i] = parts[i];
+    }
+    return result;
+}
+
+export function decodeValue(value) {
+    if (value === null) {
+        return null;
+    }
+
+    // value is of Java type: byte[]
+    const b = android.util.Base64.encodeToString(value, android.util.Base64.NO_WRAP);
+    return this.base64ToArrayBuffer(b);
+}
+
+export function valueToByteArray(value) {
+    if (typeof value === 'string') {
+        const bytes = Array.create('byte', value.length);
+        for (let i = 0; i < value.length; i++) {
+            bytes[i] = value.charCodeAt(i);
+        }
+        return bytes;
+        // called within this class
+    } else if (Array.isArray(value)) {
+        return value;
+    }
+    return null;
+}
+export function byteArrayToBuffer(value) {
+    const ret = new Uint8Array(value.length);
+    const isString = typeof value === 'string';
+    for (let i = 0; i < value.length; i++) {
+        ret[i] = isString ? value.charCodeAt(i) : value;
+    }
+    return ret.buffer;
+}
+
+export function printValueToString(value) {
+    if (value instanceof java.lang.Object) {
+        const array = [];
+        const bytes = value as any;
+        for (let i = 0; i < bytes.length; i++) {
+            array.push(new Number(bytes[i]).valueOf());
+        }
+        return array;
+    }
+    return value;
+}
+
+// JS UUID -> Java
+export function stringToUuid(uuidStr) {
+    if (uuidStr.length === 4) {
+        uuidStr = '0000' + uuidStr + '-0000-1000-8000-00805f9b34fb';
+    }
+    return java.util.UUID.fromString(uuidStr);
 }
 
 export class Bluetooth extends BluetoothCommon {
@@ -185,7 +289,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public coarseLocationPermissionGranted() {
-        let hasPermission = android.os.Build.VERSION.SDK_INT < 23 /* android.os.Build.VERSION_CODES.M */;
+        let hasPermission = getAndroidSDK() < MARSHMALLOW;
         if (!hasPermission) {
             const ctx = this._getContext();
             CLog(CLogTypes.info, `app context ${ctx}`);
@@ -399,7 +503,7 @@ export class Bluetooth extends BluetoothCommon {
                         const uuids = [];
                         filters.forEach(f => {
                             if (f.serviceUUID) {
-                                uuids.push(this.stringToUuid(f.serviceUUID));
+                                uuids.push(stringToUuid(f.serviceUUID));
                             }
                         });
                         this.LeScanCallback.onPeripheralDiscovered = arg.onDiscovered;
@@ -418,7 +522,7 @@ export class Bluetooth extends BluetoothCommon {
                             filters.forEach(f => {
                                 const scanFilterBuilder = new android.bluetooth.le.ScanFilter.Builder();
                                 if (f.serviceUUID) {
-                                    scanFilterBuilder.setServiceUuid(new android.os.ParcelUuid(this.stringToUuid(f.serviceUUID)));
+                                    scanFilterBuilder.setServiceUuid(new android.os.ParcelUuid(stringToUuid(f.serviceUUID)));
                                 }
                                 if (f.deviceName) {
                                     scanFilterBuilder.setDeviceName(f.deviceName);
@@ -428,7 +532,7 @@ export class Bluetooth extends BluetoothCommon {
                                 }
                                 if (f.manufacturerData) {
                                     const manufacturerId = new DataView(f.manufacturerData, 0).getUint16(0, true);
-                                    scanFilterBuilder.setManufacturerData(manufacturerId, this.encodeValue(f.manufacturerData));
+                                    scanFilterBuilder.setManufacturerData(manufacturerId, encodeValue(f.manufacturerData));
                                 }
                                 scanFilters.add(scanFilterBuilder.build());
                             });
@@ -527,7 +631,7 @@ export class Bluetooth extends BluetoothCommon {
                     let gatt;
 
                     // if less than Android23(Marshmallow)
-                    if (android.os.Build.VERSION.SDK_INT < 23 /* android.os.Build.VERSION_CODES.M */) {
+                    if (getAndroidSDK() < MARSHMALLOW) {
                         gatt = bluetoothDevice.connectGatt(
                             utils.ad.getApplicationContext(), // context
                             false, // autoconnect
@@ -594,7 +698,7 @@ export class Bluetooth extends BluetoothCommon {
                     CLog(CLogTypes.info, `Bluetooth.read ---- gatt: ${gatt}`);
                     const bluetoothGattService = wrapper.bluetoothGattService;
                     CLog(CLogTypes.info, `Bluetooth.read ---- bluetoothGattService: ${bluetoothGattService}`);
-                    const characteristicUUID = this.stringToUuid(arg.characteristicUUID);
+                    const characteristicUUID = stringToUuid(arg.characteristicUUID);
                     CLog(CLogTypes.info, `Bluetooth.read ---- characteristicUUID: ${characteristicUUID}`);
 
                     const bluetoothGattCharacteristic = this._findCharacteristicOfType(bluetoothGattService, characteristicUUID, android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ);
@@ -634,7 +738,7 @@ export class Bluetooth extends BluetoothCommon {
 
                     const characteristic = this._findCharacteristicOfType(
                         wrapper.bluetoothGattService,
-                        this.stringToUuid(arg.characteristicUUID),
+                        stringToUuid(arg.characteristicUUID),
                         android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE
                     );
                     CLog(CLogTypes.info, `Bluetooth.write ---- characteristic: ${characteristic}`);
@@ -644,9 +748,9 @@ export class Bluetooth extends BluetoothCommon {
                         return;
                     }
 
-                    const val = arg.raw === true ? this.valueToByteArray(arg.value) : this.encodeValue(arg.value);
+                    const val = arg.raw === true ? valueToByteArray(arg.value) : encodeValue(arg.value);
                     if (BluetoothUtil.debug) {
-                        CLog(CLogTypes.info, `Bluetooth.write: val:"${this.valueToString(val)}", arg.value"${arg.value}"`);
+                        CLog(CLogTypes.info, `Bluetooth.write: val:"${printValueToString(val)}", arg.value"${arg.value}"`);
                     }
                     if (val === null) {
                         reject('Invalid value: ' + arg.value);
@@ -684,7 +788,7 @@ export class Bluetooth extends BluetoothCommon {
 
                     const characteristic = this._findCharacteristicOfType(
                         wrapper.bluetoothGattService,
-                        this.stringToUuid(arg.characteristicUUID),
+                        stringToUuid(arg.characteristicUUID),
                         android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE
                     );
                     CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse ---- characteristic: ${characteristic}`);
@@ -693,9 +797,9 @@ export class Bluetooth extends BluetoothCommon {
                         return;
                     }
 
-                    const val = arg.raw === true ? this.valueToByteArray(arg.value) : this.encodeValue(arg.value);
+                    const val = arg.raw === true ? valueToByteArray(arg.value) : encodeValue(arg.value);
                     if (BluetoothUtil.debug) {
-                        CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: val:"${this.valueToString(val)}", arg.value"${arg.value}"`);
+                        CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: val:"${printValueToString(val)}", arg.value"${arg.value}"`);
                     }
                     if (!val) {
                         reject(`Invalid value: ${arg.value}`);
@@ -730,7 +834,7 @@ export class Bluetooth extends BluetoothCommon {
 
                     const gatt = wrapper.gatt;
                     const bluetoothGattService = wrapper.bluetoothGattService;
-                    const characteristicUUID = this.stringToUuid(arg.characteristicUUID);
+                    const characteristicUUID = stringToUuid(arg.characteristicUUID);
 
                     const characteristic = this._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
                     CLog(CLogTypes.info, `Bluetooth.startNotifying ---- characteristic: ${characteristic}`);
@@ -744,7 +848,7 @@ export class Bluetooth extends BluetoothCommon {
                         return;
                     }
 
-                    const clientCharacteristicConfigId = this.stringToUuid('2902');
+                    const clientCharacteristicConfigId = stringToUuid('2902');
                     let bluetoothGattDescriptor = characteristic.getDescriptor(clientCharacteristicConfigId) as android.bluetooth.BluetoothGattDescriptor;
                     if (!bluetoothGattDescriptor) {
                         bluetoothGattDescriptor = new android.bluetooth.BluetoothGattDescriptor(clientCharacteristicConfigId, android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE);
@@ -797,7 +901,7 @@ export class Bluetooth extends BluetoothCommon {
 
                     const gatt = wrapper.gatt;
                     const gattService = wrapper.bluetoothGattService;
-                    const characteristicUUID = this.stringToUuid(arg.characteristicUUID);
+                    const characteristicUUID = stringToUuid(arg.characteristicUUID);
 
                     const characteristic = this._findNotifyCharacteristic(gattService, characteristicUUID);
                     CLog(CLogTypes.info, `Bluetooth.stopNotifying ---- service characteristic: ${characteristic}`);
@@ -844,78 +948,6 @@ export class Bluetooth extends BluetoothCommon {
         }
     }
 
-    // Java UUID -> JS
-    public uuidToString(uuid) {
-        const uuidStr = uuid.toString();
-        const pattern = java.util.regex.Pattern.compile('0000(.{4})-0000-1000-8000-00805f9b34fb', 2);
-        const matcher = pattern.matcher(uuidStr);
-        return matcher.matches() ? matcher.group(1) : uuidStr;
-    }
-
-    // val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
-    public encodeValue(val) {
-        let parts = val;
-        // if it's not a string assume it's a byte array already
-        if (typeof val === 'string') {
-            parts = val.split(',');
-
-            if (parts[0].indexOf('x') === -1) {
-                return null;
-            }
-        }
-
-        const result = Array.create('byte', parts.length);
-
-        for (let i = 0; i < parts.length; i++) {
-            result[i] = parts[i];
-        }
-        return result;
-    }
-
-    public decodeValue(value) {
-        if (value === null) {
-            return null;
-        }
-
-        // value is of Java type: byte[]
-        const b = android.util.Base64.encodeToString(value, android.util.Base64.NO_WRAP);
-        return this.base64ToArrayBuffer(b);
-    }
-
-    private valueToByteArray(value) {
-        if (typeof value === 'string') {
-            const bytes = Array.create('byte', value.length);
-            for (let i = 0; i < value.length; i++) {
-                bytes[i] = value.charCodeAt(i);
-            }
-            return bytes;
-            // called within this class
-        } else if (Array.isArray(value)) {
-            return value;
-        }
-        return null;
-    }
-
-    private valueToString(value) {
-        if (value instanceof java.lang.Object) {
-            const array = [];
-            const bytes = value as any;
-            for (let i = 0; i < bytes.length; i++) {
-                array.push(new Number(bytes[i]).valueOf());
-            }
-            return array;
-        }
-        return value;
-    }
-
-    // JS UUID -> Java
-    public stringToUuid(uuidStr) {
-        if (uuidStr.length === 4) {
-            uuidStr = '0000' + uuidStr + '-0000-1000-8000-00805f9b34fb';
-        }
-        return java.util.UUID.fromString(uuidStr);
-    }
-
     // public extractManufacturerRawData(scanRecord) {
     //   let offset = 0;
     //   while (offset < scanRecord.length - 2) {
@@ -934,63 +966,7 @@ export class Bluetooth extends BluetoothCommon {
     //     }
     //   }
     // }
-    public extractAdvertismentData(scanRecord) {
-        // console.log('extractAdvertSDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */entData', scanRecord, scanRecord.length);
-        const result: {
-            manufacturerData?: any;
-            manufacturerId?: number;
-            txPowerLevel?: any;
-            localName?: string;
-            flags?: any;
-            uuids?: any;
-            class?: any;
-        } = {};
-        let index = 0,
-            length,
-            type,
-            data;
-        while (index < scanRecord.length) {
-            length = scanRecord[index++];
-            // Done once we run out of records
-            if (length === 0) {
-                break;
-            }
 
-            type = scanRecord[index] & 0xff;
-
-            // Done if our record isn't a valid type
-            if (type === 0) {
-                break;
-            }
-
-            data = java.util.Arrays.copyOfRange(scanRecord, index + 1, index + length);
-            switch (type) {
-                case 0xff: // Manufacturer Specific Data
-                    result.manufacturerData = this.encodeValue(data);
-                    result.manufacturerId = result.manufacturerData[0];
-                    break;
-                case 0x0a:
-                    result.txPowerLevel = this.encodeValue(data);
-                    break;
-                case 0x09:
-                    result.localName = String.fromCharCode.apply(String, data);
-                    break;
-                case 0x01:
-                    result.flags = this.encodeValue(data);
-                    break;
-                case 0x02:
-                    result.uuids = this.encodeValue(data);
-                    break;
-                case 0x0d:
-                    result.class = this.encodeValue(data);
-                    break;
-                default:
-                    break;
-            }
-            index += length;
-        }
-        return result;
-    }
 
     // This guards against peripherals reusing char UUID's. We prefer notify.
     private _findNotifyCharacteristic(bluetoothGattService, characteristicUUID) {
@@ -1047,7 +1023,7 @@ export class Bluetooth extends BluetoothCommon {
             return null;
         }
 
-        const serviceUUID = this.stringToUuid(arg.serviceUUID);
+        const serviceUUID = stringToUuid(arg.serviceUUID);
 
         const stateObject = this.connections[arg.peripheralUUID];
         if (!stateObject) {

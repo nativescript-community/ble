@@ -1,4 +1,4 @@
-import { Bluetooth } from './android_main';
+import { Bluetooth, decodeValue, uuidToString } from './android_main';
 import { CLog, CLogTypes } from '../common';
 
 @JavaProxy('com.nativescript.TNS_BluetoothGattCallback')
@@ -59,7 +59,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
                     for (let k = 0; k < descriptors.size(); k++) {
                         const descriptor = descriptors.get(k) as android.bluetooth.BluetoothGattCharacteristic;
                         const descriptorJs = {
-                            UUID: this.owner.get().uuidToString(descriptor.getUuid()),
+                            UUID: uuidToString(descriptor.getUuid()),
                             value: descriptor.getValue(), // always empty btw
                             permissions: null
                         };
@@ -82,9 +82,9 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
                     }
 
                     const characteristicJs = {
-                        serviceUUID: this.owner.get().uuidToString(service.getUuid()),
-                        UUID: this.owner.get().uuidToString(characteristic.getUuid()),
-                        name: this.owner.get().uuidToString(characteristic.getUuid()), // there's no sep field on Android
+                        serviceUUID: uuidToString(service.getUuid()),
+                        UUID: uuidToString(characteristic.getUuid()),
+                        name: uuidToString(characteristic.getUuid()), // there's no sep field on Android
                         properties: {
                             read: (props & btChar.PROPERTY_READ) !== 0,
                             write: (props & btChar.PROPERTY_WRITE) !== 0,
@@ -119,7 +119,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
                 }
 
                 servicesJs.push({
-                    UUID: this.owner.get().uuidToString(service.getUuid()),
+                    UUID: uuidToString(service.getUuid()),
                     characteristics: characteristicsJs
                 });
             }
@@ -159,7 +159,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
             const value = characteristic.getValue();
             stateObject.onReadPromise({
                 valueRaw: value,
-                value: this.owner.get().decodeValue(value),
+                value: decodeValue(value),
                 characteristicUUID: characteristic.getUuid()
             });
         }
@@ -184,7 +184,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
             const value = characteristic.getValue();
             stateObject.onNotifyCallback({
                 valueRaw: value,
-                value: this.owner.get().decodeValue(value),
+                value: decodeValue(value),
                 characteristicUUID: characteristic.getUuid()
             });
         }

@@ -23,6 +23,18 @@ export declare enum CallbackType {
     FIRST_MATCH = 1,
     MATCH_LOST = 2,
 }
+export declare enum Phy {
+    LE_1M = 0,
+    LE_CODED = 1,
+    LE_ALL_SUPPORTED = 2,
+}
+export declare function uuidToString(uuid: any): any;
+export declare function encodeValue(val: any): any;
+export declare function decodeValue(value: any): any;
+export declare function valueToByteArray(value: any): any;
+export declare function byteArrayToBuffer(value: any): ArrayBuffer;
+export declare function printValueToString(value: any): any;
+export declare function stringToUuid(uuidStr: any): java.util.UUID;
 export declare class Bluetooth extends BluetoothCommon {
     bluetoothManager: android.bluetooth.BluetoothManager;
     adapter: android.bluetooth.BluetoothAdapter;
@@ -85,21 +97,6 @@ export declare class Bluetooth extends BluetoothCommon {
     startNotifying(arg: StartNotifyingOptions): any;
     stopNotifying(arg: StopNotifyingOptions): any;
     gattDisconnect(gatt: android.bluetooth.BluetoothGatt): void;
-    uuidToString(uuid: any): any;
-    encodeValue(val: any): any;
-    decodeValue(value: any): ArrayBuffer;
-    private valueToByteArray(value);
-    private valueToString(value);
-    stringToUuid(uuidStr: any): java.util.UUID;
-    extractAdvertismentData(scanRecord: any): {
-        manufacturerData?: any;
-        manufacturerId?: number;
-        txPowerLevel?: any;
-        localName?: string;
-        flags?: any;
-        uuids?: any;
-        class?: any;
-    };
     private _findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
     private _findCharacteristicOfType(bluetoothGattService, characteristicUUID, charType);
     private _getWrapper(arg, reject);

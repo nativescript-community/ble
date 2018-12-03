@@ -21,6 +21,11 @@ declare enum CallbackType {
     FIRST_MATCH,
     MATCH_LOST
 }
+declare enum Phy {
+    LE_1M,
+    LE_CODED,
+    LE_ALL_SUPPORTED
+}
 
 export type ConnectionState = 'connected' | 'connecting' | 'disconnected';
 
@@ -65,7 +70,6 @@ export class Bluetooth extends COMMON.BluetoothCommon {
      * @returns {Promise<void>}
      */
     enableGPS(): Promise<void>;
-
 
     /**
      * open device bluetooth settings
@@ -195,6 +199,56 @@ export interface StartScanningOptions {
          * TODO: Add documentation on the valid values for callbackTypes.
          */
         callbackType?: CallbackType;
+
+        /**
+         * Set whether only legacy advertisements should be returned in scan results.
+         * Legacy advertisements include advertisements as specified by the
+         * Bluetooth core specification 4.2 and below. This is true by default
+         * for compatibility with older apps.
+         *
+         * @param legacy true if only legacy advertisements will be returned
+         */
+        legacy?: boolean;
+
+        /**
+         * Several phones may have some issues when it comes to offloaded filtering.
+         * Even if it should be supported, it may not work as expected.
+         * It has been observed for example, that setting 2 filters with different devices
+         * addresses on Nexus 6 with Lollipop gives no callbacks if one or both devices advertise.
+         * See https://code.google.com/p/android/issues/detail?id=181561.
+         *
+         * @param use true to enable (default) hardware offload filtering.
+         *                 If false a compat software filtering will be used
+         *                 (uses much more resources).
+         */
+        useHardwareBatchingIfSupported?: boolean;
+
+        /**
+         * Set report delay timestamp for Bluetooth LE scan.
+         *
+         * @param reportDelayMillis Delay of report in milliseconds. Set to 0 to be notified of
+         *            results immediately. Values &gt; 0 causes the scan results to be queued up and
+         *            delivered after the requested delay or when the internal buffers fill up.
+         * @throws IllegalArgumentException If {@code reportDelayMillis} &lt; 0.
+         */
+        reportDelay?: number;
+
+        /**
+         * *** Only available on Android 23+ ***
+         * Set the Physical Layer to use during this scan.
+         * This is used only if {@link ScanSettings.Builder#setLegacy}
+         * is set to false and only on Android 0reo or newer.
+         * {@link android.bluetooth.BluetoothAdapter#isLeCodedPhySupported}
+         * may be used to check whether LE Coded phy is supported by calling
+         * {@link android.bluetooth.BluetoothAdapter#isLeCodedPhySupported}.
+         * Selecting an unsupported phy will result in failure to start scan.
+         *
+         * @param phy Can be one of
+         *   {@link BluetoothDevice#PHY_LE_1M},
+         *   {@link BluetoothDevice#PHY_LE_CODED} or
+         *   {@link ScanSettings#PHY_LE_ALL_SUPPORTED}
+         */
+        phy?: Phy;
     };
 }
 
@@ -233,6 +287,7 @@ export interface AdvertismentData {
     manufacturerData?: ArrayBuffer;
     manufacturerId?: number;
     serviceUUIDs?: string[];
+    serviceData?: { [k: string]: ArrayBuffer };
     txPowerLevel?: number;
     flags?: number;
 }

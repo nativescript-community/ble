@@ -1,7 +1,7 @@
 declare var NSMakeRange; // not recognized by platform-declarations
 
 import { CLog, CLogTypes } from '../common';
-import { Bluetooth } from './ios_main';
+import { Bluetooth, toArrayBuffer } from './ios_main';
 import { CBPeripheralDelegateImpl } from './CBPeripheralDelegateImpl';
 
 /**
@@ -103,60 +103,63 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
      * @param RSSI [NSNumber] - The current received signal strength indicator (RSSI) of the peripheral, in decibels.
      */
     public centralManagerDidDiscoverPeripheralAdvertisementDataRSSI(central: CBCentralManager, peripheral: CBPeripheral, advData: NSDictionary<string, any>, RSSI: number) {
-        CLog(CLogTypes.info, `CBCentralManagerDelegateImpl.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI ---- ${peripheral.name} @ ${RSSI} @ ${advData}`);
-        const peri = this._owner.get().findPeripheral(peripheral.identifier.UUIDString);
-        if (!peri) {
-            this._owner.get()._discoverPeripherals[peripheral.identifier.UUIDString] = peripheral;
-        }
-        if (this._owner.get()._onDiscovered) {
-            let manufacturerId;
-            // let localName;
-            const advertismentData = {};
+        const UUIDString = peripheral.identifier.UUIDString;
+        CLog(CLogTypes.info, `CBCentralManagerDelegateImpl.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI ---- ${peripheral.name} @ ${UUIDString} @ ${RSSI} @ ${advData}`);
+        this._owner.get().adddDiscoverPeripheral(peripheral);
+        // if (!peri) {
+        //     this._owner.get()._discoverPeripherals[UUIDString] = peripheral;
+        // }
+        // if (this._owner.get()._onDiscovered) {
+        // let manufacturerId;
+        // let localName;
+        const advertismentData = new AdvertismentData(advData);
 
-            if (advData.objectForKey(CBAdvertisementDataManufacturerDataKey)) {
-                const manufacturerIdBuffer = this._owner.get().toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(0, 2)));
-                manufacturerId = new DataView(manufacturerIdBuffer, 0).getUint16(0, true);
-                advertismentData['manufacturerData'] = this._owner
-                    .get()
-                    .toArrayBuffer(
-                        advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(2, advData.objectForKey(CBAdvertisementDataManufacturerDataKey).length - 2))
-                    );
-            }
-            if (advData.objectForKey(CBAdvertisementDataLocalNameKey)) {
-                advertismentData['localName'] = advData.objectForKey(CBAdvertisementDataLocalNameKey);
-            }
-            if (advData.objectForKey(CBAdvertisementDataServiceUUIDsKey)) {
-                advertismentData['uuids'] = advData.objectForKey(CBAdvertisementDataServiceUUIDsKey);
-            }
-            if (advData.objectForKey(CBAdvertisementDataIsConnectable)) {
-                advertismentData['connectable'] = advData.objectForKey(CBAdvertisementDataIsConnectable);
-            }
-            if (advData.objectForKey(CBAdvertisementDataServiceDataKey)) {
-                const result = {};
-                const obj = advData.objectForKey(CBAdvertisementDataServiceDataKey) as NSDictionary<string, NSData>;
-                obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
-                    result[key] = interop.bufferFromData(data);
-                });
-                advertismentData['serviceData'] = result;
-            }
-            if (advData.objectForKey(CBAdvertisementDataTxPowerLevelKey)) {
-                advertismentData['txPowerLevel'] = advData.objectForKey(CBAdvertisementDataTxPowerLevelKey);
-            }
-            const payload = {
-                UUID: peripheral.identifier.UUIDString,
-                name: peripheral.name,
-                localName: advertismentData['localName'],
-                RSSI,
-                advertismentData,
-                state: this._owner.get()._getState(peripheral.state),
-                manufacturerId
-            };
-            this._owner.get()._advData[payload.UUID] = advertismentData;
+        // if (advData.objectForKey(CBAdvertisementDataManufacturerDataKey)) {
+        //     const manufacturerIdBuffer = this._owner.get().toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(0, 2)));
+        //     manufacturerId = new DataView(manufacturerIdBuffer, 0).getUint16(0, true);
+        //     advertismentData['manufacturerData'] = this._owner
+        //         .get()
+        //         .toArrayBuffer(
+        //             advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(2, advData.objectForKey(CBAdvertisementDataManufacturerDataKey).length - 2))
+        //         );
+        // }
+        // if (advData.objectForKey(CBAdvertisementDataLocalNameKey)) {
+        //     advertismentData['localName'] = advData.objectForKey(CBAdvertisementDataLocalNameKey);
+        // }
+        // if (advData.objectForKey(CBAdvertisementDataServiceUUIDsKey)) {
+        //     advertismentData['uuids'] = advData.objectForKey(CBAdvertisementDataServiceUUIDsKey);
+        // }
+        // if (advData.objectForKey(CBAdvertisementDataIsConnectable)) {
+        //     advertismentData['connectable'] = advData.objectForKey(CBAdvertisementDataIsConnectable);
+        // }
+        // if (advData.objectForKey(CBAdvertisementDataServiceDataKey)) {
+        //     const result = {};
+        //     const obj = advData.objectForKey(CBAdvertisementDataServiceDataKey) as NSDictionary<string, NSData>;
+        //     obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
+        //         result[key] = interop.bufferFromData(data);
+        //     });
+        //     advertismentData['serviceData'] = result;
+        // }
+        // if (advData.objectForKey(CBAdvertisementDataTxPowerLevelKey)) {
+        //     advertismentData['txPowerLevel'] = advData.objectForKey(CBAdvertisementDataTxPowerLevelKey);
+        // }
+        const payload = {
+            UUID: UUIDString,
+            name: peripheral.name,
+            localName: advertismentData.localName,
+            RSSI,
+            advertismentData,
+            state: this._owner.get()._getState(peripheral.state),
+            manufacturerId: advertismentData.manufacturerId
+        };
+        this._owner.get()._advData[UUIDString] = advertismentData;
+        if (this._owner.get()._onDiscovered) {
             this._owner.get()._onDiscovered(payload);
-            this._owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
-        } else {
-            CLog(CLogTypes.warning, 'CBCentralManagerDelegateImpl.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI ---- No onDiscovered callback specified');
         }
+        this._owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
+        // } else {
+        // CLog(CLogTypes.warning, 'CBCentralManagerDelegateImpl.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI ---- No onDiscovered callback specified');
+        // }
         // }
     }
 
@@ -188,5 +191,74 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
      */
     public centralManagerWillRestoreState(central: CBCentralManager, dict: NSDictionary<string, any>) {
         CLog(CLogTypes.info, `CBCentralManagerDelegateImpl.centralManagerWillRestoreState ---- central: ${central}, dict: ${dict}`);
+    }
+}
+
+export class AdvertismentData {
+    constructor(private advData: NSDictionary<string, any>) {}
+    get manufacturerData() {
+        // const manufacturerIdBuffer = this._owner.get().toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(0, 2)));
+        //         manufacturerId = new DataView(manufacturerIdBuffer, 0).getUint16(0, true);
+        const data = this.advData.objectForKey(CBAdvertisementDataManufacturerDataKey);
+        if (data) {
+            return toArrayBuffer(data.subdataWithRange(NSMakeRange(2, data.length - 2)));
+        }
+        return undefined;
+    }
+    get data() {
+        return toArrayBuffer(this.advData);
+    }
+    get manufacturerId() {
+        const data = this.advData.objectForKey(CBAdvertisementDataManufacturerDataKey);
+        if (data) {
+            const manufacturerIdBuffer = toArrayBuffer(data.subdataWithRange(NSMakeRange(0, 2)));
+            return new DataView(manufacturerIdBuffer, 0).getUint16(0, true);
+        }
+        return -1;
+        // return this.manufacturerData[0];
+    }
+    get txPowerLevel() {
+        return this.advData.objectForKey(CBAdvertisementDataTxPowerLevelKey) || Number.MIN_VALUE;
+    }
+    get localName() {
+        return this.advData.objectForKey(CBAdvertisementDataLocalNameKey);
+    }
+    get flags() {
+        return -1;
+    }
+    get uuids() {
+        const result = [];
+        const serviceUuids = this.advData.objectForKey(CBAdvertisementDataServiceUUIDsKey) as NSArray<CBUUID>;
+        for (let i = 0; i < serviceUuids.count; i++) {
+            result.push(serviceUuids[i].toString());
+        }
+        return result;
+    }
+    get overtflow() {
+        const result = [];
+        const serviceUuids = this.advData.objectForKey(CBAdvertisementDataOverflowServiceUUIDsKey) as NSArray<CBUUID>;
+        for (let i = 0; i < serviceUuids.count; i++) {
+            result.push(serviceUuids[i].toString());
+        }
+        return result;
+    }
+    get solicitedServices() {
+        const result = [];
+        const serviceUuids = this.advData.objectForKey(CBAdvertisementDataSolicitedServiceUUIDsKey) as NSArray<CBUUID>;
+        for (let i = 0; i < serviceUuids.count; i++) {
+            result.push(serviceUuids[i].toString());
+        }
+        return result;
+    }
+    get connectable() {
+        return this.advData.objectForKey(CBAdvertisementDataIsConnectable);
+    }
+    get serviceData() {
+        const result = {};
+        const obj = this.advData.objectForKey(CBAdvertisementDataServiceDataKey) as NSDictionary<CBUUID, NSData>;
+        obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
+            result[key.toString()] = toArrayBuffer(data);
+        });
+        return result;
     }
 }

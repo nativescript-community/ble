@@ -50,6 +50,9 @@ export interface StartScanningOptions {
         matchMode?: number;
         matchNum?: number;
         callbackType?: number;
+        legacy?: boolean;
+        reportDelay?: number;
+        phy?: number;
     };
 }
 export interface DisconnectOptions {

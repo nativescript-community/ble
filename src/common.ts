@@ -204,7 +204,6 @@ export interface StartScanningOptions {
      */
     android?: {
         /**
-         * *** Only available on Android 21+ ***
          * The scan mode can be one of android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_POWER (0),
          * android.bluetooth.le.ScanSettings.SCAN_MODE_BALANCED (1) ,
          * or android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY (2).
@@ -213,7 +212,6 @@ export interface StartScanningOptions {
         scanMode?: number;
 
         /**
-         * *** Only available on Android 23+ ***
          * The match mode can be one of android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE (1)
          * or android.bluetooth.le.ScanSettings.MATCH_MODE_STICKY (2)
          * DEFAULT: MATCH_MODE_AGGRESSIVE (2).
@@ -221,7 +219,6 @@ export interface StartScanningOptions {
         matchMode?: number;
 
         /**
-         * *** Only available on Android 23+ ***
          * The num of matches can be one of android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT (1),
          *  android.bluetooth.le.ScanSettings.MATCH_NUM_FEW_ADVERTISEMENT (2),
          * or android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT (3)
@@ -230,11 +227,46 @@ export interface StartScanningOptions {
         matchNum?: number;
 
         /**
-         * *** Only available on Android 23+ ***
          * The callback type flags for the scan.
          * TODO: Add documentation on the valid values for callbackTypes.
          */
         callbackType?: number;
+
+        /**
+         * Set whether only legacy advertisements should be returned in scan results.
+         * Legacy advertisements include advertisements as specified by the
+         * Bluetooth core specification 4.2 and below. This is true by default
+         * for compatibility with older apps.
+         *
+         * @param legacy true if only legacy advertisements will be returned
+         */
+        legacy?: boolean;
+
+        /**
+         * Set report delay timestamp for Bluetooth LE scan.
+         *
+         * @param reportDelayMillis Delay of report in milliseconds. Set to 0 to be notified of
+         *            results immediately. Values &gt; 0 causes the scan results to be queued up and
+         *            delivered after the requested delay or when the internal buffers fill up.
+         * @throws IllegalArgumentException If {@code reportDelayMillis} &lt; 0.
+         */
+        reportDelay?: number;
+
+        /**
+         * Set the Physical Layer to use during this scan.
+         * This is used only if {@link ScanSettings.Builder#setLegacy}
+         * is set to false and only on Android 0reo or newer.
+         * {@link android.bluetooth.BluetoothAdapter#isLeCodedPhySupported}
+         * may be used to check whether LE Coded phy is supported by calling
+         * {@link android.bluetooth.BluetoothAdapter#isLeCodedPhySupported}.
+         * Selecting an unsupported phy will result in failure to start scan.
+         *
+         * @param phy Can be one of
+         *   {@link BluetoothDevice#PHY_LE_1M},
+         *   {@link BluetoothDevice#PHY_LE_CODED} or
+         *   {@link ScanSettings#PHY_LE_ALL_SUPPORTED}
+         */
+        phy?: number;
     };
 }
 
@@ -273,11 +305,12 @@ export interface ConnectOptions {
     /**
      * Once the peripheral is disconnected this callback function is invoked.
      */
-    onDisconnected: (data: {
-        UUID;
-        name: string;
-    }
-) => void;
+    onDisconnected: (
+        data: {
+            UUID;
+            name: string;
+        }
+    ) => void;
 }
 
 /**

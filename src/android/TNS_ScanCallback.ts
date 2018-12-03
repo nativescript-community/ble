@@ -1,4 +1,4 @@
-import { Bluetooth } from './android_main';
+import { Bluetooth, byteArrayToBuffer, encodeValue, uuidToString } from './android_main';
 import { CLog, CLogTypes, Peripheral } from '../common';
 
 /**
@@ -65,30 +65,81 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
         }
         // let manufacturerId;
         // let manufacturerData;
-        const scanRecord = result.getScanRecord();
+        // const scanRecord = result.getScanRecord();
         // const manufacturerData = scanRecord.getManufacturerSpecificData();
         // if (manufacturerData.size() > 0) {
         //     manufacturerId = manufacturerData.keyAt(0);
         //     CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- manufacturerId: ${manufacturerId}`);
         // }
 
-        const advertismentData = (stateObject.advertismentData = this.owner.get().extractAdvertismentData(scanRecord.getBytes()));
-
-        CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- advertismentData: ${JSON.stringify(advertismentData)}`);
+        const advertismentData = new ScanAdvertisment(result.getScanRecord());
 
         const payload = {
             type: 'scanResult', // TODO or use different callback functions?
             UUID: result.getDevice().getAddress(),
             name: result.getDevice().getName(),
             RSSI: result.getRssi(),
+            localName: advertismentData.localName,
             state: 'disconnected',
-            advertisement: this.owner.get().decodeValue(scanRecord.getBytes()),
             manufacturerId: advertismentData.manufacturerId,
             advertismentData
         };
-        CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
+        // CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
         this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
         this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
     }
     // }
+}
+
+export class ScanAdvertisment {
+    constructor(private scanRecord: android.bluetooth.le.ScanRecord) {}
+    get manufacturerData() {
+        const data = this.scanRecord.getManufacturerSpecificData();
+        const size = data.size();
+        if (size > 0) {
+            const mKey = data.keyAt(0);
+            return byteArrayToBuffer(data.get(mKey));
+        }
+        return undefined;
+    }
+    get data() {
+        return byteArrayToBuffer(this.scanRecord.getBytes());
+    }
+    get manufacturerId() {
+        const data = this.scanRecord.getManufacturerSpecificData();
+        const size = data.size();
+        if (size > 0) {
+            return data.keyAt(0);
+        }
+        return -1;
+    }
+    get txPowerLevel() {
+        return this.scanRecord.getTxPowerLevel();
+    }
+    get localName() {
+        return this.scanRecord.getDeviceName();
+    }
+    get flags() {
+        return this.scanRecord.getAdvertiseFlags();
+    }
+    get uuids() {
+        const result = [];
+        const serviceUuids = this.scanRecord.getServiceUuids();
+        console.log('uuids', serviceUuids);
+        for (let i = 0; i < serviceUuids.size(); i++) {
+            result.push(uuidToString(serviceUuids[i]));
+        }
+        return result;
+    }
+    get serviceData() {
+        const result = {};
+        const serviceData = this.scanRecord.getServiceData();
+        const keys = serviceData.keySet();
+        let currentKey;
+        for (let i = 0; i < keys.size(); i++) {
+            currentKey = keys[i];
+            result[uuidToString(currentKey)] = serviceData.get(currentKey);
+        }
+        return result;
+    }
 }

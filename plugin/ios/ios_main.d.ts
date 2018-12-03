@@ -1,4 +1,5 @@
 import { BluetoothCommon, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions } from '../common';
+export declare function toArrayBuffer(value: any): ArrayBuffer;
 export declare class Bluetooth extends BluetoothCommon {
     private _centralDelegate;
     private _centralManager;
@@ -24,7 +25,6 @@ export declare class Bluetooth extends BluetoothCommon {
         resolve?: Function;
     };
     startScanning(arg: StartScanningOptions): Promise<{}>;
-    toArrayBuffer(value: any): ArrayBuffer;
     enable(): Promise<{}>;
     isGPSEnabled(): Promise<boolean>;
     enableGPS(): Promise<void>;
@@ -33,7 +33,9 @@ export declare class Bluetooth extends BluetoothCommon {
     connect(args: ConnectOptions): Promise<{}>;
     disconnect(arg: any): Promise<{}>;
     isConnected(arg: any): Promise<{}>;
-    findPeripheral(UUID: any): CBPeripheral;
+    findPeripheral: (UUID: any) => CBPeripheral;
+    adddDiscoverPeripheral: (peripheral: any) => void;
+    findDiscoverPeripheral: (UUID: any) => CBPeripheral;
     read(arg: any): Promise<{}>;
     write(arg: any): Promise<{}>;
     writeWithoutResponse(arg: any): Promise<{}>;

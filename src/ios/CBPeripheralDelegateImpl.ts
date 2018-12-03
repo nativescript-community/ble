@@ -1,5 +1,5 @@
 import { CLog, CLogTypes } from '../common';
-import { Bluetooth } from './ios_main';
+import { Bluetooth, toArrayBuffer } from './ios_main';
 
 /**
  * @link - https://developer.apple.com/documentation/corebluetooth/cbperipheraldelegate
@@ -45,8 +45,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
         for (let i = 0; i < peripheral.services.count; i++) {
             const service = peripheral.services.objectAtIndex(i);
             this._services.push({
-                UUID: service.UUID.UUIDString,
-                name: service.UUID
+                UUID: service.UUID.UUIDString
             });
             // NOTE: discover all is slow
             peripheral.discoverCharacteristicsForService(null, service);
@@ -175,7 +174,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
             type: characteristic.isNotifying ? 'notification' : 'read',
             characteristicUUID: characteristic.UUID.UUIDString,
             valueRaw: characteristic.value,
-            value: this._owner.get().toArrayBuffer(characteristic.value)
+            value: toArrayBuffer(characteristic.value)
         };
 
         if (result.type === 'read') {
