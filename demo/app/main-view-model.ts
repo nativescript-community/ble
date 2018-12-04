@@ -125,6 +125,55 @@ export class DemoAppModel extends Observable {
         });
     }
 
+    // this one 'manually' checks for permissions
+    public doScanForBeacon() {
+        this._bluetooth.hasCoarseLocationPermission().then(granted => {
+            if (!granted) {
+                this._bluetooth.requestCoarseLocationPermission().then(
+                    // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
+                    granted2 => {
+                        dialogs.alert({
+                            title: 'Granted?',
+                            message: granted2 ? 'Yep - now invoke that button again' : 'Nope',
+                            okButtonText: 'OK!'
+                        });
+                    }
+                );
+            } else {
+                // const heartrateService = '180d';
+                // const omegaService = '12345678-9012-3456-7890-1234567890ee';
+
+                this.isLoading = true;
+                // reset the array
+                this.peripherals.splice(0, this.peripherals.length);
+                this._bluetooth
+                    .startScanning({
+                        // beware: the peripheral must advertise ALL these services
+                        filters: [{ serviceUUID: '0000feaa-0000-1000-8000-00805f9b34fb' }],
+                        seconds: 4,
+                        // onDiscovered: peripheral => {
+                        //     this.peripherals.push(peripheral);
+                        // },
+                        skipPermissionCheck: true // we can skip permissions as we use filters:   https://developer.android.com/guide/topics/connectivity/bluetooth-le
+                    })
+                    .then(
+                        p => {
+                            this.isLoading = false;
+                            console.log('p', p);
+                        },
+                        err => {
+                            this.isLoading = false;
+                            dialogs.alert({
+                                title: 'Whoops!',
+                                message: err,
+                                okButtonText: 'OK, got it'
+                            });
+                        }
+                    );
+            }
+        });
+    }
+
     // this one uses automatic permission handling
     public doStartScanning() {
         this.isLoading = true;
@@ -132,11 +181,11 @@ export class DemoAppModel extends Observable {
         this.peripherals.length = 0;
         this._bluetooth
             .startScanning({
-                seconds: 5, // passing in seconds makes the plugin stop scanning after <seconds> seconds
-                onDiscovered: peripheral => {
-                    console.log("peripheral discovered. Not adding it here because we're using a listener.");
-                    // this.peripherals.push(peripheral);
-                },
+                seconds: 50, // passing in seconds makes the plugin stop scanning after <seconds> seconds
+                // onDiscovered: peripheral => {
+                //     console.log("peripheral discovered. Not adding it here because we're using a listener.");
+                //     // this.peripherals.push(peripheral);
+                // },
                 skipPermissionCheck: false // we can't skip permissions and we need enabled location as we dont use filters: https://developer.android.com/guide/topics/connectivity/bluetooth-le
             })
             .then(() => (this.isLoading = false))

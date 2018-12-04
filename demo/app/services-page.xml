@@ -7,10 +7,10 @@
       <Label text="{{ 'LocalName: ' + advertismentData.localName }}" class="h3" textWrap="true" />
       <Label text="{{ 'flags: ' + advertismentData.flags }}" class="h3" textWrap="true" />
       <Label text="{{ 'manufactureId: ' + (companyIdentifier[advertismentData.manufacturerId] || advertismentData.manufacturerId ) }}" class="h3" textWrap="true" />
-      <Label text="{{ 'manufactureData: ' + advertismentData.manufacturerData }}" class="h3" textWrap="true" />
-      <Label text="{{ 'txPowerLevel: ' + advertismentData.txPowerLevel }}" class="h3" textWrap="true" />
-      <Label text="{{ 'serviceUUIDs: ' + JSON.stringify(advertismentData.serviceUUIDs) }}" class="h3" textWrap="true" />
-      <Label text="{{ 'serviceData: ' + JSON.stringify(advertismentData.serviceData) }}" class="h3" textWrap="true" />
+      <Label text="{{ formatData('manufactureData', 'manufactureData') }}" class="h3" textWrap="true" />
+      <Label text="{{ formatData('txPowerLevel', 'txPowerLevel') }}" class="h3" textWrap="true" />
+      <Label text="{{ formatData('serviceUUIDs', 'serviceUUIDs') }}" class="h3" textWrap="true" />
+      <Label text="{{ formatData('serviceData', 'serviceData') }}" class="h3" textWrap="true" />
       <Button text="{{connected ? 'Disconnect' : 'Connect'}}" tap="{{ onConnectTap }}" class="{{'btn ' + (connected? 'btn-red':'btn-blue')}}" />
     </StackLayout>
     <ActivityIndicator busy="{{ isLoading }}"/>

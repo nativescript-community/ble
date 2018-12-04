@@ -1,7 +1,7 @@
 declare var NSMakeRange; // not recognized by platform-declarations
 
 import { CLog, CLogTypes } from '../common';
-import { Bluetooth, toArrayBuffer } from './ios_main';
+import { Bluetooth, CBUUIDToString, toArrayBuffer } from './ios_main';
 import { CBPeripheralDelegateImpl } from './CBPeripheralDelegateImpl';
 
 /**
@@ -238,7 +238,7 @@ export class AdvertismentData {
         const result = [];
         const serviceUuids = this.advData.objectForKey(CBAdvertisementDataOverflowServiceUUIDsKey) as NSArray<CBUUID>;
         for (let i = 0; i < serviceUuids.count; i++) {
-            result.push(serviceUuids[i].toString());
+            result.push(CBUUIDToString(serviceUuids[i]));
         }
         return result;
     }
@@ -246,7 +246,7 @@ export class AdvertismentData {
         const result = [];
         const serviceUuids = this.advData.objectForKey(CBAdvertisementDataSolicitedServiceUUIDsKey) as NSArray<CBUUID>;
         for (let i = 0; i < serviceUuids.count; i++) {
-            result.push(serviceUuids[i].toString());
+            result.push(CBUUIDToString(serviceUuids[i]));
         }
         return result;
     }
@@ -257,7 +257,7 @@ export class AdvertismentData {
         const result = {};
         const obj = this.advData.objectForKey(CBAdvertisementDataServiceDataKey) as NSDictionary<CBUUID, NSData>;
         obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
-            result[key.toString()] = toArrayBuffer(data);
+            result[CBUUIDToString(key)] = toArrayBuffer(data);
         });
         return result;
     }

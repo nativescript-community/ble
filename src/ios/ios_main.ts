@@ -16,6 +16,10 @@ export function toArrayBuffer(value) {
     return interop.bufferFromData(value);
 }
 
+export function CBUUIDToString(uuid: CBUUID) {
+    return uuid.toString().toLowerCase();
+}
+
 export class Bluetooth extends BluetoothCommon {
     private _centralDelegate = CBCentralManagerDelegateImpl.new().initWithCallback(new WeakRef(this), obj => {
         CLog(CLogTypes.info, `---- centralDelegate ---- obj: ${obj}`);

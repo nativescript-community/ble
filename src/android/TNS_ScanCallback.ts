@@ -125,7 +125,6 @@ export class ScanAdvertisment {
     get uuids() {
         const result = [];
         const serviceUuids = this.scanRecord.getServiceUuids();
-        console.log('uuids', serviceUuids);
         for (let i = 0; i < serviceUuids.size(); i++) {
             result.push(uuidToString(serviceUuids[i]));
         }
@@ -134,11 +133,12 @@ export class ScanAdvertisment {
     get serviceData() {
         const result = {};
         const serviceData = this.scanRecord.getServiceData();
-        const keys = serviceData.keySet();
-        let currentKey;
-        for (let i = 0; i < keys.size(); i++) {
-            currentKey = keys[i];
-            result[uuidToString(currentKey)] = serviceData.get(currentKey);
+        if (serviceData.size() > 0) {
+            const entries = serviceData.entrySet().iterator();
+            while (entries.hasNext()) {
+                const entry = entries.next();
+                result[uuidToString(entry.getKey())] = byteArrayToBuffer(entry.getValue());
+            }
         }
         return result;
     }

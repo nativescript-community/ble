@@ -1,5 +1,6 @@
 import { BluetoothCommon, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions } from '../common';
 export declare function toArrayBuffer(value: any): ArrayBuffer;
+export declare function CBUUIDToString(uuid: CBUUID): string;
 export declare class Bluetooth extends BluetoothCommon {
     private _centralDelegate;
     private _centralManager;
@@ -16,7 +17,7 @@ export declare class Bluetooth extends BluetoothCommon {
     _onDiscovered: any;
     constructor(restoreIdentifier?: string);
     readonly enabled: boolean;
-    _getState(state: CBPeripheralState): "connecting" | "connected" | "disconnected";
+    _getState(state: CBPeripheralState): "connected" | "connecting" | "disconnected";
     onPeripheralDisconnected(peripheral: CBPeripheral): void;
     onPeripheralConnected(peripheral: CBPeripheral): void;
     isBluetoothEnabled(): Promise<{}>;

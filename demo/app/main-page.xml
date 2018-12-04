@@ -13,7 +13,8 @@
               <Label row="1" colSpan="2" text="Scan 5 seconds for:" class="hint text-center" textWrap="true" />
               <StackLayout row="2" colSpan="2" orientation="horizontal">
                 <Button text="Any Device" tap="{{ doStartScanning }}" class="btn btn-green" />
-                <Button text="Heartrate Monitor" tap="{{ doScanForHeartrateMontitor }}" class="btn btn-green" />
+                <Button text="HR" tap="{{ doScanForHeartrateMontitor }}" class="btn btn-green" />
+                <Button text="Beacon" tap="{{ doScanForBeacon }}" class="btn btn-green" />
               </StackLayout>
               <Button row="3" colSpan="2" text="Stop Scan" tap="{{ doStopScanning }}" class="btn btn-red" />
             </GridLayout>

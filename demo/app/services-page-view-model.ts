@@ -25,6 +25,9 @@ export class ServicesViewModel extends Observable {
         console.log('peripheral', JSON.stringify(this.peripheral));
         console.log('advertismentData', JSON.stringify(this.advertismentData));
         console.log('manufacturerId', this.advertismentData.manufacturerId, companyIdentifier[this.advertismentData.manufacturerId]);
+        console.log('serviceData', JSON.stringify(this.advertismentData.serviceData));
+        console.log('uuids', this.advertismentData.serviceUUIDs);
+        console.log('txPowerLevel', this.advertismentData.txPowerLevel);
         // console.log('localName', this.advertismentData.localName);
         // console.log('serviceUUIDs', this.advertismentData.serviceUUIDs);
         // console.log('txPowerLevel', this.advertismentData.txPowerLevel);
@@ -32,6 +35,10 @@ export class ServicesViewModel extends Observable {
         // console.log('manufacturerId', this.advertismentData.manufacturerId);
         // console.log('manufacturerData', this.advertismentData.manufacturerData);
         // console.log('serviceData', this.advertismentData.serviceData);
+    }
+
+    formatData(title: string, advKey: string) {
+        return title + ': ' + JSON.stringify(this.advertismentData[advKey]);
     }
 
     public connect() {
