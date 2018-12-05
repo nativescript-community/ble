@@ -113,7 +113,8 @@ function androidPhy(mode: Phy) {
             return android.bluetooth.BluetoothDevice.PHY_LE_1M;
         case Phy.LE_CODED:
             return android.bluetooth.BluetoothDevice.PHY_LE_CODED;
-        default: // PHY_LE_ALL_SUPPORTED
+        default:
+            // PHY_LE_ALL_SUPPORTED
             return android.bluetooth.le.ScanSettings.PHY_LE_ALL_SUPPORTED;
     }
 }
@@ -145,15 +146,15 @@ export function encodeValue(val) {
     return result;
 }
 
-export function decodeValue(value) {
-    if (value === null) {
-        return null;
-    }
+// export function decodeValue(value) {
+//     if (value === null) {
+//         return null;
+//     }
 
-    // value is of Java type: byte[]
-    const b = android.util.Base64.encodeToString(value, android.util.Base64.NO_WRAP);
-    return this.base64ToArrayBuffer(b);
-}
+//     // value is of Java type: byte[]
+//     const b = android.util.Base64.encodeToString(value, android.util.Base64.NO_WRAP);
+//     return this.base64ToArrayBuffer(b);
+// }
 
 export function valueToByteArray(value) {
     if (typeof value === 'string') {
@@ -198,10 +199,23 @@ export function stringToUuid(uuidStr) {
 }
 
 export class Bluetooth extends BluetoothCommon {
-    // @link - https://developer.android.com/reference/android/content/Context.html#BLUETOOTH_SERVICE
-    public bluetoothManager: android.bluetooth.BluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
-    public adapter: android.bluetooth.BluetoothAdapter = this.bluetoothManager.getAdapter();
-    public gattServer: android.bluetooth.BluetoothGattServer;
+    private _adapter: android.bluetooth.BluetoothAdapter;
+
+    get adapter() {
+        if (!this._adapter) {
+            this._adapter = this.bluetoothManager.getAdapter();
+        }
+        return this._adapter;
+    }
+    private _bluetoothManager: android.bluetooth.BluetoothManager;
+
+    get bluetoothManager() {
+        if (!this._bluetoothManager) {
+            this._bluetoothManager = utils.ad.getApplicationContext().getSystemService(android.content.Context.BLUETOOTH_SERVICE);
+        }
+        return this._bluetoothManager;
+    }
+    // public gattServer: android.bluetooth.BluetoothGattServer;
     public bluetoothGattCallback = new TNS_BluetoothGattCallback();
     // not initializing here, if the Android API is < 21  use LeScanCallback
     public scanCallback: TNS_ScanCallback;
@@ -255,8 +269,8 @@ export class Bluetooth extends BluetoothCommon {
     constructor() {
         super();
         CLog(CLogTypes.info, '*** Android Bluetooth Constructor ***');
-        CLog(CLogTypes.info, 'this.bluetoothManager', this.bluetoothManager);
-        CLog(CLogTypes.info, 'this.adapter', this.adapter);
+        // CLog(CLogTypes.info, 'this.bluetoothManager', this.bluetoothManager);
+        // CLog(CLogTypes.info, 'this.adapter', this.adapter);
 
         // if >= Android21 (Lollipop)
         if (android.os.Build.VERSION.SDK_INT >= LOLLIPOP) {
@@ -281,11 +295,7 @@ export class Bluetooth extends BluetoothCommon {
 
     // Getter/Setters
     get enabled() {
-        if (this.adapter !== null && this.adapter.isEnabled()) {
-            return true;
-        } else {
-            return false;
-        }
+        return this._isEnabled();
     }
 
     public coarseLocationPermissionGranted() {
@@ -373,12 +383,13 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public enable() {
-        CLog(CLogTypes.info, 'Bluetooth.enable');
+        CLog(CLogTypes.info, 'Bluetooth.enable: ' + this._isEnabled());
         return new Promise((resolve, reject) => {
-            if (this.isBluetoothEnabled()) {
+            if (this._isEnabled()) {
                 return resolve(true);
             }
             try {
+                CLog(CLogTypes.info, 'Bluetooth.enable: asking to enable bluetooth');
                 // activityResult event
                 const onBluetoothEnableResult = (args: application.AndroidActivityResultEventData) => {
                     CLog(CLogTypes.info, 'Bluetooth.onBluetoothEnableResult ---', `requestCode: ${args.requestCode}, result: ${args.resultCode}`);
@@ -415,6 +426,7 @@ export class Bluetooth extends BluetoothCommon {
                 // create the intent to start the bluetooth enable request
                 const intent = new android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 const activity = application.android.foregroundActivity || application.android.startActivity;
+                CLog(CLogTypes.info, 'Bluetooth.enable: startActivityForResult');
                 activity.startActivityForResult(intent, ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE);
             } catch (ex) {
                 CLog(CLogTypes.error, `Bluetooth.enable: ${ex}`);
@@ -462,7 +474,12 @@ export class Bluetooth extends BluetoothCommon {
     };
 
     private stopCurrentScan() {
-        CLog(CLogTypes.info, 'Bluetooth.stopCurrentScan');
+        CLog(CLogTypes.info, `Bluetooth.stopCurrentScan: ${!!this.scanningReferTimer}`);
+
+        if (!this.adapter) {
+            CLog(CLogTypes.error, 'Bluetooth.stopCurrentScan: no adapter');
+            return;
+        }
 
         if (this.scanCallback) {
             this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
@@ -479,6 +496,10 @@ export class Bluetooth extends BluetoothCommon {
         }
     }
     public startScanning(arg: StartScanningOptions) {
+        if (!this.adapter) {
+            CLog(CLogTypes.error, 'Bluetooth.stopCurrentScan: no adapter');
+            return Promise.reject('no_bluetooth');
+        }
         return new Promise((resolve, reject) => {
             try {
                 if (!this._isEnabled()) {
@@ -584,27 +605,17 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public stopScanning() {
+        if (!this.adapter) {
+            CLog(CLogTypes.error, 'Bluetooth.stopCurrentScan: no adapter');
+            return Promise.reject('no_bluetooth');
+        }
         return new Promise((resolve, reject) => {
             try {
                 if (!this._isEnabled()) {
                     reject('Bluetooth is not enabled');
                     return;
                 }
-                CLog(CLogTypes.info, `Bluetooth.stopScanning: ${!!this.scanningReferTimer}`);
-
-                // if less than Android21(Lollipop)
-                if (this.LeScanCallback) {
-                    CLog(CLogTypes.info, `Bluetooth.stopScanning preLollipop`);
-                    this.adapter.stopLeScan(this.LeScanCallback);
-                } else if (this.scanCallback) {
-                    CLog(CLogTypes.info, `Bluetooth.stopScanning postLollipop`);
-                    this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
-                }
-                if (this.scanningReferTimer) {
-                    this.scanningReferTimer.resolve && this.scanningReferTimer.resolve();
-                    clearTimeout(this.scanningReferTimer.timer);
-                    this.scanningReferTimer = null;
-                }
+                this.stopCurrentScan();
                 resolve();
             } catch (ex) {
                 CLog(CLogTypes.info, `Bluetooth.stopScanning: ${ex}`);
@@ -615,6 +626,10 @@ export class Bluetooth extends BluetoothCommon {
 
     // note that this doesn't make much sense without scanning first
     public connect(arg: ConnectOptions) {
+        if (!this.adapter) {
+            CLog(CLogTypes.error, 'Bluetooth.stopCurrentScan: no adapter');
+            return Promise.reject('no_bluetooth');
+        }
         return new Promise((resolve, reject) => {
             try {
                 // or macaddress..
@@ -967,7 +982,6 @@ export class Bluetooth extends BluetoothCommon {
     //   }
     // }
 
-
     // This guards against peripherals reusing char UUID's. We prefer notify.
     private _findNotifyCharacteristic(bluetoothGattService, characteristicUUID) {
         // Check for Notify first
@@ -1047,7 +1061,8 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     private _isEnabled() {
-        return this.adapter && this.adapter.isEnabled();
+        const adapter = this.adapter;
+        return adapter && adapter.isEnabled();
     }
 
     private _getContext() {
