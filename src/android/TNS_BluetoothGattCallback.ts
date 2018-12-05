@@ -1,4 +1,4 @@
-import { Bluetooth, decodeValue, uuidToString } from './android_main';
+import { Bluetooth, byteArrayToBuffer, uuidToString } from './android_main';
 import { CLog, CLogTypes } from '../common';
 
 @JavaProxy('com.nativescript.TNS_BluetoothGattCallback')
@@ -159,7 +159,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
             const value = characteristic.getValue();
             stateObject.onReadPromise({
                 valueRaw: value,
-                value: decodeValue(value),
+                value: byteArrayToBuffer(value),
                 characteristicUUID: characteristic.getUuid()
             });
         }
@@ -184,7 +184,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
             const value = characteristic.getValue();
             stateObject.onNotifyCallback({
                 valueRaw: value,
-                value: decodeValue(value),
+                value: byteArrayToBuffer(value),
                 characteristicUUID: characteristic.getUuid()
             });
         }
