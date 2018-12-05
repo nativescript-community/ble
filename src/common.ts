@@ -131,15 +131,15 @@ export class BluetoothCommon extends Observable {
      * @param b64 - Base64 Encoded string to be decoded.
      * @returns buffer [ArrayBuffer]
      */
-    base64ToArrayBuffer(b64) {
-        // decodes a string of data which has been encoded using base-64 encoding
-        const decoded = atob(b64);
-        const ret = new Uint8Array(decoded.length);
-        for (let i = 0; i < decoded.length; i++) {
-            ret[i] = decoded.charCodeAt(i);
-        }
-        return ret.buffer;
-    }
+    // base64ToArrayBuffer(b64) {
+    //     // decodes a string of data which has been encoded using base-64 encoding
+    //     const decoded = atob(b64);
+    //     const ret = new Uint8Array(decoded.length);
+    //     for (let i = 0; i < decoded.length; i++) {
+    //         ret[i] = decoded.charCodeAt(i);
+    //     }
+    //     return ret.buffer;
+    // }
 
     requestCoarseLocationPermission() {
         return new Promise(resolve => {
