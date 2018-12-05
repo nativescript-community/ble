@@ -172,7 +172,7 @@ export function byteArrayToBuffer(value) {
     const ret = new Uint8Array(value.length);
     const isString = typeof value === 'string';
     for (let i = 0; i < value.length; i++) {
-        ret[i] = isString ? value.charCodeAt(i) : value;
+        ret[i] = isString ? value.charCodeAt(i) : value[i];
     }
     return ret.buffer;
 }
