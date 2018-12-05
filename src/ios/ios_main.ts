@@ -208,7 +208,7 @@ export class Bluetooth extends BluetoothCommon {
                     reject('No UUID was passed');
                     return;
                 }
-                console.log('test', this._discoverPeripherals);
+                // console.log('test', this._discoverPeripherals);
                 CLog(CLogTypes.info, `Bluetooth.connect ---- ${args.UUID}`);
                 const peripheral = this.findDiscoverPeripheral(args.UUID);
 
