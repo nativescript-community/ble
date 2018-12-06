@@ -30,15 +30,15 @@ export declare enum Phy {
 }
 export declare function uuidToString(uuid: any): any;
 export declare function encodeValue(val: any): any;
-export declare function decodeValue(value: any): any;
 export declare function valueToByteArray(value: any): any;
 export declare function byteArrayToBuffer(value: any): ArrayBuffer;
 export declare function printValueToString(value: any): any;
 export declare function stringToUuid(uuidStr: any): java.util.UUID;
 export declare class Bluetooth extends BluetoothCommon {
-    bluetoothManager: android.bluetooth.BluetoothManager;
-    adapter: android.bluetooth.BluetoothAdapter;
-    gattServer: android.bluetooth.BluetoothGattServer;
+    private _adapter;
+    readonly adapter: globalAndroid.bluetooth.BluetoothAdapter;
+    private _bluetoothManager;
+    readonly bluetoothManager: globalAndroid.bluetooth.BluetoothManager;
     bluetoothGattCallback: TNS_BluetoothGattCallback;
     scanCallback: TNS_ScanCallback;
     LeScanCallback: TNS_LeScanCallback;

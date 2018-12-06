@@ -122,9 +122,9 @@ export class Bluetooth extends COMMON.BluetoothCommon {
     makeService(options: any): any;
     getAdvertiser(): any;
     setDiscoverable(): Promise<any>;
-    startGattServer();
-    stopGattServer();
-    setGattServerCallbacks(options: any);
+    // startGattServer();
+    // stopGattServer();
+    // setGattServerCallbacks(options: any);
     fetchUuidsWithSdp(device: any): boolean;
     removeBond(device: any): any;
     getAdapter(): any;
@@ -304,6 +304,11 @@ export interface Peripheral {
      * A friendly description of the peripheral as provided by the manufacturer.
      */
     name: string;
+    
+    /**
+     * A friendly description of the peripheral as provided by the manufacturer.
+     */
+    localName?: string;
 
     // state: string; // TODO not sure we'll keep this, so not adding it here for now
 

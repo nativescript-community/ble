@@ -347,7 +347,7 @@ export class Bluetooth extends BluetoothCommon {
 
                 const valueEncoded = arg.raw === true ? this.valueToNSData(arg.value) : this._encodeValue(arg.value);
                 if (BluetoothUtil.debug) {
-                    CLog(CLogTypes.info, `Bluetooth.write: "${arg.value}", "${this.valueToString(valueEncoded)}"`);
+                    CLog(CLogTypes.info, `Bluetooth.write: "${arg.value}"`);
                 }
                 if (valueEncoded === null) {
                     reject('Invalid value: ' + arg.value);
@@ -386,7 +386,7 @@ export class Bluetooth extends BluetoothCommon {
 
                 const valueEncoded = arg.raw === true ? this.valueToNSData(arg.value) : this._encodeValue(arg.value);
                 if (BluetoothUtil.debug) {
-                    CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: "${arg.value}", "${this.valueToString(valueEncoded)}"`);
+                    CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: "${arg.value}"`);
                 }
                 if (valueEncoded === null) {
                     reject('Invalid value: ' + arg.value);
@@ -605,6 +605,8 @@ export class Bluetooth extends BluetoothCommon {
 
     private valueToNSData(value) {
         if (typeof value === 'string') {
+            // return this.valueToNSData(value.split('').map(s => s.charCodeAt(0)));
+            // return NSString.stringWithUTF8String(value).dataUsingEncoding(NSUTF8StringEncoding);
             const intRef = new interop.Reference(interop.types.int8, interop.alloc(value.length));
             for (let i = 0; i < value.length; i++) {
                 intRef[i] = value.charCodeAt(i);
@@ -612,6 +614,7 @@ export class Bluetooth extends BluetoothCommon {
             return NSData.dataWithBytesLength(intRef, value.length);
             // called within this class
         } else if (Array.isArray(value)) {
+            // return NSKeyedArchiver.archivedDataWithRootObject(value);
             const intRef = new interop.Reference(interop.types.int8, interop.alloc(value.length));
             for (let i = 0; i < value.length; i++) {
                 intRef[i] = value[i];
@@ -622,15 +625,15 @@ export class Bluetooth extends BluetoothCommon {
         }
     }
 
-    private valueToString(value) {
-        if (value instanceof NSData) {
-            const array = [];
-            const bytes = value.bytes;
-            for (let i = 0; i < value.length; i++) {
-                array.push(new Number(bytes[i]).valueOf());
-            }
-            return array;
-        }
-        return value;
-    }
+    // private valueToString(value) {
+    //     if (value instanceof NSData) {
+    //         const array = [];
+    //         const bytes = value.bytes;
+    //         for (let i = 0; i < value.length; i++) {
+    //             array.push(new Number(bytes[i]).valueOf());
+    //         }
+    //         return array;
+    //     }
+    //     return value;
+    // }
 }

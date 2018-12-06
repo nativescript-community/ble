@@ -158,18 +158,21 @@ export function encodeValue(val) {
 
 export function valueToByteArray(value) {
     if (typeof value === 'string') {
+        // return new java.lang.String(value).getBytes('UTF-8');
         const bytes = Array.create('byte', value.length);
         for (let i = 0; i < value.length; i++) {
             bytes[i] = value.charCodeAt(i);
         }
         return bytes;
-        // called within this class
     } else if (Array.isArray(value)) {
         return value;
     }
     return null;
 }
 export function byteArrayToBuffer(value) {
+    // if (typeof value === 'string') {
+    //     value = new java.lang.String(value).getBytes('UTF-8');
+    // }
     const ret = new Uint8Array(value.length);
     const isString = typeof value === 'string';
     for (let i = 0; i < value.length; i++) {
@@ -765,7 +768,7 @@ export class Bluetooth extends BluetoothCommon {
 
                     const val = arg.raw === true ? valueToByteArray(arg.value) : encodeValue(arg.value);
                     if (BluetoothUtil.debug) {
-                        CLog(CLogTypes.info, `Bluetooth.write: val:"${printValueToString(val)}", arg.value"${arg.value}"`);
+                        CLog(CLogTypes.info, `Bluetooth.write: "${arg.value}"`);
                     }
                     if (val === null) {
                         reject('Invalid value: ' + arg.value);
@@ -814,7 +817,7 @@ export class Bluetooth extends BluetoothCommon {
 
                     const val = arg.raw === true ? valueToByteArray(arg.value) : encodeValue(arg.value);
                     if (BluetoothUtil.debug) {
-                        CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: val:"${printValueToString(val)}", arg.value"${arg.value}"`);
+                        CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: "${arg.value}"`);
                     }
                     if (!val) {
                         reject(`Invalid value: ${arg.value}`);

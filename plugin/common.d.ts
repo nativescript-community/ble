@@ -30,7 +30,6 @@ export declare class BluetoothCommon extends Observable {
     static execute_write_event: string;
     events: any;
     readonly enabled: boolean;
-    base64ToArrayBuffer(b64: any): ArrayBuffer;
     requestCoarseLocationPermission(): Promise<{}>;
     hasCoarseLocationPermission(): Promise<{}>;
     sendEvent(eventName: string, data?: any, msg?: string): void;
