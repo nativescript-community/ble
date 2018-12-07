@@ -260,14 +260,14 @@ bluetooth.read({
 ### write
 If a peripheral has a service that has a characteristic where `properties.write` is `true` then you can call the `write` function to update the current state (value) of the characteristic.
 
-The value must be hexadecimal, so if you want to send a `1`, send `0x01`. If you want to send multiple bytes add a comma: `"0x007F,0x006E"`.
+The value may be a string or any array type value. If you pass a string you should pass the encoding too
 
 ```js
 bluetooth.write({
   peripheralUUID: '34134-5453-4453-54545',
   serviceUUID: '180e',
   characteristicUUID: '3424-45234-34324-2343',
-  value: '0x01' // a hex 1
+  value: [1]
 }).then(function(result) {
   console.log("value written");
 }, function (err) {

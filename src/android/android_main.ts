@@ -156,14 +156,14 @@ export function encodeValue(val) {
 //     return this.base64ToArrayBuffer(b);
 // }
 
-export function valueToByteArray(value) {
+export function valueToByteArray(value, encoding = 'iso-8859-1') {
     if (typeof value === 'string') {
-        // return new java.lang.String(value).getBytes('UTF-8');
-        const bytes = Array.create('byte', value.length);
-        for (let i = 0; i < value.length; i++) {
-            bytes[i] = value.charCodeAt(i);
-        }
-        return bytes;
+        return new java.lang.String(value).getBytes(encoding.toUpperCase());
+        // const bytes = Array.create('byte', value.length);
+        // for (let i = 0; i < value.length; i++) {
+        //     bytes[i] = value.charCodeAt(i);
+        // }
+        // return bytes;
     } else if (Array.isArray(value)) {
         return value;
     }
@@ -766,7 +766,7 @@ export class Bluetooth extends BluetoothCommon {
                         return;
                     }
 
-                    const val = arg.raw === true ? valueToByteArray(arg.value) : encodeValue(arg.value);
+                    const val = valueToByteArray(arg.value, arg.encoding);
                     if (BluetoothUtil.debug) {
                         CLog(CLogTypes.info, `Bluetooth.write: "${arg.value}"`);
                     }
@@ -815,7 +815,7 @@ export class Bluetooth extends BluetoothCommon {
                         return;
                     }
 
-                    const val = arg.raw === true ? valueToByteArray(arg.value) : encodeValue(arg.value);
+                    const val = valueToByteArray(arg.value, arg.encoding);
                     if (BluetoothUtil.debug) {
                         CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: "${arg.value}"`);
                     }

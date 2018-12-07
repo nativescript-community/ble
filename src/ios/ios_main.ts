@@ -1,7 +1,7 @@
 declare var NSMakeRange;
 
 import { ios as iOS_Utils } from 'tns-core-modules/utils/utils';
-import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions } from '../common';
+import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from '../common';
 import { CBPeripheralDelegateImpl } from './CBPeripheralDelegateImpl';
 import { CBCentralManagerDelegateImpl } from './CBCentralManagerDelegateImpl';
 
@@ -332,7 +332,7 @@ export class Bluetooth extends BluetoothCommon {
         });
     }
 
-    public write(arg) {
+    public write(arg: WriteOptions) {
         return new Promise((resolve, reject) => {
             try {
                 if (!arg.value) {
@@ -345,7 +345,7 @@ export class Bluetooth extends BluetoothCommon {
                     return;
                 }
 
-                const valueEncoded = arg.raw === true ? this.valueToNSData(arg.value) : this._encodeValue(arg.value);
+                const valueEncoded = this.valueToNSData(arg.value, arg.encoding);
                 if (BluetoothUtil.debug) {
                     CLog(CLogTypes.info, `Bluetooth.write: "${arg.value}"`);
                 }
@@ -371,7 +371,7 @@ export class Bluetooth extends BluetoothCommon {
         });
     }
 
-    public writeWithoutResponse(arg) {
+    public writeWithoutResponse(arg: WriteOptions) {
         return new Promise((resolve, reject) => {
             try {
                 if (!arg.value) {
@@ -384,7 +384,7 @@ export class Bluetooth extends BluetoothCommon {
                     return;
                 }
 
-                const valueEncoded = arg.raw === true ? this.valueToNSData(arg.value) : this._encodeValue(arg.value);
+                const valueEncoded = this.valueToNSData(arg.value, arg.encoding);
                 if (BluetoothUtil.debug) {
                     CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: "${arg.value}"`);
                 }
@@ -603,15 +603,47 @@ export class Bluetooth extends BluetoothCommon {
         return result.buffer;
     }
 
-    private valueToNSData(value) {
+    private nativeEncoding(encoding) {
+        switch (encoding) {
+            case 'utf-8':
+                return NSUTF8StringEncoding;
+            default:
+            case 'iso-8859-1':
+                return NSISOLatin1StringEncoding;
+            case 'iso-8859-2':
+                return NSISOLatin2StringEncoding;
+            case 'shift-jis':
+                return NSShiftJISStringEncoding;
+            case 'iso-2022-jp':
+                return NSISO2022JPStringEncoding;
+            case 'euc-jp':
+                return NSJapaneseEUCStringEncoding;
+            case 'windows-1250':
+                return NSWindowsCP1250StringEncoding;
+            case 'windows-1251':
+                return NSWindowsCP1251StringEncoding;
+            case 'windows-1252':
+                return NSWindowsCP1252StringEncoding;
+            case 'windows-1253':
+                return NSWindowsCP1253StringEncoding;
+            case 'windows-1254':
+                return NSWindowsCP1254StringEncoding;
+            case 'utf-16be':
+                return NSUTF16BigEndianStringEncoding;
+            case 'utf-16le':
+                return NSUTF16LittleEndianStringEncoding;
+        }
+    }
+
+    private valueToNSData(value: any, encoding = 'iso-8859-1') {
         if (typeof value === 'string') {
             // return this.valueToNSData(value.split('').map(s => s.charCodeAt(0)));
-            // return NSString.stringWithUTF8String(value).dataUsingEncoding(NSUTF8StringEncoding);
-            const intRef = new interop.Reference(interop.types.int8, interop.alloc(value.length));
-            for (let i = 0; i < value.length; i++) {
-                intRef[i] = value.charCodeAt(i);
-            }
-            return NSData.dataWithBytesLength(intRef, value.length);
+            return NSString.stringWithUTF8String(value).dataUsingEncoding(this.nativeEncoding(encoding));
+            // const intRef = new interop.Reference(interop.types.int8, interop.alloc(value.length));
+            // for (let i = 0; i < value.length; i++) {
+            //     intRef[i] = value.charCodeAt(i);
+            // }
+            // return NSData.dataWithBytesLength(intRef, value.length);
             // called within this class
         } else if (Array.isArray(value)) {
             // return NSKeyedArchiver.archivedDataWithRootObject(value);

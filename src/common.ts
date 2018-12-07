@@ -415,7 +415,7 @@ export interface ReadOptions extends CRUDOptions {}
 
 export interface WriteOptions extends CRUDOptions {
     value: any;
-    raw?: boolean;
+    encoding?: string;
 }
 
 // tslint:disable-next-line:no-empty-interface
