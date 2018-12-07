@@ -827,8 +827,11 @@ export class Bluetooth extends BluetoothCommon {
                     characteristic.setValue(val);
                     characteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
 
+
+                    // using the WRITE_TYPE_NO_RESPONSE, we will get the onCharacteristicWrite callback as soon as the stack is ready and has space to accept a new request.
+                    this.connections[arg.peripheralUUID].onWritePromise = resolve;
                     if (wrapper.gatt.writeCharacteristic(characteristic)) {
-                        resolve();
+                        // resolve();
                     } else {
                         reject(`Failed to write to characteristic ${arg.characteristicUUID}, ${val}`);
                     }
