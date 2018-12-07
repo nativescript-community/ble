@@ -156,9 +156,15 @@ export function encodeValue(val) {
 //     return this.base64ToArrayBuffer(b);
 // }
 
+function nativeEncoding(encoding: string) {
+    const result = java.nio.charset.Charset.forName(encoding);
+    // console.log('nativeEncoding', encoding, encoding.toUpperCase(), result.displayName());
+    return result;
+}
+
 export function valueToByteArray(value, encoding = 'iso-8859-1') {
     if (typeof value === 'string') {
-        return new java.lang.String(value).getBytes(encoding.toUpperCase());
+        return new java.lang.String(value).getBytes(nativeEncoding(encoding));
         // const bytes = Array.create('byte', value.length);
         // for (let i = 0; i < value.length; i++) {
         //     bytes[i] = value.charCodeAt(i);
@@ -305,12 +311,12 @@ export class Bluetooth extends BluetoothCommon {
         let hasPermission = getAndroidSDK() < MARSHMALLOW;
         if (!hasPermission) {
             const ctx = this._getContext();
-            CLog(CLogTypes.info, `app context ${ctx}`);
+            CLog(CLogTypes.info, 'app context', ctx);
 
             hasPermission =
                 android.content.pm.PackageManager.PERMISSION_GRANTED === android.support.v4.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
         }
-        CLog(CLogTypes.info, 'Bluetooth.coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
+        CLog(CLogTypes.info, 'coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
         return hasPermission;
     }
 
@@ -357,8 +363,8 @@ export class Bluetooth extends BluetoothCommon {
         const result = this.getAndroidLocationManager().isProviderEnabled(android.location.LocationManager.GPS_PROVIDER);
         if (BluetoothUtil.debug) {
             const providers = this.getAndroidLocationManager().getProviders(false);
-            CLog(CLogTypes.info, 'Bluetooth.isGPSEnabled providers', providers);
-            CLog(CLogTypes.info, 'Bluetooth.isGPSEnabled: ' + result);
+            CLog(CLogTypes.info, 'isGPSEnabled providers', providers);
+            CLog(CLogTypes.info, 'isGPSEnabled: ', result);
         }
         return Promise.resolve(result);
     }
@@ -386,13 +392,13 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public enable() {
-        CLog(CLogTypes.info, 'Bluetooth.enable: ' + this._isEnabled());
+        CLog(CLogTypes.info, 'enable:', this._isEnabled());
         return new Promise((resolve, reject) => {
             if (this._isEnabled()) {
                 return resolve(true);
             }
             try {
-                CLog(CLogTypes.info, 'Bluetooth.enable: asking to enable bluetooth');
+                CLog(CLogTypes.info, 'enable: asking to enable bluetooth');
                 // activityResult event
                 const onBluetoothEnableResult = (args: application.AndroidActivityResultEventData) => {
                     CLog(CLogTypes.info, 'Bluetooth.onBluetoothEnableResult ---', `requestCode: ${args.requestCode}, result: ${args.resultCode}`);
@@ -412,7 +418,7 @@ export class Bluetooth extends BluetoothCommon {
                         } catch (ex) {
                             CLog(CLogTypes.error, ex);
                             application.android.off(application.AndroidApplication.activityResultEvent, onBluetoothEnableResult);
-                            this.sendEvent(Bluetooth.error_event, { error: ex }, `Bluetooth.enable ---- error: ${ex}`);
+                            this.sendEvent(Bluetooth.error_event, { error: ex }, `enable ---- error: ${ex}`);
                             reject(ex);
                             return;
                         }
@@ -429,10 +435,10 @@ export class Bluetooth extends BluetoothCommon {
                 // create the intent to start the bluetooth enable request
                 const intent = new android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 const activity = application.android.foregroundActivity || application.android.startActivity;
-                CLog(CLogTypes.info, 'Bluetooth.enable: startActivityForResult');
+                CLog(CLogTypes.info, 'enable: startActivityForResult');
                 activity.startActivityForResult(intent, ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE);
             } catch (ex) {
-                CLog(CLogTypes.error, `Bluetooth.enable: ${ex}`);
+                CLog(CLogTypes.error, 'enable:', ex);
                 reject(ex);
                 this.sendEvent(Bluetooth.error_event, { error: ex }, 'Error enabling bluetooth.');
             }
@@ -443,7 +449,7 @@ export class Bluetooth extends BluetoothCommon {
             try {
                 resolve(this._isEnabled());
             } catch (ex) {
-                CLog(CLogTypes.error, `Bluetooth.isBluetoothEnabled ---- error: ${ex}`);
+                CLog(CLogTypes.error, 'isBluetoothEnabled ---- error:', ex);
                 reject(ex);
             }
         });
@@ -477,10 +483,10 @@ export class Bluetooth extends BluetoothCommon {
     };
 
     private stopCurrentScan() {
-        CLog(CLogTypes.info, `Bluetooth.stopCurrentScan: ${!!this.scanningReferTimer}`);
+        CLog(CLogTypes.info, 'stopCurrentScan:', !!this.scanningReferTimer);
 
         if (!this.adapter) {
-            CLog(CLogTypes.error, 'Bluetooth.stopCurrentScan: no adapter');
+            CLog(CLogTypes.error, 'stopCurrentScan: no adapter');
             return;
         }
 
@@ -500,7 +506,7 @@ export class Bluetooth extends BluetoothCommon {
     }
     public startScanning(arg: StartScanningOptions) {
         if (!this.adapter) {
-            CLog(CLogTypes.error, 'Bluetooth.stopCurrentScan: no adapter');
+            CLog(CLogTypes.error, 'stopCurrentScan: no adapter');
             return Promise.reject('no_bluetooth');
         }
         return new Promise((resolve, reject) => {
@@ -532,7 +538,7 @@ export class Bluetooth extends BluetoothCommon {
                         });
                         this.LeScanCallback.onPeripheralDiscovered = arg.onDiscovered;
                         const didStart = uuids.length === 0 ? this.adapter.startLeScan(this.LeScanCallback) : this.adapter.startLeScan(uuids, this.LeScanCallback);
-                        CLog(CLogTypes.info, `Bluetooth.startScanning ---- PreLollipop ---- didStart scanning: ${didStart}, ${JSON.stringify(uuids)}`);
+                        CLog(CLogTypes.info, 'startScanning ---- PreLollipop ---- didStart scanning:', didStart, JSON.stringify(uuids));
 
                         if (!didStart) {
                             // TODO error msg, see https://github.com/randdusing/cordova-plugin-bluetoothle/blob/master/src/android/BluetoothLePlugin.java#L758
@@ -583,7 +589,7 @@ export class Bluetooth extends BluetoothCommon {
 
                         this.scanCallback.onPeripheralDiscovered = arg.onDiscovered;
                         this.adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), this.scanCallback);
-                        CLog(CLogTypes.info, `Bluetooth.startScanning ---- PostLollipop ---- didStart scanning: ${JSON.stringify(filters)}`);
+                        CLog(CLogTypes.info, 'startScanning ---- PostLollipop ---- didStart scanning:', JSON.stringify(filters));
                     }
 
                     this.scanningReferTimer = { resolve };
@@ -595,13 +601,13 @@ export class Bluetooth extends BluetoothCommon {
                 };
 
                 if (arg.skipPermissionCheck !== true && !this.coarseLocationPermissionGranted()) {
-                    CLog(CLogTypes.info, 'Bluetooth.startScanning ---- Coarse Location Permission not granted on Android device, will request permission.');
+                    CLog(CLogTypes.info, 'startScanning ---- Coarse Location Permission not granted on Android device, will request permission.');
                     this.requestCoarseLocationPermission(onPermissionGranted);
                 } else {
                     onPermissionGranted();
                 }
             } catch (ex) {
-                CLog(CLogTypes.error, `Bluetooth.startScanning ---- error: ${ex}`);
+                CLog(CLogTypes.error, 'startScanning ---- error:', ex);
                 reject(ex);
             }
         });
@@ -609,7 +615,7 @@ export class Bluetooth extends BluetoothCommon {
 
     public stopScanning() {
         if (!this.adapter) {
-            CLog(CLogTypes.error, 'Bluetooth.stopCurrentScan: no adapter');
+            CLog(CLogTypes.error, 'stopCurrentScan: no adapter');
             return Promise.reject('no_bluetooth');
         }
         return new Promise((resolve, reject) => {
@@ -621,7 +627,7 @@ export class Bluetooth extends BluetoothCommon {
                 this.stopCurrentScan();
                 resolve();
             } catch (ex) {
-                CLog(CLogTypes.info, `Bluetooth.stopScanning: ${ex}`);
+                CLog(CLogTypes.info, 'stopScanning:', ex);
                 reject(ex);
             }
         });
@@ -630,7 +636,7 @@ export class Bluetooth extends BluetoothCommon {
     // note that this doesn't make much sense without scanning first
     public connect(arg: ConnectOptions) {
         if (!this.adapter) {
-            CLog(CLogTypes.error, 'Bluetooth.stopCurrentScan: no adapter');
+            CLog(CLogTypes.error, 'stopCurrentScan: no adapter');
             return Promise.reject('no_bluetooth');
         }
         return new Promise((resolve, reject) => {
@@ -644,7 +650,7 @@ export class Bluetooth extends BluetoothCommon {
                 if (bluetoothDevice === null) {
                     reject('Could not find peripheral with UUID ' + arg.UUID);
                 } else {
-                    CLog(CLogTypes.info, `Bluetooth.connect ---- Connecting to peripheral with UUID: ${arg.UUID}`);
+                    CLog(CLogTypes.info, 'connect ---- Connecting to peripheral with UUID:', arg.UUID);
 
                     let gatt;
 
@@ -673,7 +679,7 @@ export class Bluetooth extends BluetoothCommon {
                     resolve();
                 }
             } catch (ex) {
-                CLog(CLogTypes.error, `Bluetooth.connect ---- error: ${ex}`);
+                CLog(CLogTypes.error, 'connect ---- error:', ex);
                 reject(ex);
             }
         });
@@ -687,7 +693,7 @@ export class Bluetooth extends BluetoothCommon {
                     return;
                 }
                 const connection = this.connections[arg.UUID];
-                CLog(CLogTypes.info, `Bluetooth.disconnect ---- connection: ${connection}`);
+                CLog(CLogTypes.info, 'disconnect ---- connection:', arg.UUID);
                 if (!connection) {
                     reject("Peripheral wasn't connected");
                     return;
@@ -696,7 +702,7 @@ export class Bluetooth extends BluetoothCommon {
                 this.gattDisconnect(connection.device);
                 resolve();
             } catch (ex) {
-                CLog(CLogTypes.error, `Bluetooth.disconnect ---- error: ${ex}`);
+                CLog(CLogTypes.error, 'disconnect ---- error:', ex);
                 reject(ex);
             }
         });
@@ -713,14 +719,14 @@ export class Bluetooth extends BluetoothCommon {
                     }
 
                     const gatt = wrapper.gatt;
-                    CLog(CLogTypes.info, `Bluetooth.read ---- gatt: ${gatt}`);
+                    // CLog(CLogTypes.info, 'read ---- gatt:', gatt);
                     const bluetoothGattService = wrapper.bluetoothGattService;
-                    CLog(CLogTypes.info, `Bluetooth.read ---- bluetoothGattService: ${bluetoothGattService}`);
+                    // CLog(CLogTypes.info, 'read ---- bluetoothGattService:', bluetoothGattService);
                     const characteristicUUID = stringToUuid(arg.characteristicUUID);
-                    CLog(CLogTypes.info, `Bluetooth.read ---- characteristicUUID: ${characteristicUUID}`);
+                    CLog(CLogTypes.info, `read ---- peripheralUUID:${arg.peripheralUUID} serviceUUID:${arg.serviceUUID} characteristicUUID:${arg.characteristicUUID}`);
 
                     const bluetoothGattCharacteristic = this._findCharacteristicOfType(bluetoothGattService, characteristicUUID, android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ);
-                    CLog(CLogTypes.info, `Bluetooth.read ---- bluetoothGattCharacteristic: ${bluetoothGattCharacteristic}`);
+                    // CLog(CLogTypes.info, 'read ---- bluetoothGattCharacteristic:', bluetoothGattCharacteristic);
 
                     if (!bluetoothGattCharacteristic) {
                         reject(`Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`);
@@ -733,7 +739,7 @@ export class Bluetooth extends BluetoothCommon {
                         reject('Failed to read client characteristic read for ' + characteristicUUID);
                     }
                 } catch (ex) {
-                    CLog(CLogTypes.error, `Bluetooth.read ---- error: ${ex}`);
+                    CLog(CLogTypes.error, 'read ---- error:', ex);
                     reject(ex);
                 }
             });
@@ -759,7 +765,6 @@ export class Bluetooth extends BluetoothCommon {
                         stringToUuid(arg.characteristicUUID),
                         android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE
                     );
-                    CLog(CLogTypes.info, `Bluetooth.write ---- characteristic: ${characteristic}`);
 
                     if (!characteristic) {
                         reject(`Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`);
@@ -767,9 +772,7 @@ export class Bluetooth extends BluetoothCommon {
                     }
 
                     const val = valueToByteArray(arg.value, arg.encoding);
-                    if (BluetoothUtil.debug) {
-                        CLog(CLogTypes.info, `Bluetooth.write: "${arg.value}"`);
-                    }
+
                     if (val === null) {
                         reject('Invalid value: ' + arg.value);
                         return;
@@ -779,11 +782,15 @@ export class Bluetooth extends BluetoothCommon {
                     characteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
 
                     this.connections[arg.peripheralUUID].onWritePromise = resolve;
-                    if (!wrapper.gatt.writeCharacteristic(characteristic)) {
+                    if (wrapper.gatt.writeCharacteristic(characteristic)) {
+                        if (BluetoothUtil.debug) {
+                            CLog(CLogTypes.info, 'write ---- characteristic:', arg.value, printValueToString(val));
+                        }
+                    } else {
                         reject(`Failed to write to characteristic ${arg.characteristicUUID}, ${val}`);
                     }
                 } catch (ex) {
-                    CLog(CLogTypes.error, `Bluetooth.write ---- error: ${ex}`);
+                    CLog(CLogTypes.error, 'write ---- error:', ex);
                     reject(ex);
                 }
             });
@@ -809,16 +816,13 @@ export class Bluetooth extends BluetoothCommon {
                         stringToUuid(arg.characteristicUUID),
                         android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE
                     );
-                    CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse ---- characteristic: ${characteristic}`);
                     if (!characteristic) {
                         reject(`Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`);
                         return;
                     }
 
                     const val = valueToByteArray(arg.value, arg.encoding);
-                    if (BluetoothUtil.debug) {
-                        CLog(CLogTypes.info, `Bluetooth.writeWithoutResponse: "${arg.value}"`);
-                    }
+
                     if (!val) {
                         reject(`Invalid value: ${arg.value}`);
                         return;
@@ -831,12 +835,15 @@ export class Bluetooth extends BluetoothCommon {
                     // using the WRITE_TYPE_NO_RESPONSE, we will get the onCharacteristicWrite callback as soon as the stack is ready and has space to accept a new request.
                     this.connections[arg.peripheralUUID].onWritePromise = resolve;
                     if (wrapper.gatt.writeCharacteristic(characteristic)) {
+                        if (BluetoothUtil.debug) {
+                            CLog(CLogTypes.info, 'writeWithoutResponse:', arg.value, JSON.stringify(printValueToString(val)));
+                        }
                         // resolve();
                     } else {
                         reject(`Failed to write to characteristic ${arg.characteristicUUID}, ${val}`);
                     }
                 } catch (ex) {
-                    CLog(CLogTypes.error, `Bluetooth.writeWithoutResponse ---- error: ${ex}`);
+                    CLog(CLogTypes.error, 'writeWithoutResponse ---- error:', ex);
                     reject(ex);
                 }
             });
@@ -858,7 +865,7 @@ export class Bluetooth extends BluetoothCommon {
                     const characteristicUUID = stringToUuid(arg.characteristicUUID);
 
                     const characteristic = this._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
-                    CLog(CLogTypes.info, `Bluetooth.startNotifying ---- characteristic: ${characteristic}`);
+                    CLog(CLogTypes.info, 'startNotifying ---- characteristic:', characteristic);
                     if (!characteristic) {
                         reject(`Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`);
                         return;
@@ -874,7 +881,7 @@ export class Bluetooth extends BluetoothCommon {
                     if (!bluetoothGattDescriptor) {
                         bluetoothGattDescriptor = new android.bluetooth.BluetoothGattDescriptor(clientCharacteristicConfigId, android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE);
                         characteristic.addDescriptor(bluetoothGattDescriptor);
-                        CLog(CLogTypes.info, `Bluetooth.startNotifying ---- descriptor: ${bluetoothGattDescriptor}`);
+                        CLog(CLogTypes.info, 'startNotifying ---- descriptor:', bluetoothGattDescriptor);
                         // Any creation error will trigger the global catch. Ok.
                     }
 
@@ -902,7 +909,7 @@ export class Bluetooth extends BluetoothCommon {
                         reject(`Failed to set client characteristic notification for ${characteristicUUID}`);
                     }
                 } catch (ex) {
-                    CLog(CLogTypes.error, `Bluetooth.startNotifying ---- error: ${ex}`);
+                    CLog(CLogTypes.error, 'startNotifying ---- error:', ex);
                     reject(ex);
                 }
             });
@@ -925,7 +932,7 @@ export class Bluetooth extends BluetoothCommon {
                     const characteristicUUID = stringToUuid(arg.characteristicUUID);
 
                     const characteristic = this._findNotifyCharacteristic(gattService, characteristicUUID);
-                    CLog(CLogTypes.info, `Bluetooth.stopNotifying ---- service characteristic: ${characteristic}`);
+                    CLog(CLogTypes.info, 'stopNotifying ---- service characteristic:', characteristic);
 
                     if (!characteristic) {
                         reject(`Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`);
@@ -941,7 +948,7 @@ export class Bluetooth extends BluetoothCommon {
                         reject('Failed to remove client characteristic notification for ' + characteristicUUID);
                     }
                 } catch (ex) {
-                    CLog(CLogTypes.error, `Bluetooth.stopNotifying: ${ex}`);
+                    CLog(CLogTypes.error, 'stopNotifying:', ex);
                     reject(ex);
                 }
             });
@@ -950,21 +957,21 @@ export class Bluetooth extends BluetoothCommon {
 
     public gattDisconnect(gatt: android.bluetooth.BluetoothGatt) {
         if (gatt !== null) {
-            const device = gatt.getDevice() as android.bluetooth.BluetoothDevice;
-            CLog(CLogTypes.info, `Bluetooth.gattDisconnect ---- device: ${device}`);
-            const stateObject = this.connections[device.getAddress()];
-            CLog(CLogTypes.info, `Bluetooth.gattDisconnect ---- invoking disconnect callback`);
+            const device = gatt.getDevice();
+            const address = device.getAddress();
+            CLog(CLogTypes.info, 'gattDisconnect ---- device:', address);
+            const stateObject = this.connections[address];
             if (stateObject && stateObject.onDisconnected) {
                 stateObject.onDisconnected({
-                    UUID: device.getAddress(),
+                    UUID: address,
                     name: device.getName()
                 });
             } else {
-                CLog(CLogTypes.info, 'Bluetooth.gattDisconnect ---- no disconnect callback found');
+                CLog(CLogTypes.info, 'gattDisconnect ---- no disconnect callback found');
             }
-            this.connections[device.getAddress()] = null;
+            this.connections[address] = null;
             // Close this Bluetooth GATT client.
-            CLog(CLogTypes.info, 'Bluetooth.gattDisconnect ---- Closing GATT client');
+            CLog(CLogTypes.info, 'gattDisconnect ---- Closing GATT client');
             gatt.close();
         }
     }

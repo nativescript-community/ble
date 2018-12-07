@@ -45,9 +45,10 @@ export declare class Bluetooth extends BluetoothCommon {
     private _isEnabled();
     private _stringToUuid(uuidStr);
     private _findService(UUID, peripheral);
-    private _findCharacteristic(UUID, service, property);
+    private _findCharacteristic(UUID, service, property?);
     private _getWrapper(arg, property, reject);
     private _encodeValue(value);
     private nativeEncoding(encoding);
     private valueToNSData(value, encoding?);
+    private valueToString(value);
 }

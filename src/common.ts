@@ -19,12 +19,12 @@ export const CLog = (type: CLogTypes = 0, ...args) => {
     if (BluetoothUtil.debug) {
         if (type === 0) {
             // Info
-            console.log('NativeScript-Bluetooth: INFO', args);
+            console.log(...args);
         } else if (type === 1) {
             // Warning
-            console.log('NativeScript-Bluetooth: WARNING', args);
+            console.warn(...args);
         } else if (type === 2) {
-            console.log('NativeScript-Bluetooth: ERROR', args);
+            console.error( ...args);
         }
     }
 };
