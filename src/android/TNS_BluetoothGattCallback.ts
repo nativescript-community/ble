@@ -172,7 +172,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
             stateObject.onReadPromise({
                 valueRaw: value,
                 value: byteArrayToBuffer(value),
-                characteristicUUID: characteristic.getUuid()
+                characteristicUUID: uuidToString(characteristic.getUuid())
             });
         }
     }
@@ -203,7 +203,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
             stateObject.onNotifyCallback({
                 valueRaw: value,
                 value: byteArrayToBuffer(value),
-                characteristicUUID: characteristic.getUuid()
+                characteristicUUID: uuidToString(characteristic.getUuid())
             });
         }
     }
@@ -235,7 +235,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
 
         if (stateObject.onWritePromise) {
             stateObject.onWritePromise({
-                characteristicUUID: characteristic.getUuid()
+                characteristicUUID: uuidToString(characteristic.getUuid())
             });
         }
     }
