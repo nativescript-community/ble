@@ -110,7 +110,7 @@ export interface ReadOptions extends CRUDOptions {
 }
 export interface WriteOptions extends CRUDOptions {
     value: any;
-    raw?: boolean;
+    encoding?: string;
 }
 export interface StopNotifyingOptions extends CRUDOptions {
 }

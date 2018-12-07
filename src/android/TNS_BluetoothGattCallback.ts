@@ -125,14 +125,20 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
             }
 
             const device = gatt.getDevice();
-            const stateObject = this.owner.get().connections[device.getAddress()];
+            let address: string  = null;
+            if (device == null) {
+                // happens some time, why ... ?
+            } else {
+                address = device.getAddress();
+            }
+            const stateObject = this.owner.get().connections[address];
             if (!stateObject) {
                 this.owner.get().gattDisconnect(gatt);
                 return;
             }
             stateObject.onConnected({
-                UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
-                name: device.getName(),
+                UUID: address, // TODO consider renaming to id (and iOS as well)
+                name: device && device.getName(),
                 state: 'connected', // Bluetooth._getState(peripheral.state),
                 services: servicesJs,
                 advertismentData: stateObject.advertismentData
@@ -148,8 +154,14 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
      */
     onCharacteristicRead(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, status: number) {
         const device = gatt.getDevice();
-        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicRead ---- gatt: ${gatt}, characteristic: ${characteristic}, status: ${status}, device: ${device}`);
-        const stateObject = this.owner.get().connections[device.getAddress()];
+        let address: string  = null;
+        if (device == null) {
+            // happens some time, why ... ?
+        } else {
+            address = device.getAddress();
+        }
+        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicRead ---- gatt: ${gatt}, characteristic: ${characteristic}, status: ${status}, device: ${address}`);
+        const stateObject = this.owner.get().connections[address];
         if (!stateObject) {
             this.owner.get().gattDisconnect(gatt);
             return;
@@ -172,9 +184,15 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
      */
     onCharacteristicChanged(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic) {
         const device = gatt.getDevice();
-        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicChanged ---- gatt: ${gatt}, characteristic: ${characteristic}, device: ${device}`);
+        let address: string  = null;
+        if (device == null) {
+            // happens some time, why ... ?
+        } else {
+            address = device.getAddress();
+        }
+        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicChanged ---- gatt: ${gatt}, characteristic: ${characteristic}, device: ${address}`);
 
-        const stateObject = this.owner.get().connections[device.getAddress()];
+        const stateObject = this.owner.get().connections[address];
         if (!stateObject) {
             this.owner.get().gattDisconnect(gatt);
             return;
@@ -201,9 +219,15 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
      */
     onCharacteristicWrite(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, status: number) {
         const device = gatt.getDevice();
-        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicWrite ---- characteristic: ${characteristic}, status: ${status}, device: ${device}`);
+        let address: string  = null;
+        if (device == null) {
+            // happens some time, why ... ?
+        } else {
+            address = device.getAddress();
+        }
+        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicWrite ---- characteristic: ${characteristic}, status: ${status}, device: ${address}`);
 
-        const stateObject = this.owner.get().connections[device.getAddress()];
+        const stateObject = this.owner.get().connections[address];
         if (!stateObject) {
             this.owner.get().gattDisconnect(gatt);
             return;

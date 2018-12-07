@@ -30,7 +30,7 @@ export declare enum Phy {
 }
 export declare function uuidToString(uuid: any): any;
 export declare function encodeValue(val: any): any;
-export declare function valueToByteArray(value: any): any;
+export declare function valueToByteArray(value: any, encoding?: string): any[] | native.Array<number>;
 export declare function byteArrayToBuffer(value: any): ArrayBuffer;
 export declare function printValueToString(value: any): any;
 export declare function stringToUuid(uuidStr: any): java.util.UUID;

@@ -1,4 +1,4 @@
-import { BluetoothCommon, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions } from '../common';
+import { BluetoothCommon, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from '../common';
 export declare function toArrayBuffer(value: any): ArrayBuffer;
 export declare function CBUUIDToString(uuid: CBUUID): string;
 export declare class Bluetooth extends BluetoothCommon {
@@ -38,8 +38,8 @@ export declare class Bluetooth extends BluetoothCommon {
     adddDiscoverPeripheral: (peripheral: any) => void;
     findDiscoverPeripheral: (UUID: any) => CBPeripheral;
     read(arg: any): Promise<{}>;
-    write(arg: any): Promise<{}>;
-    writeWithoutResponse(arg: any): Promise<{}>;
+    write(arg: WriteOptions): Promise<{}>;
+    writeWithoutResponse(arg: WriteOptions): Promise<{}>;
     startNotifying(args: StartNotifyingOptions): Promise<{}>;
     stopNotifying(args: StopNotifyingOptions): Promise<{}>;
     private _isEnabled();
@@ -48,5 +48,6 @@ export declare class Bluetooth extends BluetoothCommon {
     private _findCharacteristic(UUID, service, property);
     private _getWrapper(arg, property, reject);
     private _encodeValue(value);
-    private valueToNSData(value);
+    private nativeEncoding(encoding);
+    private valueToNSData(value, encoding?);
 }
