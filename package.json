@@ -76,8 +76,7 @@
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.16.0",
     "tslint-config-standard": "^8.0.1",
-    "typescript": "~2.8.1",
-    "p-queue": "^2.4.2"
+    "typescript": "~2.8.1"
   },
   "dependencies": {
     "p-queue": "^2.4.2"
