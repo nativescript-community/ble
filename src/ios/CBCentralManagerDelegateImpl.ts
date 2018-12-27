@@ -256,9 +256,11 @@ export class AdvertismentData {
     get serviceData() {
         const result = {};
         const obj = this.advData.objectForKey(CBAdvertisementDataServiceDataKey) as NSDictionary<CBUUID, NSData>;
-        obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
-            result[CBUUIDToString(key)] = toArrayBuffer(data);
-        });
+        if (obj) {
+            obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
+                result[CBUUIDToString(key)] = toArrayBuffer(data);
+            });
+        }
         return result;
     }
 }
