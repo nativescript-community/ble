@@ -17,7 +17,7 @@ export declare class Bluetooth extends BluetoothCommon {
     _onDiscovered: any;
     constructor(restoreIdentifier?: string);
     readonly enabled: boolean;
-    _getState(state: CBPeripheralState): 'connected' | 'connecting' | 'disconnected';
+    _getState(state: CBPeripheralState): "connecting" | "connected" | "disconnected";
     onPeripheralDisconnected(peripheral: CBPeripheral): void;
     onPeripheralConnected(peripheral: CBPeripheral): void;
     isBluetoothEnabled(): Promise<{}>;
