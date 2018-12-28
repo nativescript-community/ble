@@ -229,24 +229,30 @@ export class AdvertismentData {
     get uuids() {
         const result = [];
         const serviceUuids = this.advData.objectForKey(CBAdvertisementDataServiceUUIDsKey) as NSArray<CBUUID>;
-        for (let i = 0; i < serviceUuids.count; i++) {
-            result.push(serviceUuids[i].toString());
+        if (serviceUuids) {
+            for (let i = 0; i < serviceUuids.count; i++) {
+                result.push(serviceUuids[i].toString());
+            }
         }
         return result;
     }
     get overtflow() {
         const result = [];
         const serviceUuids = this.advData.objectForKey(CBAdvertisementDataOverflowServiceUUIDsKey) as NSArray<CBUUID>;
-        for (let i = 0; i < serviceUuids.count; i++) {
-            result.push(CBUUIDToString(serviceUuids[i]));
+        if (serviceUuids) {
+            for (let i = 0; i < serviceUuids.count; i++) {
+                result.push(CBUUIDToString(serviceUuids[i]));
+            }
         }
         return result;
     }
     get solicitedServices() {
         const result = [];
         const serviceUuids = this.advData.objectForKey(CBAdvertisementDataSolicitedServiceUUIDsKey) as NSArray<CBUUID>;
-        for (let i = 0; i < serviceUuids.count; i++) {
-            result.push(CBUUIDToString(serviceUuids[i]));
+        if (serviceUuids) {
+            for (let i = 0; i < serviceUuids.count; i++) {
+                result.push(CBUUIDToString(serviceUuids[i]));
+            }
         }
         return result;
     }
@@ -256,9 +262,11 @@ export class AdvertismentData {
     get serviceData() {
         const result = {};
         const obj = this.advData.objectForKey(CBAdvertisementDataServiceDataKey) as NSDictionary<CBUUID, NSData>;
-        obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
-            result[CBUUIDToString(key)] = toArrayBuffer(data);
-        });
+        if (obj) {
+            obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
+                result[CBUUIDToString(key)] = toArrayBuffer(data);
+            });
+        }
         return result;
     }
 }
