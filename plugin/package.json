@@ -1,6 +1,6 @@
 {
   "name": "nativescript-akylas-bluetooth",
-  "version": "1.2.1",
+  "version": "1.2.4",
   "description": "Connect to and interact with Bluetooth LE peripherals",
   "main": "./bluetooth",
   "typings": "./bluetooth.d.ts",
