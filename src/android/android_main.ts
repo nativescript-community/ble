@@ -176,6 +176,9 @@ export function valueToByteArray(value, encoding = 'iso-8859-1') {
     return null;
 }
 export function byteArrayToBuffer(value) {
+    if (!value) {
+        return null;
+    }
     // if (typeof value === 'string') {
     //     value = new java.lang.String(value).getBytes('UTF-8');
     // }
@@ -491,7 +494,10 @@ export class Bluetooth extends BluetoothCommon {
         }
 
         if (this.scanCallback) {
-            this.adapter.getBluetoothLeScanner().stopScan(this.scanCallback);
+            const scanner = this.adapter.getBluetoothLeScanner();
+            if (scanner) {
+                scanner.stopScan(this.scanCallback);
+            }
             this.scanCallback.onPeripheralDiscovered = null;
         }
         if (this.LeScanCallback) {
@@ -546,6 +552,11 @@ export class Bluetooth extends BluetoothCommon {
                             return;
                         }
                     } else {
+                        const scanner = this.adapter.getBluetoothLeScanner();
+                        if (!scanner) {
+                            reject('bluetooth_not_enabled');
+                            return;
+                        }
                         let scanFilters = null as java.util.ArrayList<any>;
                         if (filters.length > 0) {
                             scanFilters = new java.util.ArrayList();
