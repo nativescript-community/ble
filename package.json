@@ -1,6 +1,6 @@
 {
-  "name": "nativescript-akylas-bluetooth",
-  "version": "1.0.0",
+  "name": "nativescript-bluetooth",
+  "version": "2.0.0",
   "description": "Connect to and interact with Bluetooth LE peripherals",
   "main": "src/bluetooth",
   "typings": "src/bluetooth.d.ts",
@@ -22,13 +22,18 @@
     "test.android": "npm i && npm run tsc && npm run tslint && cd demo && tns build android && tns test android --justlaunch",
     "test.ios": "npm i && npm run tsc && npm run tslint && cd demo && tns build ios && tns test ios --justlaunch",
     "tslint": "tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\"",
-    "plugin.link": "npm link && cd demo && npm link nativescript-akylas-bluetooth && cd ../src",
+    "plugin.link": "npm link && cd demo && npm link nativescript-bluetooth && cd ../demo-ng && npm link nativescript-bluetooth && cd ../src",
     "plugin.tscwatch": "npm run tsc -- -w",
     "demo.ios": "npm i && npm run tsc && cd demo && tns run ios --syncAllFiles",
     "demo.android": "npm i && npm run tsc && cd demo && tns run android --syncAllFiles",
     "demo.reset": "cd demo && rimraf platforms",
-    "plugin.prepare": "npm run tsc && cd demo && tns plugin remove nativescript-akylas-bluetooth && tns plugin add ../plugin",
-    "clean": "cd demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
+    "demo-ng.ios": "npm i && npm run tsc && cd demo-ng && tns run ios --syncAllFiles",
+    "demo-ng.android": "npm i && npm run tsc && cd demo-ng && tns run android --syncAllFiles",
+    "demo-ng.reset": "cd demo-ng && rimraf platforms",
+    "plugin.prepare": "npm run tsc && cd demo && tns plugin remove nativescript-bluetooth && tns plugin add ../plugin && && cd ../demo-ng && tns plugin remove nativescript-bluetooth && tns plugin add ../plugin",
+    "clean-demo": "cd demo && npm run clean",
+    "clean-demo-ng": "cd demo-ng && npm run clean",
+    "clean": "rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
     "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'",
     "precommit": "lint-staged"
   },
@@ -60,6 +65,15 @@
       "name": "Brad Martin",
       "email": "bmartin@nstudio.io",
       "url": "https://github.com/bradmartin"
+    },
+    {
+      "name": "Martin Guillon",
+      "email": "martin.guillon@akyasl.fr"
+    },
+    {
+      "name": "Ryan Pendergast",
+      "email": "ryan.pendergast@gmail.com",
+      "url": "https://rynop.com"
     }
   ],
   "license": "MIT",

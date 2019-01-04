@@ -3,7 +3,7 @@ import { Observable } from 'tns-core-modules/data/observable';
 import { ObservableArray } from 'tns-core-modules/data/observable-array';
 import { topmost } from 'tns-core-modules/ui/frame';
 import { Prop } from './utils/obs-prop';
-import { Bluetooth, Peripheral } from 'nativescript-akylas-bluetooth';
+import { Bluetooth, Peripheral } from 'nativescript-bluetooth';
 
 export class DemoAppModel extends Observable {
     @Prop() public isLoading = false;

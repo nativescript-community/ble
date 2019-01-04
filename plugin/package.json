@@ -1,6 +1,6 @@
 {
-  "name": "nativescript-akylas-bluetooth",
-  "version": "1.2.5",
+  "name": "nativescript-bluetooth",
+  "version": "2.0.0",
   "description": "Connect to and interact with Bluetooth LE peripherals",
   "main": "./bluetooth",
   "typings": "./bluetooth.d.ts",
@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Akylas/nativescript-bluetooth.git"
+    "url": "https://github.com/EddyVerbruggen/nativescript-bluetooth.git"
   },
   "keywords": [
     "ecosystem:NativeScript",
@@ -48,13 +48,18 @@
     {
       "name": "Martin Guillon",
       "email": "martin.guillon@akyasl.fr"
+    },
+    {
+      "name": "Ryan Pendergast",
+      "email": "ryan.pendergast@gmail.com",
+      "url": "https://rynop.com"
     }
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Akylas/nativescript-bluetooth/issues"
+    "url": "https://github.com/EddyVerbruggen/nativescript-bluetooth/issues"
   },
-  "homepage": "https://github.com/Akylas/nativescript-bluetooth",
+  "homepage": "https://github.com/EddyVerbruggen/nativescript-bluetooth",
   "dependencies": {
     "p-queue": "^3.0.0"
   }

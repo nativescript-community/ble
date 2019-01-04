@@ -1,6 +1,6 @@
 import * as dialogs from 'tns-core-modules/ui/dialogs';
 import { Observable } from 'tns-core-modules/data/observable';
-import { Bluetooth, Peripheral, Service } from 'nativescript-akylas-bluetooth';
+import { Bluetooth, Peripheral, Service } from 'nativescript-bluetooth';
 import { Prop } from './utils/obs-prop';
 
 export class CharacteristicsViewModel extends Observable {

@@ -9,7 +9,7 @@
     }
   },
   "dependencies": {
-    "nativescript-akylas-bluetooth": "file:../plugin",
+    "nativescript-bluetooth": "file:../plugin",
     "nativescript-theme-core": "^1.0.4",
     "tns-core-modules": "~5.0.5"
   },
