@@ -14,7 +14,7 @@
 From the command prompt go to your app's root folder and execute:
 
 ```
-tns plugin add nativescript-bluetooth
+tns plugin add nativescript-akylas-bluetooth
 ```
 
 And do yourself a favor by adding TypeScript support to your nativeScript app:
