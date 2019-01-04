@@ -144,7 +144,7 @@ This function will receive an object representing the peripheral which contains 
 
 ```js
 bluetooth.startScanning({
-  serviceUUIDs: [],
+  filters: [{serviceUUID:'180d'}],
   seconds: 4,
   onDiscovered: function (peripheral) {
   	console.log("Periperhal found with UUID: " + peripheral.UUID);
