@@ -1,0 +1,7 @@
+{
+  "generator-NativeScript": {
+    "dependsOn": [
+      "generator-NativeScript@0.0.12"
+    ]
+  }
+}

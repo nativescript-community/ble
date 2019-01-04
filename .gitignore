@@ -8,6 +8,10 @@ demo/hooks
 demo/platforms
 demo/app/**/*.js
 
+demo-ng/hooks
+demo-ng/platforms
+demo-ng/app/**/*.js
+
 **/*.js.map
 plugin/**/*.js
 !src/base64.js

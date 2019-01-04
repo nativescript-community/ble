@@ -1,0 +1,29 @@
+{
+  "nativescript": {
+    "id": "org.nativescript.bluetoothdemo",
+    "tns-android": {
+      "version": "5.0.0"
+    },
+    "tns-ios": {
+      "version": "5.0.1-rc-2018-11-30-133527-01"
+    }
+  },
+  "dependencies": {
+    "nativescript-akylas-bluetooth": "file:../plugin",
+    "nativescript-theme-core": "^1.0.4",
+    "tns-core-modules": "~5.0.5"
+  },
+  "devDependencies": {
+    "nativescript-css-loader": "~0.26.1",
+    "nativescript-dev-typescript": "0.7.8",
+    "nativescript-dev-webpack": "~0.18.1",
+    "tns-platform-declarations": "~5.0.5",
+    "typescript": "~3.2.1",
+    "webpack": "~4.26.1",
+    "webpack-bundle-analyzer": "^3.0.3",
+    "webpack-sources": "~1.3.0",
+    "css-loader": "~1.0.1",
+    "nativescript-worker-loader": "~0.9.1",
+    "uglifyjs-webpack-plugin": "~2.0.1"
+  }
+}

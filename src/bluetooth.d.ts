@@ -1,0 +1,1 @@
+../plugin/bluetooth.d.ts

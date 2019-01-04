@@ -1,0 +1,61 @@
+{
+  "name": "nativescript-akylas-bluetooth",
+  "version": "1.2.5",
+  "description": "Connect to and interact with Bluetooth LE peripherals",
+  "main": "./bluetooth",
+  "typings": "./bluetooth.d.ts",
+  "nativescript": {
+    "platforms": {
+      "android": "3.0.0",
+      "ios": "3.0.0"
+    },
+    "plugin": {
+      "nan": "true",
+      "pan": "true",
+      "core3": "true",
+      "category": "Processing"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Akylas/nativescript-bluetooth.git"
+  },
+  "keywords": [
+    "ecosystem:NativeScript",
+    "NativeScript",
+    "BLE",
+    "Bluetooth",
+    "Bluetooth LE",
+    "Bluetooth Smart",
+    "Bluetooth Low Energy"
+  ],
+  "author": {
+    "name": "Eddy Verbruggen",
+    "email": "eddyverbruggen@gmail.com"
+  },
+  "contributors": [
+    {
+      "name": "Brad Martin",
+      "email": "bmartin@nstudio.io",
+      "url": "https://github.com/bradmartin"
+    },
+    {
+      "name": "Martin Guillon",
+      "email": "martin.guillon@akyasl.fr"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Akylas/nativescript-bluetooth/issues"
+  },
+  "homepage": "https://github.com/Akylas/nativescript-bluetooth",
+  "dependencies": {
+    "p-queue": "^3.0.0"
+  }
+}
