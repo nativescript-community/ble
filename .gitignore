@@ -10,5 +10,6 @@ demo*/app/**/*.js
 **/*.js.map
 src/**/*.js
 plugin/**/*.js
+plugin/**/*.d.ts
 
 !plugin/platforms
