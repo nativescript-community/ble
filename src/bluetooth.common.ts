@@ -2,7 +2,6 @@ import { Observable } from 'tns-core-modules/data/observable/observable';
 
 // declare var require;
 
-import { atob } from './base64';
 import { AdvertismentData, ConnectionState } from './bluetooth';
 
 export class BluetoothUtil {
@@ -24,7 +23,7 @@ export const CLog = (type: CLogTypes = 0, ...args) => {
             // Warning
             console.warn(...args);
         } else if (type === 2) {
-            console.error( ...args);
+            console.error(...args);
         }
     }
 };
@@ -125,21 +124,6 @@ export class BluetoothCommon extends Observable {
      * Property to determine if bluetooth is enabled.
      */
     readonly enabled: boolean;
-
-    /**
-     * Takes a Base64 encoded string and decodes it and returns an ArrayBuffer.
-     * @param b64 - Base64 Encoded string to be decoded.
-     * @returns buffer [ArrayBuffer]
-     */
-    // base64ToArrayBuffer(b64) {
-    //     // decodes a string of data which has been encoded using base-64 encoding
-    //     const decoded = atob(b64);
-    //     const ret = new Uint8Array(decoded.length);
-    //     for (let i = 0; i < decoded.length; i++) {
-    //         ret[i] = decoded.charCodeAt(i);
-    //     }
-    //     return ret.buffer;
-    // }
 
     requestCoarseLocationPermission() {
         return new Promise(resolve => {

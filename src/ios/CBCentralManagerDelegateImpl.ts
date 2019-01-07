@@ -1,7 +1,7 @@
 declare var NSMakeRange; // not recognized by platform-declarations
 
-import { CLog, CLogTypes } from '../common';
-import { Bluetooth, CBUUIDToString, toArrayBuffer } from './ios_main';
+import { CLog, CLogTypes } from '../bluetooth.common';
+import { Bluetooth, CBUUIDToString, toArrayBuffer } from '../bluetooth.ios';
 import { CBPeripheralDelegateImpl } from './CBPeripheralDelegateImpl';
 
 /**
@@ -106,43 +106,9 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
         const UUIDString = peripheral.identifier.UUIDString;
         CLog(CLogTypes.info, `CBCentralManagerDelegateImpl.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI ---- ${peripheral.name} @ ${UUIDString} @ ${RSSI} @ ${advData}`);
         this._owner.get().adddDiscoverPeripheral(peripheral);
-        // if (!peri) {
-        //     this._owner.get()._discoverPeripherals[UUIDString] = peripheral;
-        // }
-        // if (this._owner.get()._onDiscovered) {
-        // let manufacturerId;
-        // let localName;
+
         const advertismentData = new AdvertismentData(advData);
 
-        // if (advData.objectForKey(CBAdvertisementDataManufacturerDataKey)) {
-        //     const manufacturerIdBuffer = this._owner.get().toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(0, 2)));
-        //     manufacturerId = new DataView(manufacturerIdBuffer, 0).getUint16(0, true);
-        //     advertismentData['manufacturerData'] = this._owner
-        //         .get()
-        //         .toArrayBuffer(
-        //             advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(2, advData.objectForKey(CBAdvertisementDataManufacturerDataKey).length - 2))
-        //         );
-        // }
-        // if (advData.objectForKey(CBAdvertisementDataLocalNameKey)) {
-        //     advertismentData['localName'] = advData.objectForKey(CBAdvertisementDataLocalNameKey);
-        // }
-        // if (advData.objectForKey(CBAdvertisementDataServiceUUIDsKey)) {
-        //     advertismentData['uuids'] = advData.objectForKey(CBAdvertisementDataServiceUUIDsKey);
-        // }
-        // if (advData.objectForKey(CBAdvertisementDataIsConnectable)) {
-        //     advertismentData['connectable'] = advData.objectForKey(CBAdvertisementDataIsConnectable);
-        // }
-        // if (advData.objectForKey(CBAdvertisementDataServiceDataKey)) {
-        //     const result = {};
-        //     const obj = advData.objectForKey(CBAdvertisementDataServiceDataKey) as NSDictionary<string, NSData>;
-        //     obj.enumerateKeysAndObjectsUsingBlock((key, data) => {
-        //         result[key] = interop.bufferFromData(data);
-        //     });
-        //     advertismentData['serviceData'] = result;
-        // }
-        // if (advData.objectForKey(CBAdvertisementDataTxPowerLevelKey)) {
-        //     advertismentData['txPowerLevel'] = advData.objectForKey(CBAdvertisementDataTxPowerLevelKey);
-        // }
         const payload = {
             UUID: UUIDString,
             name: peripheral.name,
@@ -197,8 +163,6 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
 export class AdvertismentData {
     constructor(private advData: NSDictionary<string, any>) {}
     get manufacturerData() {
-        // const manufacturerIdBuffer = this._owner.get().toArrayBuffer(advData.objectForKey(CBAdvertisementDataManufacturerDataKey).subdataWithRange(NSMakeRange(0, 2)));
-        //         manufacturerId = new DataView(manufacturerIdBuffer, 0).getUint16(0, true);
         const data = this.advData.objectForKey(CBAdvertisementDataManufacturerDataKey);
         if (data) {
             return toArrayBuffer(data.subdataWithRange(NSMakeRange(2, data.length - 2)));

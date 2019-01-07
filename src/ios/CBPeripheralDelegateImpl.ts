@@ -1,5 +1,5 @@
-import { CLog, CLogTypes } from '../common';
-import { Bluetooth, toArrayBuffer } from './ios_main';
+import { CLog, CLogTypes } from '../bluetooth.common';
+import { Bluetooth, toArrayBuffer } from '../bluetooth.ios';
 
 /**
  * @link - https://developer.apple.com/documentation/corebluetooth/cbperipheraldelegate

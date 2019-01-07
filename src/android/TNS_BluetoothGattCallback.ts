@@ -1,5 +1,5 @@
-import { Bluetooth, byteArrayToBuffer, uuidToString } from './android_main';
-import { CLog, CLogTypes } from '../common';
+import { Bluetooth, byteArrayToBuffer, uuidToString } from '../bluetooth.android';
+import { CLog, CLogTypes } from '../bluetooth.common';
 
 @JavaProxy('com.nativescript.TNS_BluetoothGattCallback')
 // tslint:disable-next-line:class-name
