@@ -1,0 +1,15 @@
+<ListView [items]="bluetoothService.peripheralList" (itemTap)="onPeripheralTap($event)" class="list-group m-x-10 m-t-5">
+    <ng-template let-item="item">
+        <StackLayout orientation="horizontal" class="list-group-item">
+            <StackLayout orientation="vertical">
+                <Image horizontalAlignment="right" width="30" src="~/res/signal-strength.png"></Image>
+                <Label horizontalAlignment="center" [text]="item.RSSI" class="list-group-item-text"></Label>
+            </StackLayout>
+            <StackLayout orientation="vertical" class="m-l-10">
+                <Label [text]="item.name" textWrap="true" class="list-group-item-heading"></Label>
+                <Label [text]="item.UUID" textWrap="true" class="list-group-item-text"></Label>
+                <Label [text]="(item.isConnected) ? 'Connected' : 'Disconnected'" class="list-group-item-text"></Label>
+            </StackLayout>
+        </StackLayout>
+    </ng-template>
+</ListView>

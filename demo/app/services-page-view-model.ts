@@ -2,7 +2,7 @@ import * as dialogs from 'tns-core-modules/ui/dialogs';
 import { topmost } from 'tns-core-modules/ui/frame';
 import { ObservableArray } from 'tns-core-modules/data/observable-array';
 import { fromObject, Observable } from 'tns-core-modules/data/observable';
-import { AdvertismentData, Bluetooth, Peripheral, Service } from 'nativescript-akylas-bluetooth';
+import { AdvertismentData, Bluetooth, Peripheral, Service } from 'nativescript-bluetooth';
 import { Prop } from './utils/obs-prop';
 
 const companyIdentifier = require('./companyIdentifiers.json');

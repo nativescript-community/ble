@@ -1,5 +1,5 @@
-import { Bluetooth, byteArrayToBuffer, encodeValue, uuidToString } from './android_main';
-import { CLog, CLogTypes, Peripheral } from '../common';
+import { Bluetooth, byteArrayToBuffer, uuidToString } from '../bluetooth.android';
+import { CLog, CLogTypes, Peripheral } from '../bluetooth.common';
 
 const DATA_TYPE_FLAGS = 0x01;
 const DATA_TYPE_SERVICE_UUIDS_16_BIT_PARTIAL = 0x02;
@@ -241,14 +241,6 @@ export class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapter.LeSca
             };
             const scanRecord = parseFromBytes(data);
             const advertismentData = new ScanAdvertisment(scanRecord);
-            // const advertismentData = (stateObject.advertismentData = this.owner.get().extractAdvertismentData(scanRecord));
-            // let manufacturerId;
-            // CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- advertismentData: ${advertismentData}`);
-            // if (advertismentData.manufacturerData) {
-            //     manufacturerId = new DataView(advertismentData.manufacturerData, 0).getUint16(0, true);
-            //     CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- manufacturerId: ${manufacturerId}`);
-            //     CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- manufacturerData: ${advertismentData.manufacturerData}`);
-            // }
 
             const payload = {
                 type: 'scanResult', // TODO or use different callback functions?
@@ -260,7 +252,7 @@ export class TNS_LeScanCallback extends android.bluetooth.BluetoothAdapter.LeSca
                 advertismentData,
                 manufacturerId: advertismentData.manufacturerId
             };
-            // CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- payload: ${JSON.stringify(payload)}`);
+            CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- payload: ${JSON.stringify(payload)}`);
             this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
             this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
         }

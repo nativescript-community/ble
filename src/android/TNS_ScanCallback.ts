@@ -1,5 +1,5 @@
-import { Bluetooth, byteArrayToBuffer, encodeValue, uuidToString } from './android_main';
-import { CLog, CLogTypes, Peripheral } from '../common';
+import { Bluetooth, byteArrayToBuffer, uuidToString } from '../bluetooth.android';
+import { CLog, CLogTypes, Peripheral } from '../bluetooth.common';
 
 /**
  * Bluetooth LE scan callbacks. Scan results are reported using these callbacks.
@@ -63,15 +63,6 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
                 state: 'disconnected'
             };
         }
-        // let manufacturerId;
-        // let manufacturerData;
-        // const scanRecord = result.getScanRecord();
-        // const manufacturerData = scanRecord.getManufacturerSpecificData();
-        // if (manufacturerData.size() > 0) {
-        //     manufacturerId = manufacturerData.keyAt(0);
-        //     CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- manufacturerId: ${manufacturerId}`);
-        // }
-
         const advertismentData = new ScanAdvertisment(result.getScanRecord());
 
         const payload = {
@@ -84,11 +75,10 @@ export class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
             manufacturerId: advertismentData.manufacturerId,
             advertismentData
         };
-        // CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
+        CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
         this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
         this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
     }
-    // }
 }
 
 export class ScanAdvertisment {
