@@ -1,17 +1,14 @@
-.idea/
-.vscode/
-node_modules/
+.idea
+.vscode
+node_modules
+platforms
+hooks
 .DS_Store
 npm-debug.log.*
-
-demo/hooks
-demo/platforms
-demo/app/**/*.js
-
-demo-ng/hooks
-demo-ng/platforms
-demo-ng/app/**/*.js
+demo*/app/**/*.js
 
 **/*.js.map
+src/**/*.js
 plugin/**/*.js
-!src/base64.js
+
+!plugin/platforms

@@ -8,19 +8,7 @@
     "platforms": {
       "android": "3.0.0",
       "ios": "3.0.0"
-    },
-    "plugin": {
-      "nan": "true",
-      "pan": "true",
-      "core3": "true",
-      "category": "Processing"
     }
-  },
-  "lint-staged": {
-    "*.ts": [
-      "prettier --write",
-      "git add"
-    ]
   },
   "repository": {
     "type": "git",
