@@ -1,0 +1,72 @@
+<action-bar-template actionBarTitle="Characteristics" [currentPeripheral]="peripheral"></action-bar-template>
+
+<StackLayout orientation="vertical">
+
+	<StackLayout orientation="vertical" class="m-l-15">
+    	<StackLayout orientation="horizontal">
+            <Label [text]="'Peripheral: ' + peripheral.name" class="h3"></Label>
+		    <Label [text]="'  (UUID: ' + peripheral.UUID + ')'" verticalAlignment="center" class="h4"></Label>
+    	</StackLayout>
+        <Label [text]="'Service: ' + service.name" class="h3"></Label>
+		<Label [text]="'UUID: ' + service.UUID" class="h4"></Label>
+	</StackLayout>
+
+    <ListView [items]="service.characteristics" class="list-group">
+        <ng-template let-item="item">
+            <StackLayout orientation="vertical" class="list-group-item">
+
+                <Label [text]="item.name" textWrap="true" class="list-group-item-heading"
+                       (tap)="onCharacteristicTap(item)" ></Label>
+                <Label [text]="item.UUID" textWrap="true" class="list-group-item-text"
+                       [visibility]="item.name !== item.UUID ? 'visible' : 'collapse'"></Label>
+
+                <GridLayout columns="auto, *" rows="auto, auto, auto, auto"
+                            [visibility]="item.isExpandedView ? 'visible' : 'collapse'"
+                            class="list-group-item  no-padding">
+
+                    <Button row="0" col="0" class="btn-primary m-l-0"
+                            [visibility]="item.properties.read ? 'visible' : 'collapse'"
+                            text="Read" (tap)="doRead(item)"></Button>
+                    <StackLayout row="0" col="1" orientation="vertical"
+                                 [visibility]="item.properties.read ? 'visible' : 'collapse'">
+                        <Label [text]="'value: ' + item.readResult.valueToHexString()" textWrap="true" class="list-group-item-text"></Label>
+                        <Label [text]="'raw: ' + item.readResult.valueRawToJSONString()" textWrap="true" class="list-group-item-text small-font"></Label>
+                        <Label [text]="item.readResult.timestampToISOString()" class="list-group-item-text small-font"></Label>
+                    </StackLayout>
+
+                    <Button row="1" col="0" class="btn-primary m-l-0"
+                            [visibility]="item.properties.write ? 'visible' : 'collapse'"
+                            text="Write" (tap)="doWrite(item)"></Button>
+                    <StackLayout row="1" col="1" orientation="vertical"
+                                 [visibility]="item.properties.write ? 'visible' : 'collapse'">
+                        <Label [text]="item.writeResult.valueToString()" textWrap="true" class="list-group-item-text"></Label>
+                        <Label [text]="item.writeResult.valueRawToJSONString()" textWrap="true" class="list-group-item-text small-font"></Label>
+                        <Label [text]="item.writeResult.timestampToISOString()" class="list-group-item-text small-font"></Label>
+                    </StackLayout>
+
+                    <Button row="2" col="0" class="btn-primary m-l-0"
+                            [visibility]="item.properties.writeWithoutResponse ? 'visible' : 'collapse'"
+                            text="Write w/o resp" (tap)="doWriteWithoutResponse(item)"></Button>
+                    <StackLayout row="2" col="1" orientation="vertical"
+                                 [visibility]="item.properties.writeWithoutResponse ? 'visible' : 'collapse'">
+                        <Label [text]="item.writeWithoutResponseResult.valueToString()" textWrap="true" class="list-group-item-text"></Label>
+                        <Label [text]="item.writeWithoutResponseResult.valueRawToJSONString()" textWrap="true" class="list-group-item-text small-font"></Label>
+                        <Label [text]="item.writeWithoutResponseResult.timestampToISOString()" class="list-group-item-text small-font"></Label>
+                    </StackLayout>
+
+                    <Button row="3" col="0" class="btn-primary m-l-0"
+                            [visibility]="item.properties.notify ? 'visible' : 'collapse'"
+                            [text]="item.isNotifying ? 'Stop Notify' : 'Start Notify'" (tap)="doNotify(item)"></Button>
+                    <StackLayout row="3" col="1" orientation="vertical"
+                                 [visibility]="item.properties.notify ? 'visible' : 'collapse'">
+                        <Label [text]="'value: ' + item.notifyResult.valueToHexString()" textWrap="true" class="list-group-item-text"></Label>
+                        <Label [text]="'raw: ' + item.notifyResult.valueRawToJSONString()" textWrap="true" class="list-group-item-text small-font"></Label>
+                        <Label [text]="item.notifyResult.timestampToISOString()" class="list-group-item-text small-font"></Label>
+                    </StackLayout>
+
+                </GridLayout>
+            </StackLayout>
+        </ng-template>
+    </ListView>
+
+</StackLayout>

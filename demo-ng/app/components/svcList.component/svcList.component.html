@@ -1,0 +1,26 @@
+<action-bar-template actionBarTitle="Services" [currentPeripheral]="peripheral"></action-bar-template>
+
+<StackLayout orientation="vertical">
+
+	<StackLayout orientation="vertical">
+        <Label [text]="'Peripheral: ' + peripheral.name" class="h3  m-l-15"></Label>
+		<Label [text]="'UUID: ' + peripheral.UUID" class="h4  m-l-15"></Label>
+
+        <Button [text]="(isConnecting || peripheral.isConnected) ? 'Disconnect' : 'Connect'"
+                (tap)="(isConnecting || peripheral.isConnected) ? doDisconnectPeripheral() : doConnectPeripheral()"
+                class="btn btn-primary"></Button>
+	</StackLayout>
+
+    <ActivityIndicator [busy]="isConnecting" [visibility]="isConnecting ? 'visible' : 'collapse'"></ActivityIndicator>
+
+    <ListView [items]="peripheral.services" (itemTap)="onServiceTap($event)" class="list-group">
+        <ng-template let-item="item">
+            <StackLayout orientation="vertical" class="list-group-item">
+                <Label [text]="item.name" textWrap="true" class="list-group-item-heading"></Label>
+                <Label [text]="item.UUID" textWrap="true" class="list-group-item-text"
+                       [visibility]="item.name !== item.UUID ? 'visible' : 'collapse'"></Label>
+            </StackLayout>
+        </ng-template>
+    </ListView>
+
+</StackLayout>
