@@ -1,4 +1,4 @@
-import { Bluetooth } from './ios_main';
+import { Bluetooth } from '../bluetooth.ios';
 export declare class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDelegate {
     static ObjCProtocols: {
         prototype: CBPeripheralDelegate;
@@ -11,7 +11,7 @@ export declare class CBPeripheralDelegateImpl extends NSObject implements CBPeri
     private _owner;
     private _callback;
     static new(): CBPeripheralDelegateImpl;
-    initWithCallback(owner: WeakRef<Bluetooth>, callback: (result?) => void): CBPeripheralDelegateImpl;
+    initWithCallback(owner: WeakRef<Bluetooth>, callback: (result?: any) => void): CBPeripheralDelegateImpl;
     peripheralDidDiscoverServices(peripheral: CBPeripheral, error?: NSError): void;
     peripheralDidDiscoverIncludedServicesForServiceError(peripheral: CBPeripheral, service: CBService, error?: NSError): void;
     peripheralDidDiscoverCharacteristicsForServiceError(peripheral: CBPeripheral, service: CBService, error?: NSError): void;
@@ -21,6 +21,6 @@ export declare class CBPeripheralDelegateImpl extends NSObject implements CBPeri
     peripheralDidWriteValueForCharacteristicError(peripheral: CBPeripheral, characteristic: CBCharacteristic, error?: NSError): void;
     peripheralDidUpdateNotificationStateForCharacteristicError(peripheral: CBPeripheral, characteristic: CBCharacteristic, error?: NSError): void;
     peripheralDidWriteValueForDescriptorError(peripheral: CBPeripheral, descriptor: CBDescriptor, error?: NSError): void;
-    private _getProperties(characteristic);
-    private _getDescriptors(characteristic);
+    private _getProperties;
+    private _getDescriptors;
 }

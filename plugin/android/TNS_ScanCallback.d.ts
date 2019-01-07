@@ -1,5 +1,5 @@
-import { Bluetooth } from './android_main';
-import { Peripheral } from '../common';
+import { Bluetooth } from '../bluetooth.android';
+import { Peripheral } from '../bluetooth.common';
 export declare class TNS_ScanCallback extends android.bluetooth.le.ScanCallback {
     private owner;
     onPeripheralDiscovered: (data: Peripheral) => void;

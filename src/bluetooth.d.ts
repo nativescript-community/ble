@@ -1,4 +1,4 @@
-import * as COMMON from './common';
+import * as COMMON from './bluetooth.common';
 
 declare enum ScanMode {
     LOW_LATENCY,

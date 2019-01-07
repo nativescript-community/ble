@@ -1,4 +1,4 @@
-import { Bluetooth } from './android_main';
+import { Bluetooth } from '../bluetooth.android';
 export declare class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCallback {
     private owner;
     constructor();

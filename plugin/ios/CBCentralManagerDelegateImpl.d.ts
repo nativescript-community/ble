@@ -1,4 +1,4 @@
-import { Bluetooth } from './ios_main';
+import { Bluetooth } from '../bluetooth.ios';
 export declare class CBCentralManagerDelegateImpl extends NSObject implements CBCentralManagerDelegate {
     static ObjCProtocols: {
         prototype: CBCentralManagerDelegate;
@@ -6,7 +6,7 @@ export declare class CBCentralManagerDelegateImpl extends NSObject implements CB
     private _owner;
     private _callback;
     static new(): CBCentralManagerDelegateImpl;
-    initWithCallback(owner: WeakRef<Bluetooth>, callback: (result?) => void): CBCentralManagerDelegateImpl;
+    initWithCallback(owner: WeakRef<Bluetooth>, callback: (result?: any) => void): CBCentralManagerDelegateImpl;
     centralManagerDidConnectPeripheral(central: CBCentralManager, peripheral: CBPeripheral): void;
     centralManagerDidDisconnectPeripheralError(central: CBCentralManager, peripheral: CBPeripheral, error?: NSError): void;
     centralManagerDidFailToConnectPeripheralError(central: CBCentralManager, peripheral: CBPeripheral, error?: NSError): void;

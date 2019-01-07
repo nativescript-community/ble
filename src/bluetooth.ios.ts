@@ -1,5 +1,5 @@
 
-import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from './common';
+import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from './bluetooth.common';
 import { CBPeripheralDelegateImpl } from './ios/CBPeripheralDelegateImpl';
 import { CBCentralManagerDelegateImpl } from './ios/CBCentralManagerDelegateImpl';
 
