@@ -3,18 +3,19 @@
   "version": "1.0.0",
   "description": "Connect to and interact with Bluetooth LE peripherals",
   "scripts": {
+    "postinstall": "cd plugin && npm install",
     "tsc": "tsc -skipLibCheck && cp src/bluetooth.d.ts plugin",
     "build": "npm i && npm run tsc",
     "test.android": "npm i && npm run tsc && npm run tslint && cd demo && tns build android && tns test android --justlaunch",
     "test.ios": "npm i && npm run tsc && npm run tslint && cd demo && tns build ios && tns test ios --justlaunch",
     "tslint": "tslint \"src/**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\"",
-    "plugin.link": "npm link && cd demo && npm link nativescript-bluetooth && cd ../src",
     "plugin.tscwatch": "npm run tsc -- -w",
     "demo.ios": "npm i && npm run tsc && cd demo && tns run ios --syncAllFiles",
     "demo.android": "npm i && npm run tsc && cd demo && tns run android --syncAllFiles",
     "demo.reset": "cd demo && rimraf platforms",
     "plugin.prepare": "npm run tsc && cd demo && tns plugin remove nativescript-bluetooth && tns plugin add ../plugin",
-    "clean": "cd demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
+    "clean.demo": "rimraf demo/hooks demo/node_modules demo/platforms",
+    "clean": "rimraf plugin/ios plugin/android plugin/**/*.d.ts plugin/**/*.js plugin/**/*.js.map plugin/node_modules plugin/package-lock.json",
     "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'"
   },
   "repository": {
@@ -48,12 +49,15 @@
   "homepage": "https://github.com/eddyverbruggen/nativescript-bluetooth",
   "devDependencies": {
     "prettier": "^1.15.3",
-    "rimraf":"^2.6.3",
+    "rimraf": "^2.6.3",
     "tns-core-modules": "^5.1.1",
     "tns-platform-declarations": "^5.1.1",
     "tslint": "^5.12.0",
     "tslint-config-prettier": "^1.17.0",
     "tslint-config-standard": "^8.0.1",
     "typescript": "~3.2.2"
+  },
+  "dependencies": {
+    "p-queue": "^3.0.0"
   }
 }
