@@ -284,10 +284,10 @@ export class Bluetooth extends BluetoothCommon {
 
         // if >= Android21 (Lollipop)
         if (android.os.Build.VERSION.SDK_INT >= LOLLIPOP) {
-            this.scanCallback = new (require('./TNS_ScanCallback')).TNS_ScanCallback();
+            this.scanCallback = new (require('./android/TNS_ScanCallback')).TNS_ScanCallback();
             this.scanCallback.onInit(new WeakRef(this));
         } else {
-            this.LeScanCallback = new (require('./TNS_LeScanCallback')).TNS_LeScanCallback();
+            this.LeScanCallback = new (require('./android/TNS_LeScanCallback')).TNS_LeScanCallback();
             this.LeScanCallback.onInit(new WeakRef(this));
         }
 
