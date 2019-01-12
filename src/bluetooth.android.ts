@@ -17,7 +17,9 @@ import { TNS_BluetoothGattCallback } from './android/TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './android/TNS_LeScanCallback';
 import { TNS_ScanCallback } from './android/TNS_ScanCallback';
 import * as Queue from 'p-queue';
-import { AdvertismentData, ConnectionState } from './bluetooth';
+import { AdvertismentData, ConnectionState, Peripheral, Service } from './bluetooth';
+
+export { AdvertismentData, Peripheral, Service };
 
 const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;

@@ -2,6 +2,9 @@
 import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from './bluetooth.common';
 import { CBPeripheralDelegateImpl } from './ios/CBPeripheralDelegateImpl';
 import { CBCentralManagerDelegateImpl } from './ios/CBCentralManagerDelegateImpl';
+import { AdvertismentData, Peripheral, Service } from './bluetooth';
+
+export { AdvertismentData, Peripheral, Service };
 
 export function toArrayBuffer(value) {
     if (value === null) {
