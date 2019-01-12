@@ -1,4 +1,3 @@
-
 import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from './bluetooth.common';
 import { CBPeripheralDelegateImpl } from './ios/CBPeripheralDelegateImpl';
 import { CBCentralManagerDelegateImpl } from './ios/CBCentralManagerDelegateImpl';
@@ -18,32 +17,41 @@ export function CBUUIDToString(uuid: CBUUID) {
 }
 
 export class Bluetooth extends BluetoothCommon {
-    private _centralDelegate = CBCentralManagerDelegateImpl.new().initWithCallback(new WeakRef(this), obj => {
-        CLog(CLogTypes.info, `---- centralDelegate ---- obj: ${obj}`);
-    });
+    private _centralDelegate: CBCentralManagerDelegateImpl;
     private _centralManager: CBCentralManager;
 
     public _discoverPeripherals: { [k: string]: CBPeripheral } = {};
     public _connectedPeripherals: { [k: string]: CBPeripheral } = {};
     public _connectCallbacks = {};
-    public _advData = {};
     public _disconnectCallbacks = {};
+
+    // _advData is used to store Advertisment Data so that we can send it to connection callback
+    public _advData = {};
     public _onDiscovered = null;
 
-    constructor(restoreIdentifier?: string) {
-        super();
-        let options: NSDictionary<any, any> = null;
-        if (restoreIdentifier) {
-            options = new (NSDictionary as any)([restoreIdentifier], [CBCentralManagerOptionRestoreIdentifierKey]);
+    get centralManager() {
+        if (this._centralManager) {
+            let options: NSDictionary<any, any> = null;
+            if (this.restoreIdentifier) {
+                options = new (NSDictionary as any)([this.restoreIdentifier], [CBCentralManagerOptionRestoreIdentifierKey]);
+            }
+            this._centralDelegate = CBCentralManagerDelegateImpl.new().initWithCallback(new WeakRef(this), obj => {
+                CLog(CLogTypes.info, `---- centralDelegate ---- obj: ${obj}`);
+            });
+            this._centralManager = CBCentralManager.alloc().initWithDelegateQueueOptions(this._centralDelegate, null, options);
+            CLog(CLogTypes.info, `this._centralManager: ${this._centralManager}`);
         }
-        this._centralManager = CBCentralManager.alloc().initWithDelegateQueueOptions(this._centralDelegate, null, options);
-        CLog(CLogTypes.info, '*** iOS Bluetooth Constructor *** ${restoreIdentifier}');
-        CLog(CLogTypes.info, `this._centralManager: ${this._centralManager}`);
+        return this._centralManager;
+    }
+
+    constructor(private restoreIdentifier?: string) {
+        super();
+        CLog(CLogTypes.info, `*** iOS Bluetooth Constructor *** ${restoreIdentifier}`);
     }
 
     // Getters/Setters
     get enabled(): boolean {
-        const state = this._centralManager.state;
+        const state = this.centralManager.state;
         if (state === CBManagerState.PoweredOn) {
             return true;
         } else {
@@ -111,7 +119,7 @@ export class Bluetooth extends BluetoothCommon {
                 CLog(CLogTypes.info, 'startScanning ---- services:', services);
 
                 // TODO: check on the services as any casting
-                this._centralManager.scanForPeripheralsWithServicesOptions(services as any, null);
+                this.centralManager.scanForPeripheralsWithServicesOptions(services as any, null);
                 if (this.scanningReferTimer) {
                     clearTimeout(this.scanningReferTimer.timer);
                     this.scanningReferTimer.resolve();
@@ -120,7 +128,7 @@ export class Bluetooth extends BluetoothCommon {
                 if (arg.seconds) {
                     this.scanningReferTimer.timer = setTimeout(() => {
                         // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
-                        this._centralManager.stopScan();
+                        this.centralManager.stopScan();
                         resolve();
                     }, arg.seconds * 1000);
                     this.scanningReferTimer.resolve = resolve;
@@ -178,7 +186,7 @@ export class Bluetooth extends BluetoothCommon {
                     reject('Bluetooth is not enabled.');
                     return;
                 }
-                this._centralManager.stopScan();
+                this.centralManager.stopScan();
                 if (this.scanningReferTimer) {
                     this.scanningReferTimer.resolve && this.scanningReferTimer.resolve();
                     clearTimeout(this.scanningReferTimer.timer);
@@ -216,7 +224,7 @@ export class Bluetooth extends BluetoothCommon {
                     CLog(CLogTypes.info, 'connect ---- Connecting to peripheral with UUID:', args.UUID);
                     this._connectCallbacks[args.UUID] = args.onConnected;
                     this._disconnectCallbacks[args.UUID] = args.onDisconnected;
-                    this._centralManager.connectPeripheralOptions(peripheral, null);
+                    this.centralManager.connectPeripheralOptions(peripheral, null);
                     resolve();
                 }
             } catch (ex) {
@@ -244,7 +252,7 @@ export class Bluetooth extends BluetoothCommon {
                     CLog(CLogTypes.info, 'disconnect ---- Disconnecting peripheral with UUID', arg.UUID);
                     // no need to send an error when already disconnected, but it's wise to check it
                     if (peripheral.state !== CBPeripheralState.Disconnected) {
-                        this._centralManager.cancelPeripheralConnection(peripheral);
+                        this.centralManager.cancelPeripheralConnection(peripheral);
                         // peripheral.delegate = null;
                         // TODO remove from the peripheralArray as well
                     }
@@ -285,7 +293,7 @@ export class Bluetooth extends BluetoothCommon {
     public findPeripheral = UUID => {
         let result = this._connectedPeripherals[UUID] || this._discoverPeripherals[UUID];
         if (!result) {
-            const periphs = this._centralManager.retrievePeripheralsWithIdentifiers([NSUUID.alloc().initWithUUIDString(UUID)]);
+            const periphs = this.centralManager.retrievePeripheralsWithIdentifiers([NSUUID.alloc().initWithUUIDString(UUID)]);
             if (periphs.count > 0) {
                 result = periphs.objectAtIndex(0);
             }
@@ -301,7 +309,7 @@ export class Bluetooth extends BluetoothCommon {
     public findDiscoverPeripheral = UUID => {
         let result = this._discoverPeripherals[UUID];
         if (!result) {
-            const periphs = this._centralManager.retrievePeripheralsWithIdentifiers([NSUUID.alloc().initWithUUIDString(UUID)]);
+            const periphs = this.centralManager.retrievePeripheralsWithIdentifiers([NSUUID.alloc().initWithUUIDString(UUID)]);
             if (periphs.count > 0) {
                 result = periphs.objectAtIndex(0);
             }
@@ -456,8 +464,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     private _isEnabled() {
-        const state = this._centralManager.state;
-        return state === CBManagerState.PoweredOn;
+        return this.centralManager.state === CBManagerState.PoweredOn;
     }
 
     private _stringToUuid(uuidStr) {
