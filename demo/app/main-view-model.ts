@@ -67,8 +67,6 @@ export class DemoAppModel extends Observable {
         const navigationEntry = {
             moduleName: 'services-page',
             context: {
-                info: 'something you want to pass to your page',
-                foo: 'bar',
                 peripheral: peri
             },
             animated: true

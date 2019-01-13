@@ -3,13 +3,13 @@
   <StackLayout col="0" orientation="vertical">
     <StackLayout col="0" orientation="vertical" class="tab-content">
       <Label text="Service characteristics" class="details-label-title" />
-      <Label text="{{ UUID }}" />
+      <Label text="{{ service.UUID }}" />
       <Label text="{{ feedback }}" class="characteristic-feedback" textWrap="true" />
       <Label text="{{ feedbackRaw || 'Tap any row below ..' }}" class="characteristic-feedback-raw" textWrap="true" />
       <Label text="{{ feedbackTimestamp }}" class="characteristic-feedback-timestamp" />
     </StackLayout>
     <GridLayout rows="*">
-      <ListView items="{{ characteristics }}" itemTap="onCharacteristicTap" separatorColor="#90c3d4">
+      <ListView items="{{ service.characteristics }}" itemTap="{{onCharacteristicTap}}" separatorColor="#90c3d4">
         <ListView.itemTemplate>
           <StackLayout col="0" orientation="vertical" class="padded-label">
             <Label text="{{ name }}" />
