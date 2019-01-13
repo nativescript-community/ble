@@ -645,17 +645,23 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     private valueToNSData(value: any, encoding = 'iso-8859-1') {
-        if (typeof value === 'string') {
+        const type = typeof value;
+        if (type === 'string') {
             return NSString.stringWithString(value).dataUsingEncoding(this.nativeEncoding(encoding));
+        } else if (type === 'number') {
+            return NSData.dataWithData(new Uint8Array([value]).buffer as any);
         } else if (Array.isArray(value)) {
-            const intRef = new interop.Reference(interop.types.int8, interop.alloc(value.length));
-            for (let i = 0; i < value.length; i++) {
-                intRef[i] = value[i];
-            }
-            return NSData.dataWithBytesLength(intRef, value.length);
-        } else {
-            return null;
+            // const intRef = new interop.Reference(interop.types.int8, interop.alloc(value.length));
+            // for (let i = 0; i < value.length; i++) {
+            //     intRef[i] = value[i];
+            // }
+            // return NSData.dataWithBytesLength(intRef, value.length);
+            return NSData.dataWithData(new Uint8Array(value).buffer as any);
+        } else if (value instanceof ArrayBuffer) {
+            // for ArrayBuffer to NSData
+            return NSData.dataWithData(value as any);
         }
+        return null;
     }
 
     private valueToString(value) {

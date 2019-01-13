@@ -135,21 +135,12 @@ export function uuidToString(uuid) {
 }
 
 // val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
-export function encodeValue(val) {
-    let parts = val;
-    // if it's not a string assume it's a byte array already
-    if (typeof val === 'string') {
-        parts = val.split(',');
+export function arrayToNativeByteArray(val) {
 
-        if (parts[0].indexOf('x') === -1) {
-            return null;
-        }
-    }
+    const result = Array.create('byte', val.length);
 
-    const result = Array.create('byte', parts.length);
-
-    for (let i = 0; i < parts.length; i++) {
-        result[i] = parts[i];
+    for (let i = 0; i < val.length; i++) {
+        result[i] = val[i];
     }
     return result;
 }
@@ -171,15 +162,16 @@ function nativeEncoding(encoding: string) {
 }
 
 export function valueToByteArray(value, encoding = 'iso-8859-1') {
-    if (typeof value === 'string') {
+    const type = typeof value;
+    console.log('valueToByteArray', value, type, Array.isArray(value), value instanceof ArrayBuffer);
+    if (type === 'string') {
         return new java.lang.String(value).getBytes(nativeEncoding(encoding));
-        // const bytes = Array.create('byte', value.length);
-        // for (let i = 0; i < value.length; i++) {
-        //     bytes[i] = value.charCodeAt(i);
-        // }
-        // return bytes;
+    } else if (type === 'number') {
+        return arrayToNativeByteArray([value]);
     } else if (Array.isArray(value)) {
-        return value;
+        return arrayToNativeByteArray(value);
+    } else if (value instanceof ArrayBuffer) {
+        return arrayToNativeByteArray(new Int8Array(value as ArrayBuffer));
     }
     return null;
 }
@@ -581,7 +573,7 @@ export class Bluetooth extends BluetoothCommon {
                                 }
                                 if (f.manufacturerData) {
                                     const manufacturerId = new DataView(f.manufacturerData, 0).getUint16(0, true);
-                                    scanFilterBuilder.setManufacturerData(manufacturerId, encodeValue(f.manufacturerData));
+                                    scanFilterBuilder.setManufacturerData(manufacturerId, arrayToNativeByteArray(f.manufacturerData));
                                 }
                                 scanFilters.add(scanFilterBuilder.build());
                             });
@@ -849,7 +841,6 @@ export class Bluetooth extends BluetoothCommon {
 
                     characteristic.setValue(val);
                     characteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
-
 
                     // using the WRITE_TYPE_NO_RESPONSE, we will get the onCharacteristicWrite callback as soon as the stack is ready and has space to accept a new request.
                     this.connections[arg.peripheralUUID].onWritePromise = resolve;
