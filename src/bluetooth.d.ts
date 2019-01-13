@@ -127,7 +127,7 @@ export class Bluetooth extends COMMON.BluetoothCommon {
     // setGattServerCallbacks(options: any);
     fetchUuidsWithSdp(device: any): boolean;
     removeBond(device: any): any;
-    getAdapter(): any;
+    adapter: any;
 }
 
 /**
@@ -304,7 +304,7 @@ export interface Peripheral {
      * A friendly description of the peripheral as provided by the manufacturer.
      */
     name: string;
-    
+
     /**
      * A friendly description of the peripheral as provided by the manufacturer.
      */
