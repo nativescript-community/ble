@@ -13,3 +13,4 @@ plugin/**/*.js
 plugin/**/*.d.ts
 
 !plugin/platforms
+/plugin/platforms/android/nativescript_bluetooth.aar
