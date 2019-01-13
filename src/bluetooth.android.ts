@@ -19,6 +19,14 @@ import { TNS_ScanCallback } from './android/TNS_ScanCallback';
 import * as Queue from 'p-queue';
 import { AdvertismentData, ConnectionState, Peripheral, Service } from './bluetooth';
 
+let _bluetoothInstance: Bluetooth;
+export function getBluetoothInstance() {
+    if (!_bluetoothInstance) {
+        _bluetoothInstance = new Bluetooth();
+    }
+    return _bluetoothInstance;
+}
+
 export { AdvertismentData, Peripheral, Service };
 
 const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;

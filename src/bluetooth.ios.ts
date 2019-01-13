@@ -3,6 +3,14 @@ import { CBPeripheralDelegateImpl } from './ios/CBPeripheralDelegateImpl';
 import { CBCentralManagerDelegateImpl } from './ios/CBCentralManagerDelegateImpl';
 import { AdvertismentData, Peripheral, Service } from './bluetooth';
 
+
+let _bluetoothInstance: Bluetooth;
+export function getBluetoothInstance() {
+    if (!_bluetoothInstance) {
+        _bluetoothInstance = new Bluetooth();
+    }
+    return _bluetoothInstance;
+}
 export { AdvertismentData, Peripheral, Service };
 
 export function toArrayBuffer(value) {

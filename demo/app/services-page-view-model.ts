@@ -2,7 +2,7 @@ import * as dialogs from 'tns-core-modules/ui/dialogs';
 import { topmost } from 'tns-core-modules/ui/frame';
 import { ObservableArray } from 'tns-core-modules/data/observable-array';
 import { fromObject, Observable } from 'tns-core-modules/data/observable';
-import { AdvertismentData, Bluetooth, Peripheral, Service } from 'nativescript-bluetooth';
+import { AdvertismentData, Bluetooth, getBluetoothInstance, Peripheral, Service } from 'nativescript-bluetooth';
 import { Prop } from './utils/obs-prop';
 
 const companyIdentifier = require('./companyIdentifiers.json');
@@ -15,7 +15,7 @@ export class ServicesViewModel extends Observable {
     @Prop() public advertismentData: AdvertismentData;
     @Prop() public companyIdentifier = companyIdentifier;
 
-    private _bluetooth = new Bluetooth();
+    private _bluetooth = getBluetoothInstance();
 
     constructor(navContext) {
         super();

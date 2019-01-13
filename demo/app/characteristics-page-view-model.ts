@@ -1,13 +1,13 @@
 import * as dialogs from 'tns-core-modules/ui/dialogs';
 import { Observable } from 'tns-core-modules/data/observable';
-import { Bluetooth, Peripheral, Service } from 'nativescript-bluetooth';
+import { Bluetooth, getBluetoothInstance, Peripheral, Service } from 'nativescript-bluetooth';
 import { Prop } from './utils/obs-prop';
 
 export class CharacteristicsViewModel extends Observable {
     @Prop() public peripheral: Peripheral;
     @Prop() public service: Service;
 
-    private _bluetooth = new Bluetooth();
+    private _bluetooth = getBluetoothInstance();
 
     constructor(navContext) {
         super();

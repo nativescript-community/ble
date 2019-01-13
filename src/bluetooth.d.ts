@@ -441,3 +441,5 @@ export interface IBluetoothEvents {
     descriptor_read_request_event: string;
     execute_write_event: string;
 }
+
+export function getBluetoothInstance(): Bluetooth;
