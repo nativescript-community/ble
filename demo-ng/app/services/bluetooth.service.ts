@@ -57,10 +57,11 @@ export class Util {
 
 export class CharOpResult {
     // result from a Characteristic read/write/notify type of operation
-    constructor(public value?: any, public valueRaw?: any, public timestamp?: Date) {}
-    public setFields(value?: any, valueRaw?: any, timestamp?: Date) {
+    constructor(public value?: any, public ios?: any, public android?: any, public timestamp?: Date) {}
+    public setFields(value?: any, ios?: any, android?: any, timestamp?: Date) {
         this.value = value;
-        this.valueRaw = valueRaw;
+        this.ios = ios;
+        this.android = android;
         this.timestamp = timestamp;
     }
     public valueToString(): string {
@@ -70,7 +71,7 @@ export class CharOpResult {
         return Util.abToHexStr(this.value);
     }
     public valueRawToJSONString(): string {
-        return JSON.stringify(this.valueRaw);
+        return JSON.stringify(this.ios || this.android);
     }
     public timestampToISOString(): string {
         return this.timestamp && this.timestamp.toISOString();
@@ -336,7 +337,7 @@ export class BluetoothService {
                     //      var data = new Uint8Array(result.value);
                     //      var heartRate = data[1];
                     self.zone.run(() => {
-                        characteristic.readResult.setFields(res.value, res.valueRaw, new Date());
+                        characteristic.readResult.setFields(res.value, res.ios, res.android, new Date());
                     });
                     console.log(`read(charUUID: ${characteristic.UUID}), result JSON = ${JSON.stringify(res)}`);
                 },
@@ -450,7 +451,7 @@ export class BluetoothService {
                 onNotify: (res: ReadResult) => {
                     // result is same as read() method result
                     self.zone.run(() => {
-                        characteristic.notifyResult.setFields(res.value, res.valueRaw, new Date());
+                        characteristic.notifyResult.setFields(res.value, res.ios, res.android, new Date());
                     });
                     console.log(`onNotify callback (charUUID: ${characteristic.UUID}), result JSON = ${JSON.stringify(res)}`);
                 }

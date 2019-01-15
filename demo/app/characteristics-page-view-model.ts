@@ -1,6 +1,6 @@
 import * as dialogs from 'tns-core-modules/ui/dialogs';
 import { Observable } from 'tns-core-modules/data/observable';
-import { Bluetooth, getBluetoothInstance, Peripheral, Service } from 'nativescript-bluetooth';
+import { Bluetooth, getBluetoothInstance, Peripheral, ReadResult, Service } from 'nativescript-bluetooth';
 import { Prop } from './utils/obs-prop';
 
 export class CharacteristicsViewModel extends Observable {
@@ -51,13 +51,13 @@ export class CharacteristicsViewModel extends Observable {
                             characteristicUUID: characteristic.UUID
                         })
                         .then(
-                            result => {
+                            (result: ReadResult) => {
                                 // result.value is an ArrayBuffer. Every service has a different encoding.
                                 // fi. a heartrate monitor value can be retrieved by:
                                 //   var data = new Uint8Array(result.value);
                                 //   var heartRate = data[1];
                                 context.set('feedback', result.value);
-                                context.set('feedbackRaw', result.valueRaw);
+                                context.set('feedbackRaw', result.ios || result.android);
                                 context.set('feedbackTimestamp', this._getTimestamp());
                             },
                             error => {
