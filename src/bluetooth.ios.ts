@@ -1,8 +1,7 @@
-import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes, ConnectOptions, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from './bluetooth.common';
+import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes } from './bluetooth.common';
 import { CBPeripheralDelegateImpl } from './ios/CBPeripheralDelegateImpl';
 import { CBCentralManagerDelegateImpl } from './ios/CBCentralManagerDelegateImpl';
-import { AdvertismentData, Peripheral, Service } from './bluetooth';
-
+import { AdvertismentData, ConnectOptions, Peripheral, ReadResult, Service, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from './bluetooth';
 
 let _bluetoothInstance: Bluetooth;
 export function getBluetoothInstance() {
@@ -11,7 +10,7 @@ export function getBluetoothInstance() {
     }
     return _bluetoothInstance;
 }
-export { AdvertismentData, Peripheral, Service };
+export { AdvertismentData, Peripheral, ReadResult, Service };
 
 export function toArrayBuffer(value) {
     if (value === null) {
@@ -38,7 +37,7 @@ export class Bluetooth extends BluetoothCommon {
     public _onDiscovered = null;
 
     get centralManager() {
-        if (this._centralManager) {
+        if (!this._centralManager) {
             let options: NSDictionary<any, any> = null;
             if (this.restoreIdentifier) {
                 options = new (NSDictionary as any)([this.restoreIdentifier], [CBCentralManagerOptionRestoreIdentifierKey]);
@@ -187,7 +186,7 @@ export class Bluetooth extends BluetoothCommon {
         }
         return Promise.resolve();
     }
-    public stopScanning(arg) {
+    public stopScanning() {
         return new Promise((resolve, reject) => {
             try {
                 if (!this._isEnabled()) {

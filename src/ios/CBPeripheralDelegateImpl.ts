@@ -173,7 +173,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
         const result = {
             type: characteristic.isNotifying ? 'notification' : 'read',
             characteristicUUID: characteristic.UUID.UUIDString,
-            valueRaw: characteristic.value,
+            ios: characteristic.value,
             value: toArrayBuffer(characteristic.value)
         };
 

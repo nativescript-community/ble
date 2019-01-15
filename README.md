@@ -236,7 +236,8 @@ The promise will receive an object like this:
 ```js
 {
   value: <ArrayBuffer>, // an ArrayBuffer which you can use to decode (see example below)
-  valueRaw: <72>, // the platform-specific binary value of the characteristic: NSData (iOS), byte[] (Android)
+  ios: <72>, // the platform-specific binary value of the characteristic: NSData (iOS), byte[] (Android)
+  android: <72>, // the platform-specific binary value of the characteristic: NSData (iOS), byte[] (Android)
   characteristicUUID: '434234-234234-234234-434'
 }
 ```

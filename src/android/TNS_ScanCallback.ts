@@ -1,5 +1,6 @@
 import { Bluetooth, byteArrayToBuffer, uuidToString } from '../bluetooth.android';
-import { CLog, CLogTypes, Peripheral } from '../bluetooth.common';
+import { CLog, CLogTypes } from '../bluetooth.common';
+import { Peripheral } from '../bluetooth';
 
 /**
  * Bluetooth LE scan callbacks. Scan results are reported using these callbacks.

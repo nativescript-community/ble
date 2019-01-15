@@ -1,4 +1,4 @@
-import * as COMMON from './bluetooth.common';
+import { BluetoothCommon } from './bluetooth.common';
 
 declare enum ScanMode {
     LOW_LATENCY,
@@ -28,107 +28,6 @@ declare enum Phy {
 }
 
 export type ConnectionState = 'connected' | 'connecting' | 'disconnected';
-
-export class Bluetooth extends COMMON.BluetoothCommon {
-    static readonly android?: {
-        ScanMode: typeof ScanMode;
-        MatchMode: typeof MatchMode;
-        MatchNum: typeof MatchNum;
-        CallbackType: typeof CallbackType;
-    };
-
-    /**
-     * restoreIdentifier is optional and only used on iOS
-     */
-    constructor(restoreIndentifier?: string);
-    /**
-     * If true console logs will be output to help debug NativeScript-Bluetooth.
-     */
-    debug: boolean;
-
-    /**
-     * Property to determine if bluetooth is enabled.
-     */
-    readonly enabled: boolean;
-
-    isBluetoothEnabled(): Promise<boolean>;
-
-    /**
-     * Android only. Will return false if the user denied turning Bluetooth on.
-     * @returns {Promise<boolean>}
-     */
-    enable(): Promise<boolean>;
-
-    /**
-     * Android only. check if GPS is enabled.
-     * @returns {boolean}
-     */
-    isGPSEnabled(): Promise<boolean>;
-
-    /**
-     * Android only. Will reject if the user denied turning GPS on.
-     * @returns {Promise<void>}
-     */
-    enableGPS(): Promise<void>;
-
-    /**
-     * open device bluetooth settings
-     * @returns {Promise<void>}
-     */
-    openBluetoothSettings(url?: string);
-
-    /**
-     * Required for Android 6+ to be able to scan for peripherals in the background.
-     */
-    hasCoarseLocationPermission(): Promise<boolean>;
-
-    /**
-     * Required for Android 6+ to be able to scan for peripherals in the background.
-     */
-    requestCoarseLocationPermission(): Promise<any>;
-
-    startScanning(options: COMMON.StartScanningOptions): Promise<void>;
-
-    stopScanning(): Promise<any>;
-
-    connect(options: COMMON.ConnectOptions): Promise<any>;
-
-    disconnect(options: COMMON.DisconnectOptions): Promise<any>;
-
-    read(options: COMMON.ReadOptions): Promise<COMMON.ReadResult>;
-
-    write(options: COMMON.WriteOptions): Promise<any>;
-
-    writeWithoutResponse(options: COMMON.WriteOptions): Promise<any>;
-
-    startNotifying(options: COMMON.StartNotifyingOptions): Promise<any>;
-
-    stopNotifying(options: COMMON.StopNotifyingOptions): Promise<any>;
-
-    // PERIPHERAL MODE FUNCTIONS
-    disable(): Promise<any>;
-    isPeripheralModeSupported(): Promise<boolean>;
-    stopAdvertising(): Promise<any>;
-    startAdvertising(advertiseOptions: any): Promise<any>;
-    getServerConnectedDevicesMatchingState(state: any): any;
-    getServerConnectedDeviceState(device: any): any;
-    getServerConnectedDevices(): any;
-    cancelServerConnection(device: any);
-    clearServices();
-    offersService(uuidString: string): boolean;
-    getServerService(uuidString: string): any;
-    makeDescriptor(options: any): any;
-    makeCharacteristic(options: any): any;
-    makeService(options: any): any;
-    getAdvertiser(): any;
-    setDiscoverable(): Promise<any>;
-    // startGattServer();
-    // stopGattServer();
-    // setGattServerCallbacks(options: any);
-    fetchUuidsWithSdp(device: any): boolean;
-    removeBond(device: any): any;
-    adapter: any;
-}
 
 /**
  * The options object passed into the startScanning function.
@@ -274,12 +173,25 @@ export interface ConnectOptions {
     /**
      * Once the peripheral is connected this callback function is invoked.
      */
-    onConnected: (data: Peripheral) => void;
+    onConnected: (
+        data: {
+            UUID;
+            name: string;
+            state: ConnectionState;
+            services: any[];
+            advertismentData: AdvertismentData;
+        }
+    ) => void;
 
     /**
      * Once the peripheral is disconnected this callback function is invoked.
      */
-    onDisconnected: (data: Peripheral) => void;
+    onDisconnected: (
+        data: {
+            UUID;
+            name: string;
+        }
+    ) => void;
 }
 
 export interface AdvertismentData {
@@ -396,6 +308,7 @@ export interface ReadOptions extends CRUDOptions {}
 
 export interface WriteOptions extends CRUDOptions {
     value: any;
+    encoding?: string;
 }
 
 // tslint:disable-next-line:no-empty-interface
@@ -410,7 +323,8 @@ export interface StartNotifyingOptions extends CRUDOptions {
  */
 export interface ReadResult {
     value: any;
-    valueRaw: any;
+    ios?: any;
+    android?: any;
     characteristicUUID: string;
 }
 
@@ -442,4 +356,104 @@ export interface IBluetoothEvents {
     execute_write_event: string;
 }
 
+export class Bluetooth extends BluetoothCommon {
+    static readonly android?: {
+        ScanMode: typeof ScanMode;
+        MatchMode: typeof MatchMode;
+        MatchNum: typeof MatchNum;
+        CallbackType: typeof CallbackType;
+    };
+
+    /**
+     * restoreIdentifier is optional and only used on iOS
+     */
+    constructor(restoreIndentifier?: string);
+    /**
+     * If true console logs will be output to help debug NativeScript-Bluetooth.
+     */
+    debug: boolean;
+
+    /**
+     * Property to determine if bluetooth is enabled.
+     */
+    readonly enabled: boolean;
+
+    isBluetoothEnabled(): Promise<boolean>;
+
+    /**
+     * Android only. Will return false if the user denied turning Bluetooth on.
+     * @returns {Promise<boolean>}
+     */
+    enable(): Promise<boolean>;
+
+    /**
+     * Android only. check if GPS is enabled.
+     * @returns {boolean}
+     */
+    isGPSEnabled(): Promise<boolean>;
+
+    /**
+     * Android only. Will reject if the user denied turning GPS on.
+     * @returns {Promise<void>}
+     */
+    enableGPS(): Promise<void>;
+
+    /**
+     * open device bluetooth settings
+     * @returns {Promise<void>}
+     */
+    openBluetoothSettings(url?: string);
+
+    /**
+     * Required for Android 6+ to be able to scan for peripherals in the background.
+     */
+    hasCoarseLocationPermission(): Promise<boolean>;
+
+    /**
+     * Required for Android 6+ to be able to scan for peripherals in the background.
+     */
+    requestCoarseLocationPermission(): Promise<any>;
+
+    startScanning(options: StartScanningOptions): Promise<void>;
+
+    stopScanning(): Promise<any>;
+
+    connect(options: ConnectOptions): Promise<any>;
+
+    disconnect(options: DisconnectOptions): Promise<any>;
+
+    read(options: ReadOptions): Promise<ReadResult>;
+
+    write(options: WriteOptions): Promise<any>;
+
+    writeWithoutResponse(options: WriteOptions): Promise<any>;
+
+    startNotifying(options: StartNotifyingOptions): Promise<any>;
+
+    stopNotifying(options: StopNotifyingOptions): Promise<any>;
+
+    // PERIPHERAL MODE FUNCTIONS
+    disable(): Promise<any>;
+    isPeripheralModeSupported(): Promise<boolean>;
+    stopAdvertising(): Promise<any>;
+    startAdvertising(advertiseOptions: any): Promise<any>;
+    getServerConnectedDevicesMatchingState(state: any): any;
+    getServerConnectedDeviceState(device: any): any;
+    getServerConnectedDevices(): any;
+    cancelServerConnection(device: any);
+    clearServices();
+    offersService(uuidString: string): boolean;
+    getServerService(uuidString: string): any;
+    makeDescriptor(options: any): any;
+    makeCharacteristic(options: any): any;
+    makeService(options: any): any;
+    getAdvertiser(): any;
+    setDiscoverable(): Promise<any>;
+    // startGattServer();
+    // stopGattServer();
+    // setGattServerCallbacks(options: any);
+    fetchUuidsWithSdp(device: any): boolean;
+    removeBond(device: any): any;
+    adapter: any;
+}
 export function getBluetoothInstance(): Bluetooth;

@@ -170,7 +170,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
         if (stateObject.onReadPromise) {
             const value = characteristic.getValue();
             stateObject.onReadPromise({
-                valueRaw: value,
+                ios: value,
                 value: byteArrayToBuffer(value),
                 characteristicUUID: uuidToString(characteristic.getUuid())
             });
@@ -201,7 +201,7 @@ export class TNS_BluetoothGattCallback extends android.bluetooth.BluetoothGattCa
         if (stateObject.onNotifyCallback) {
             const value = characteristic.getValue();
             stateObject.onNotifyCallback({
-                valueRaw: value,
+                ios: value,
                 value: byteArrayToBuffer(value),
                 characteristicUUID: uuidToString(characteristic.getUuid())
             });

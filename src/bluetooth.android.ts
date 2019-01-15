@@ -1,23 +1,23 @@
 import * as utils from 'tns-core-modules/utils/utils';
 import * as application from 'tns-core-modules/application/application';
-import {
-    BluetoothCommon,
-    BluetoothUtil,
-    CLog,
-    CLogTypes,
-    ConnectOptions,
-    DisconnectOptions,
-    ReadOptions,
-    StartNotifyingOptions,
-    StartScanningOptions,
-    StopNotifyingOptions,
-    WriteOptions
-} from './bluetooth.common';
+import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes } from './bluetooth.common';
 import { TNS_BluetoothGattCallback } from './android/TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './android/TNS_LeScanCallback';
 import { TNS_ScanCallback } from './android/TNS_ScanCallback';
 import * as Queue from 'p-queue';
-import { AdvertismentData, ConnectionState, Peripheral, Service } from './bluetooth';
+import {
+    AdvertismentData,
+    ConnectionState,
+    ConnectOptions,
+    DisconnectOptions,
+    Peripheral,
+    ReadResult,
+    Service,
+    StartNotifyingOptions,
+    StartScanningOptions,
+    StopNotifyingOptions,
+    WriteOptions
+} from './bluetooth';
 
 let _bluetoothInstance: Bluetooth;
 export function getBluetoothInstance() {
@@ -27,7 +27,7 @@ export function getBluetoothInstance() {
     return _bluetoothInstance;
 }
 
-export { AdvertismentData, Peripheral, Service };
+export { AdvertismentData, Peripheral, ReadResult, Service };
 
 const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
@@ -136,7 +136,6 @@ export function uuidToString(uuid) {
 
 // val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
 export function arrayToNativeByteArray(val) {
-
     const result = Array.create('byte', val.length);
 
     for (let i = 0; i < val.length; i++) {
@@ -583,18 +582,18 @@ export class Bluetooth extends BluetoothCommon {
                         const scanSettings = new android.bluetooth.le.ScanSettings.Builder();
                         scanSettings.setReportDelay(0);
 
-                        const scanMode = (arg.android && arg.android.scanMode) || ScanMode.LOW_LATENCY;
+                        const scanMode = ((arg.android && arg.android.scanMode) || ScanMode.LOW_LATENCY) as ScanMode;
                         scanSettings.setScanMode(androidScanMode(scanMode));
 
                         // if >= Android23 (Marshmallow)
                         if (android.os.Build.VERSION.SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */) {
-                            const matchMode = (arg.android && arg.android.matchMode) || MatchMode.AGGRESSIVE;
+                            const matchMode = ((arg.android && arg.android.matchMode) || MatchMode.AGGRESSIVE)as MatchMode;
                             scanSettings.setMatchMode(androidMatchMode(matchMode));
 
-                            const matchNum = (arg.android && arg.android.matchNum) || MatchNum.MAX_ADVERTISEMENT;
+                            const matchNum = ((arg.android && arg.android.matchNum) || MatchNum.MAX_ADVERTISEMENT)as MatchNum;
                             scanSettings.setNumOfMatches(androidMatchNum(matchNum));
 
-                            const callbackType = (arg.android && arg.android.callbackType) || CallbackType.ALL_MATCHES;
+                            const callbackType = ((arg.android && arg.android.callbackType) || CallbackType.ALL_MATCHES)as CallbackType;
                             scanSettings.setCallbackType(androidCallbackType(callbackType));
                         }
 

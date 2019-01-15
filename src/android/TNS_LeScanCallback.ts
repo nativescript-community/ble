@@ -1,5 +1,6 @@
 import { Bluetooth, byteArrayToBuffer, uuidToString } from '../bluetooth.android';
-import { CLog, CLogTypes, Peripheral } from '../bluetooth.common';
+import { CLog, CLogTypes } from '../bluetooth.common';
+import { Peripheral } from '../bluetooth';
 
 const DATA_TYPE_FLAGS = 0x01;
 const DATA_TYPE_SERVICE_UUIDS_16_BIT_PARTIAL = 0x02;
