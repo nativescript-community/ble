@@ -1,9 +1,9 @@
 import * as utils from 'tns-core-modules/utils/utils';
 import * as application from 'tns-core-modules/application/application';
 import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes } from './bluetooth.common';
-import { TNS_BluetoothGattCallback } from './android/TNS_BluetoothGattCallback';
-import { TNS_LeScanCallback } from './android/TNS_LeScanCallback';
-import { TNS_ScanCallback } from './android/TNS_ScanCallback';
+// import { TNS_BluetoothGattCallback } from './android/TNS_BluetoothGattCallback';
+// import { TNS_LeScanCallback } from './android/TNS_LeScanCallback';
+// import { TNS_ScanCallback } from './android/TNS_ScanCallback';
 import * as Queue from 'p-queue';
 import {
     AdvertismentData,
@@ -11,6 +11,7 @@ import {
     ConnectOptions,
     DisconnectOptions,
     Peripheral,
+    ReadOptions,
     ReadResult,
     Service,
     StartNotifyingOptions,
@@ -209,6 +210,745 @@ export function stringToUuid(uuidStr) {
     return java.util.UUID.fromString(uuidStr);
 }
 
+declare class LeScanCallback extends android.bluetooth.BluetoothAdapter.LeScanCallback {
+    constructor(owner: WeakRef<Bluetooth>);
+    onPeripheralDiscovered: (data: Peripheral) => void;
+}
+
+let LeScanCallbackVar: typeof LeScanCallback;
+
+function initLeScanCallback() {
+    if (LeScanCallback) {
+        return;
+    }
+
+    class ScanRecord {
+        getManufacturerSpecificData() {
+            return this.manufacturerData;
+        }
+        getBytes() {
+            return this.bytes;
+        }
+        getAdvertiseFlags() {
+            return this.advertiseFlags;
+        }
+        getServiceUuids() {
+            return this.serviceUuids;
+        }
+        getServiceData() {
+            return this.serviceData;
+        }
+        getDeviceName() {
+            return this.localName;
+        }
+        getTxPowerLevel() {
+            return this.txPowerLevel;
+        }
+        constructor(
+            private serviceUuids: Array<native.Array<number>>,
+            private manufacturerData: android.util.SparseArray<any[]>,
+            private serviceData: { [k: string]: native.Array<number> },
+            private advertiseFlags: number,
+            private txPowerLevel: number,
+            private localName: string,
+            private bytes: native.Array<number>
+        ) {}
+    }
+
+    class ScanAdvertisment {
+        constructor(private scanRecord: ScanRecord) {}
+        get manufacturerData() {
+            const data = this.scanRecord.getManufacturerSpecificData();
+            const size = data.size();
+            if (size > 0) {
+                const mKey = data.keyAt(0);
+                return byteArrayToBuffer(data.get(mKey));
+            }
+            return undefined;
+        }
+        get data() {
+            return byteArrayToBuffer(this.scanRecord.getBytes());
+        }
+        get manufacturerId() {
+            const data = this.scanRecord.getManufacturerSpecificData();
+            const size = data.size();
+            if (size > 0) {
+                return data.keyAt(0);
+            }
+            return -1;
+        }
+        get txPowerLevel() {
+            return this.scanRecord.getTxPowerLevel();
+        }
+        get localName() {
+            return this.scanRecord.getDeviceName();
+        }
+        get flags() {
+            return this.scanRecord.getAdvertiseFlags();
+        }
+        get uuids() {
+            const result = [];
+            const serviceUuids = this.scanRecord.getServiceUuids();
+            for (let i = 0; i < serviceUuids.length; i++) {
+                result.push(uuidToString(serviceUuids[i]));
+            }
+            return result;
+        }
+        get serviceData() {
+            const result = {};
+            const serviceData = this.scanRecord.getServiceData();
+
+            const keys = Object.keys(serviceData);
+            let currentKey;
+            for (let i = 0; i < keys.length; i++) {
+                currentKey = keys[i];
+                result[uuidToString(currentKey)] = byteArrayToBuffer(serviceData[currentKey]);
+            }
+            return result;
+        }
+    }
+
+    // Helper method to extract bytes from byte array.
+    function extractBytes(scanRecord, start: number, length: number) {
+        // const  bytes = new byte[length];
+        // System.arraycopy(scanRecord, start, bytes, 0, length);
+        return java.util.Arrays.copyOfRange(scanRecord, start, start + length);
+    }
+
+    let BASE_UUID;
+    function getBASE_UUID() {
+        if (!BASE_UUID) {
+            BASE_UUID = android.os.ParcelUuid.fromString('00000000-0000-1000-8000-00805F9B34FB');
+        }
+        return BASE_UUID;
+    }
+
+    /** Length of bytes for 16 bit UUID */
+    const UUID_BYTES_16_BIT = 2;
+    /** Length of bytes for 32 bit UUID */
+    const UUID_BYTES_32_BIT = 4;
+    /** Length of bytes for 128 bit UUID */
+    const UUID_BYTES_128_BIT = 16;
+
+    function parseUuidFrom(uuidBytes: any) {
+        if (uuidBytes == null) {
+            throw new Error('uuidBytes cannot be null');
+        }
+        const length = uuidBytes.length;
+        if (length !== UUID_BYTES_16_BIT && length !== UUID_BYTES_32_BIT && length !== UUID_BYTES_128_BIT) {
+            throw new Error('uuidBytes length invalid - ' + length);
+        }
+
+        // Construct a 128 bit UUID.
+        if (length === UUID_BYTES_128_BIT) {
+            const buf = java.nio.ByteBuffer.wrap(uuidBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            const msb = buf.getLong(8);
+            const lsb = buf.getLong(0);
+            return new java.util.UUID(msb, lsb).toString();
+        }
+
+        // For 16 bit and 32 bit UUID we need to convert them to 128 bit value.
+        // 128_bit_value = uuid * 2^96 + BASE_UUID
+        let shortUuid;
+        if (length === UUID_BYTES_16_BIT) {
+            shortUuid = uuidBytes[0] & 0xff;
+            shortUuid += (uuidBytes[1] & 0xff) << 8;
+        } else {
+            shortUuid = uuidBytes[0] & 0xff;
+            shortUuid += (uuidBytes[1] & 0xff) << 8;
+            shortUuid += (uuidBytes[2] & 0xff) << 16;
+            shortUuid += (uuidBytes[3] & 0xff) << 24;
+        }
+        const msb =
+            getBASE_UUID()
+                .getUuid()
+                .getMostSignificantBits() +
+            (shortUuid << 32);
+        const lsb = getBASE_UUID()
+            .getUuid()
+            .getLeastSignificantBits();
+        return new java.util.UUID(msb, lsb).toString();
+    }
+    function parseServiceUuid(scanRecord, currentPos: number, dataLength: number, uuidLength: number, serviceUuids: string[]) {
+        while (dataLength > 0) {
+            const uuidBytes = extractBytes(scanRecord, currentPos, uuidLength);
+            serviceUuids.push(parseUuidFrom(uuidBytes));
+            dataLength -= uuidLength;
+            currentPos += uuidLength;
+        }
+        return currentPos;
+    }
+
+    const DATA_TYPE_FLAGS = 0x01;
+    const DATA_TYPE_SERVICE_UUIDS_16_BIT_PARTIAL = 0x02;
+    const DATA_TYPE_SERVICE_UUIDS_16_BIT_COMPLETE = 0x03;
+    const DATA_TYPE_SERVICE_UUIDS_32_BIT_PARTIAL = 0x04;
+    const DATA_TYPE_SERVICE_UUIDS_32_BIT_COMPLETE = 0x05;
+    const DATA_TYPE_SERVICE_UUIDS_128_BIT_PARTIAL = 0x06;
+    const DATA_TYPE_SERVICE_UUIDS_128_BIT_COMPLETE = 0x07;
+    const DATA_TYPE_LOCAL_NAME_SHORT = 0x08;
+    const DATA_TYPE_LOCAL_NAME_COMPLETE = 0x09;
+    const DATA_TYPE_TX_POWER_LEVEL = 0x0a;
+    const DATA_TYPE_SERVICE_DATA_16_BIT = 0x16;
+    const DATA_TYPE_SERVICE_DATA_32_BIT = 0x20;
+    const DATA_TYPE_SERVICE_DATA_128_BIT = 0x21;
+    const DATA_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xff;
+    function parseFromBytes(scanRecord: number[]) {
+        if (scanRecord == null) {
+            return null;
+        }
+
+        let currentPos = 0;
+        let advertiseFlag = -1;
+        let serviceUuids = [];
+        let localName: string = null;
+        let txPowerLevel = Number.MIN_VALUE;
+        const manufacturerData: android.util.SparseArray<any[]> = new android.util.SparseArray();
+
+        // const manufacturerData = null;
+        const serviceData = {};
+
+        try {
+            while (currentPos < scanRecord.length) {
+                // length is unsigned int.
+                const length = scanRecord[currentPos++] & 0xff;
+                if (length === 0) {
+                    break;
+                }
+                // Note the length includes the length of the field type itself.
+                const dataLength = length - 1;
+                // fieldType is unsigned int.
+                const fieldType = scanRecord[currentPos++] & 0xff;
+                switch (fieldType) {
+                    case DATA_TYPE_FLAGS:
+                        advertiseFlag = scanRecord[currentPos] & 0xff;
+                        break;
+                    case DATA_TYPE_SERVICE_UUIDS_16_BIT_PARTIAL:
+                    case DATA_TYPE_SERVICE_UUIDS_16_BIT_COMPLETE:
+                        parseServiceUuid(scanRecord, currentPos, dataLength, UUID_BYTES_16_BIT, serviceUuids);
+                        break;
+                    case DATA_TYPE_SERVICE_UUIDS_32_BIT_PARTIAL:
+                    case DATA_TYPE_SERVICE_UUIDS_32_BIT_COMPLETE:
+                        parseServiceUuid(scanRecord, currentPos, dataLength, UUID_BYTES_32_BIT, serviceUuids);
+                        break;
+                    case DATA_TYPE_SERVICE_UUIDS_128_BIT_PARTIAL:
+                    case DATA_TYPE_SERVICE_UUIDS_128_BIT_COMPLETE:
+                        parseServiceUuid(scanRecord, currentPos, dataLength, UUID_BYTES_128_BIT, serviceUuids);
+                        break;
+                    case DATA_TYPE_LOCAL_NAME_SHORT:
+                    case DATA_TYPE_LOCAL_NAME_COMPLETE:
+                        localName = String.fromCharCode.apply(String, extractBytes(scanRecord, currentPos, dataLength));
+                        break;
+                    case DATA_TYPE_TX_POWER_LEVEL:
+                        txPowerLevel = scanRecord[currentPos];
+                        break;
+                    case DATA_TYPE_SERVICE_DATA_16_BIT:
+                    case DATA_TYPE_SERVICE_DATA_32_BIT:
+                    case DATA_TYPE_SERVICE_DATA_128_BIT:
+                        let serviceUuidLength = UUID_BYTES_16_BIT;
+                        if (fieldType === DATA_TYPE_SERVICE_DATA_32_BIT) {
+                            serviceUuidLength = UUID_BYTES_32_BIT;
+                        } else if (fieldType === DATA_TYPE_SERVICE_DATA_128_BIT) {
+                            serviceUuidLength = UUID_BYTES_128_BIT;
+                        }
+
+                        const serviceDataUuidBytes = extractBytes(scanRecord, currentPos, serviceUuidLength);
+                        const serviceDataUuid = parseUuidFrom(serviceDataUuidBytes);
+                        const serviceDataArray = extractBytes(scanRecord, currentPos + serviceUuidLength, dataLength - serviceUuidLength);
+                        serviceData[serviceDataUuid] = serviceDataArray;
+                        break;
+                    case DATA_TYPE_MANUFACTURER_SPECIFIC_DATA:
+                        // The first two bytes of the manufacturer specific data are
+                        // manufacturer ids in little endian.
+                        const manufacturerId = ((scanRecord[currentPos + 1] & 0xff) << 8) + (scanRecord[currentPos] & 0xff);
+                        const manufacturerDataBytes = extractBytes(scanRecord, currentPos + 2, dataLength - 2);
+                        manufacturerData.put(manufacturerId, manufacturerDataBytes);
+                        break;
+                    default:
+                        // Just ignore, we don't handle such data type.
+                        break;
+                }
+                currentPos += dataLength;
+            }
+
+            if (serviceUuids.length === 0) {
+                serviceUuids = null;
+            }
+            return new ScanRecord(serviceUuids, manufacturerData, serviceData, advertiseFlag, txPowerLevel, localName, scanRecord);
+        } catch (e) {
+            // Log.e(TAG, 'unable to parse scan record: ' + Arrays.toString(scanRecord));
+            // As the record is invalid, ignore all the parsed results for this packet
+            // and return an empty record with raw scanRecord bytes in results
+            return new ScanRecord(null, null, null, -1, Number.MIN_VALUE, null, scanRecord);
+        }
+    }
+
+    class LeScanCallbackImpl extends android.bluetooth.BluetoothAdapter.LeScanCallback {
+        onPeripheralDiscovered: (data: Peripheral) => void;
+
+        constructor(private owner: WeakRef<Bluetooth>) {
+            super();
+            /**
+             * Callback reporting an LE device found during a device scan initiated by the startLeScan(BluetoothAdapter.LeScanCallback) function.
+             * @param device [android.bluetooth.BluetoothDevice] - Identifies the remote device
+             * @param rssi [number] - The RSSI value for the remote device as reported by the Bluetooth hardware. 0 if no RSSI value is available.
+             * @param scanRecord [byte[]] - The content of the advertisement record offered by the remote device.
+             */
+            return global.__native(this);
+        }
+
+        onLeScan(device: android.bluetooth.BluetoothDevice, rssi: number, data: number[]) {
+            CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- device: ${device}, rssi: ${rssi}, scanRecord: ${data}`);
+
+            let stateObject = this.owner.get().connections[device.getAddress()];
+            if (!stateObject) {
+                stateObject = this.owner.get().connections[device.getAddress()] = {
+                    state: 'disconnected'
+                };
+                const scanRecord = parseFromBytes(data);
+                const advertismentData = new ScanAdvertisment(scanRecord);
+
+                const payload = {
+                    type: 'scanResult', // TODO or use different callback functions?
+                    UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
+                    name: device.getName(),
+                    localName: advertismentData.localName,
+                    RSSI: rssi,
+                    state: 'disconnected',
+                    advertismentData,
+                    manufacturerId: advertismentData.manufacturerId
+                };
+                CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- payload: ${JSON.stringify(payload)}`);
+                this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
+                this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
+            }
+        }
+    }
+    LeScanCallbackVar = LeScanCallbackImpl;
+}
+
+declare class ScanCallback extends android.bluetooth.le.ScanCallback {
+    constructor(owner: WeakRef<Bluetooth>);
+    onPeripheralDiscovered?: (data: Peripheral) => void;
+}
+
+let ScanCallbackVar: typeof ScanCallback;
+
+// interface IScanCallback extends android.bluetooth.le.ScanCallback {
+//     new (owner: WeakRef<Bluetooth>): IScanCallback;
+// }
+function initScanCallback() {
+    if (ScanCallbackVar) {
+        return;
+    }
+    class ScanCallBackImpl extends android.bluetooth.le.ScanCallback {
+        onPeripheralDiscovered: (data: Peripheral) => void;
+
+        constructor(private owner: WeakRef<Bluetooth>) {
+            super();
+            return global.__native(this);
+        }
+
+        /**
+         * Callback when batch results are delivered.
+         * @param results [List<android.bluetooth.le.ScanResult>] - List of scan results that are previously scanned.
+         */
+        onBatchScanResults(results) {
+            CLog(CLogTypes.info, `TNS_ScanCallback.onBatchScanResults ---- results: ${results}`);
+        }
+
+        /**
+         * Callback when scan could not be started.
+         * @param errorCode [number] - Error code (one of SCAN_FAILED_*) for scan failure.
+         */
+        onScanFailed(errorCode: number) {
+            CLog(CLogTypes.info, `TNS_ScanCallback.onScanFailed ---- errorCode: ${errorCode}`);
+            let errorMessage;
+            if (errorCode === android.bluetooth.le.ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
+                errorMessage = 'Scan already started';
+            } else if (errorCode === android.bluetooth.le.ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
+                errorMessage = 'Application registration failed';
+            } else if (errorCode === android.bluetooth.le.ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED) {
+                errorMessage = 'Feature unsupported';
+            } else if (errorCode === android.bluetooth.le.ScanCallback.SCAN_FAILED_INTERNAL_ERROR) {
+                errorMessage = 'Internal error';
+            } else {
+                errorMessage = 'Scan failed to start';
+            }
+            CLog(CLogTypes.info, `TNS_ScanCallback.onScanFailed errorMessage: ${errorMessage}`);
+        }
+
+        /**
+         * Callback when a BLE advertisement has been found.
+         * @param callbackType [number] - Determines how this callback was triggered. Could be one of CALLBACK_TYPE_ALL_MATCHES, CALLBACK_TYPE_FIRST_MATCH or CALLBACK_TYPE_MATCH_LOST
+         * @param result  [android.bluetooth.le.ScanResult] - A Bluetooth LE scan result.
+         */
+        onScanResult(callbackType: number, result: android.bluetooth.le.ScanResult) {
+            CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- callbackType: ${callbackType}, result: ${result}`);
+            let stateObject = this.owner.get().connections[result.getDevice().getAddress()];
+            if (!stateObject) {
+                stateObject = this.owner.get().connections[result.getDevice().getAddress()] = {
+                    state: 'disconnected'
+                };
+            }
+            const advertismentData = new ScanAdvertisment(result.getScanRecord());
+
+            const payload = {
+                type: 'scanResult', // TODO or use different callback functions?
+                UUID: result.getDevice().getAddress(),
+                name: result.getDevice().getName(),
+                RSSI: result.getRssi(),
+                localName: advertismentData.localName,
+                state: 'disconnected',
+                manufacturerId: advertismentData.manufacturerId,
+                advertismentData
+            };
+            CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
+            this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
+            this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
+        }
+    }
+
+    class ScanAdvertisment {
+        constructor(private scanRecord: android.bluetooth.le.ScanRecord) {}
+        get manufacturerData() {
+            const data = this.scanRecord.getManufacturerSpecificData();
+            const size = data.size();
+            if (size > 0) {
+                const mKey = data.keyAt(0);
+                return byteArrayToBuffer(data.get(mKey));
+            }
+            return undefined;
+        }
+        get data() {
+            return byteArrayToBuffer(this.scanRecord.getBytes());
+        }
+        get manufacturerId() {
+            const data = this.scanRecord.getManufacturerSpecificData();
+            const size = data.size();
+            if (size > 0) {
+                return data.keyAt(0);
+            }
+            return -1;
+        }
+        get txPowerLevel() {
+            return this.scanRecord.getTxPowerLevel();
+        }
+        get localName() {
+            return this.scanRecord.getDeviceName();
+        }
+        get flags() {
+            return this.scanRecord.getAdvertiseFlags();
+        }
+        get uuids() {
+            const result = [];
+            const serviceUuids = this.scanRecord.getServiceUuids();
+            for (let i = 0; i < serviceUuids.size(); i++) {
+                result.push(uuidToString(serviceUuids[i]));
+            }
+            return result;
+        }
+        get serviceData() {
+            const result = {};
+            const serviceData = this.scanRecord.getServiceData();
+            if (serviceData.size() > 0) {
+                const entries = serviceData.entrySet().iterator();
+                while (entries.hasNext()) {
+                    const entry = entries.next();
+                    result[uuidToString(entry.getKey())] = byteArrayToBuffer(entry.getValue());
+                }
+            }
+            return result;
+        }
+    }
+    ScanCallbackVar = ScanCallBackImpl;
+}
+let BluetoothGattCallback: BluetoothGattCallback;
+type BluetoothGattCallback = new (owner: WeakRef<Bluetooth>) => android.bluetooth.BluetoothGattCallback;
+function initBluetoothGattCallback() {
+    if (BluetoothGattCallback) {
+        return;
+    }
+    class BluetoothGattCallbackImpl extends android.bluetooth.BluetoothGattCallback {
+        private owner: WeakRef<Bluetooth>;
+        constructor() {
+            super();
+            return global.__native(this);
+        }
+
+        onInit(owner: WeakRef<Bluetooth>) {
+            this.owner = owner;
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onInit ---- this.owner: ${this.owner}`);
+        }
+
+        /**
+         * Callback indicating when GATT client has connected/disconnected to/from a remote GATT server.
+         * @param bluetoothGatt [android.bluetooth.BluetoothGatt] - GATT client
+         * @param status [number] - Status of the connect or disconnect operation. GATT_SUCCESS if the operation succeeds.
+         * @param newState [number] - Returns the new connection state. Can be one of STATE_DISCONNECTED or STATE_CONNECTED
+         */
+        onConnectionStateChange(gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) {
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onConnectionStateChange ---- gatt: ${gatt}, status: ${status}, newState: ${newState}`);
+            if (newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED && status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
+                CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.onConnectionStateChange ---- discovering services -----');
+                // Discovers services offered by a remote device as well as their characteristics and descriptors.
+                gatt.discoverServices();
+            } else {
+                CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onConnectionStateChange ---- disconnecting the gatt: ${gatt} ----`);
+                // perhaps the device was manually disconnected, or in use by another device
+                this.owner.get().gattDisconnect(gatt);
+            }
+        }
+
+        /**
+         * Callback invoked when the list of remote services, characteristics and descriptors for the remote device have been updated, ie new services have been discovered.
+         * @param gatt [android.bluetooth.BluetoothGatt] - GATT client invoked discoverServices()
+         * @param status [number] - GATT_SUCCESS if the remote device has been explored successfully.
+         */
+        onServicesDiscovered(gatt: android.bluetooth.BluetoothGatt, status: number) {
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- gatt: ${gatt}, status (0=success): ${status}`);
+
+            if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
+                // TODO grab from cached object and extend with services data?
+                const services = gatt.getServices();
+                const servicesJs = [];
+                const btChar = android.bluetooth.BluetoothGattCharacteristic;
+                for (let i = 0; i < services.size(); i++) {
+                    const service = services.get(i) as android.bluetooth.BluetoothGattService;
+                    const characteristics = service.getCharacteristics();
+                    const characteristicsJs = [];
+                    for (let j = 0; j < characteristics.size(); j++) {
+                        const characteristic = characteristics.get(j) as android.bluetooth.BluetoothGattCharacteristic;
+                        const props = characteristic.getProperties();
+                        const descriptors = characteristic.getDescriptors();
+                        const descriptorsJs = [];
+                        for (let k = 0; k < descriptors.size(); k++) {
+                            const descriptor = descriptors.get(k) as android.bluetooth.BluetoothGattCharacteristic;
+                            const descriptorJs = {
+                                UUID: uuidToString(descriptor.getUuid()),
+                                value: descriptor.getValue(), // always empty btw
+                                permissions: null
+                            };
+                            const descPerms = descriptor.getPermissions();
+                            if (descPerms > 0) {
+                                descriptorJs.permissions = {
+                                    read: (descPerms & btChar.PERMISSION_READ) !== 0,
+                                    readEncrypted: (descPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
+                                    readEncryptedMitm: (descPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
+                                    write: (descPerms & btChar.PERMISSION_WRITE) !== 0,
+                                    writeEncrypted: (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
+                                    writeEncryptedMitm: (descPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
+                                    writeSigned: (descPerms & btChar.PERMISSION_WRITE_SIGNED) !== 0,
+                                    writeSignedMitm: (descPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
+                                };
+                            }
+
+                            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing descriptor: ${descriptor}`);
+                            descriptorsJs.push(descriptorJs);
+                        }
+
+                        const characteristicJs = {
+                            serviceUUID: uuidToString(service.getUuid()),
+                            UUID: uuidToString(characteristic.getUuid()),
+                            name: uuidToString(characteristic.getUuid()), // there's no sep field on Android
+                            properties: {
+                                read: (props & btChar.PROPERTY_READ) !== 0,
+                                write: (props & btChar.PROPERTY_WRITE) !== 0,
+                                writeWithoutResponse: (props & btChar.PROPERTY_WRITE_NO_RESPONSE) !== 0,
+                                notify: (props & btChar.PROPERTY_NOTIFY) !== 0,
+                                indicate: (props & btChar.PROPERTY_INDICATE) !== 0,
+                                broadcast: (props & btChar.PROPERTY_BROADCAST) !== 0,
+                                authenticatedSignedWrites: (props & btChar.PROPERTY_SIGNED_WRITE) !== 0,
+                                extendedProperties: (props & btChar.PROPERTY_EXTENDED_PROPS) !== 0
+                            },
+                            descriptors: descriptorsJs,
+                            permissions: null
+                        };
+
+                        // permissions are usually not provided, so let's not return them in that case
+                        const charPerms = characteristic.getPermissions();
+                        if (charPerms > 0) {
+                            characteristicJs.permissions = {
+                                read: (charPerms & btChar.PERMISSION_READ) !== 0,
+                                readEncrypted: (charPerms & btChar.PERMISSION_READ_ENCRYPTED) !== 0,
+                                readEncryptedMitm: (charPerms & btChar.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
+                                write: (charPerms & btChar.PERMISSION_WRITE) !== 0,
+                                writeEncrypted: (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED) !== 0,
+                                writeEncryptedMitm: (charPerms & btChar.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
+                                writeSigned: (charPerms & btChar.PERMISSION_WRITE_SIGNED) !== 0,
+                                writeSignedMitm: (charPerms & btChar.PERMISSION_WRITE_SIGNED_MITM) !== 0
+                            };
+                        }
+
+                        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing characteristic: ${JSON.stringify(characteristicJs)}`);
+                        characteristicsJs.push(characteristicJs);
+                    }
+
+                    servicesJs.push({
+                        UUID: uuidToString(service.getUuid()),
+                        characteristics: characteristicsJs
+                    });
+                }
+
+                const device = gatt.getDevice();
+                let address: string = null;
+                if (device == null) {
+                    // happens some time, why ... ?
+                } else {
+                    address = device.getAddress();
+                }
+                const stateObject = this.owner.get().connections[address];
+                if (!stateObject) {
+                    this.owner.get().gattDisconnect(gatt);
+                    return;
+                }
+                stateObject.onConnected({
+                    UUID: address, // TODO consider renaming to id (and iOS as well)
+                    name: device && device.getName(),
+                    state: 'connected', // Bluetooth._getState(peripheral.state),
+                    services: servicesJs,
+                    advertismentData: stateObject.advertismentData
+                });
+            }
+        }
+
+        /**
+         * Callback reporting the result of a characteristic read operation.
+         * @param gatt [android.bluetooth.BluetoothGatt] - GATT client invoked readCharacteristic(BluetoothGattCharacteristic)
+         * @param characteristic - Characteristic that was read from the associated remote device.
+         * @param status [number] - GATT_SUCCESS if the read operation was completed successfully.
+         */
+        onCharacteristicRead(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, status: number) {
+            const device = gatt.getDevice();
+            let address: string = null;
+            if (device == null) {
+                // happens some time, why ... ?
+            } else {
+                address = device.getAddress();
+            }
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicRead ---- gatt: ${gatt}, characteristic: ${characteristic}, status: ${status}, device: ${address}`);
+            const stateObject = this.owner.get().connections[address];
+            if (!stateObject) {
+                this.owner.get().gattDisconnect(gatt);
+                return;
+            }
+
+            if (stateObject.onReadPromise) {
+                const value = characteristic.getValue();
+                stateObject.onReadPromise({
+                    ios: value,
+                    value: byteArrayToBuffer(value),
+                    characteristicUUID: uuidToString(characteristic.getUuid())
+                });
+            }
+        }
+
+        /**
+         * Callback triggered as a result of a remote characteristic notification.
+         * @param gatt [android.bluetooth.BluetoothGatt] - GATT client the characteristic is associated with.
+         * @param characteristic [android.bluetooth.BluetoothGattCharacteristic] - Characteristic that has been updated as a result of a remote notification event.
+         */
+        onCharacteristicChanged(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic) {
+            const device = gatt.getDevice();
+            let address: string = null;
+            if (device == null) {
+                // happens some time, why ... ?
+            } else {
+                address = device.getAddress();
+            }
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicChanged ---- gatt: ${gatt}, characteristic: ${characteristic}, device: ${address}`);
+
+            const stateObject = this.owner.get().connections[address];
+            if (!stateObject) {
+                this.owner.get().gattDisconnect(gatt);
+                return;
+            }
+
+            if (stateObject.onNotifyCallback) {
+                const value = characteristic.getValue();
+                stateObject.onNotifyCallback({
+                    ios: value,
+                    value: byteArrayToBuffer(value),
+                    characteristicUUID: uuidToString(characteristic.getUuid())
+                });
+            }
+        }
+
+        /**
+         * Callback indicating the result of a characteristic write operation.
+         * If this callback is invoked while a reliable write transaction is in progress, the value of the characteristic represents the value reported by the remote device.
+         * An application should compare this value to the desired value to be written.
+         * If the values don't match, the application must abort the reliable write transaction.
+         * @param gatt - GATT client invoked writeCharacteristic(BluetoothGattCharacteristic)
+         * @param characteristic - Characteristic that was written to the associated remote device.
+         * @param status - The result of the write operation GATT_SUCCESS if the operation succeeds.
+         */
+        onCharacteristicWrite(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, status: number) {
+            const device = gatt.getDevice();
+            let address: string = null;
+            if (device == null) {
+                // happens some time, why ... ?
+            } else {
+                address = device.getAddress();
+            }
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicWrite ---- characteristic: ${characteristic}, status: ${status}, device: ${address}`);
+
+            const stateObject = this.owner.get().connections[address];
+            if (!stateObject) {
+                this.owner.get().gattDisconnect(gatt);
+                return;
+            }
+
+            if (stateObject.onWritePromise) {
+                stateObject.onWritePromise({
+                    characteristicUUID: uuidToString(characteristic.getUuid())
+                });
+            }
+        }
+
+        /**
+         * Callback reporting the result of a descriptor read operation.
+         * @param gatt - GATT client invoked readDescriptor(BluetoothGattDescriptor)
+         * @param descriptor - Descriptor that was read from the associated remote device.
+         * @param status - GATT_SUCCESS if the read operation was completed successfully
+         */
+        onDescriptorRead(gatt: android.bluetooth.BluetoothGatt, descriptor: android.bluetooth.BluetoothGattDescriptor, status: number) {
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onDescriptorRead ---- gatt: ${gatt}, descriptor: ${descriptor}, status: ${status}`);
+        }
+
+        /**
+         * Callback indicating the result of a descriptor write operation.
+         * @param gatt - GATT client invoked writeDescriptor(BluetoothGattDescriptor).
+         * @param descriptor - Descriptor that was written to the associated remote device.
+         * @param status - The result of the write operation GATT_SUCCESS if the operation succeeds.
+         */
+        onDescriptorWrite(gatt: android.bluetooth.BluetoothGatt, descriptor: android.bluetooth.BluetoothGattDescriptor, status: number) {
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onDescriptorWrite ---- gatt: ${gatt}, descriptor: ${descriptor}, status: ${status}`);
+        }
+
+        /**
+         * Callback reporting the RSSI for a remote device connection. This callback is triggered in response to the readRemoteRssi() function.
+         * @param gatt - GATT client invoked readRemoteRssi().
+         * @param rssi - The RSSI value for the remote device.
+         * @param status - GATT_SUCCESS if the RSSI was read successfully.
+         */
+        onReadRemoteRssi(gatt: android.bluetooth.BluetoothGatt, rssi: number, status: number) {
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onReadRemoteRssi ---- gatt: ${gatt} rssi: ${rssi}, status: ${status}`);
+        }
+
+        /**
+         * Callback indicating the MTU for a given device connection has changed. This callback is triggered in response to the requestMtu(int) function, or in response to a connection event.
+         * @param gatt - GATT client invoked requestMtu(int).
+         * @param mtu - The new MTU size.
+         * @param status - GATT_SUCCESS if the MTU has been changed successfully.
+         */
+        onMtuChanged(gatt: android.bluetooth.BluetoothGatt, mtu: number, status: number) {
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onMtuChanged ---- gatt: ${gatt} mtu: ${mtu}, status: ${status}`);
+        }
+    }
+    BluetoothGattCallback = BluetoothGattCallbackImpl;
+}
+
 export class Bluetooth extends BluetoothCommon {
     private _adapter: android.bluetooth.BluetoothAdapter;
 
@@ -227,10 +967,17 @@ export class Bluetooth extends BluetoothCommon {
         return this._bluetoothManager;
     }
     // public gattServer: android.bluetooth.BluetoothGattServer;
-    public bluetoothGattCallback = new TNS_BluetoothGattCallback();
+    public _bluetoothGattCallback: android.bluetooth.BluetoothGattCallback;
+
+    get bluetoothGattCallback() {
+        if (!this._bluetoothGattCallback) {
+            this._bluetoothGattCallback = new BluetoothGattCallback(new WeakRef(this));
+        }
+        return this._bluetoothGattCallback;
+    }
     // not initializing here, if the Android API is < 21  use LeScanCallback
-    public scanCallback: TNS_ScanCallback;
-    public LeScanCallback: TNS_LeScanCallback;
+    public scanCallback: ScanCallback;
+    public LeScanCallback: LeScanCallback;
 
     // with gatt all operations must be queued. Parallel operations will fail
     private gattQueue = new Queue({ concurrency: 1 });
@@ -285,14 +1032,14 @@ export class Bluetooth extends BluetoothCommon {
 
         // if >= Android21 (Lollipop)
         if (android.os.Build.VERSION.SDK_INT >= LOLLIPOP) {
-            this.scanCallback = new (require('./android/TNS_ScanCallback')).TNS_ScanCallback();
-            this.scanCallback.onInit(new WeakRef(this));
+            initScanCallback();
+            this.scanCallback = new ScanCallbackVar(new WeakRef(this));
         } else {
-            this.LeScanCallback = new (require('./android/TNS_LeScanCallback')).TNS_LeScanCallback();
-            this.LeScanCallback.onInit(new WeakRef(this));
+            initLeScanCallback();
+            this.LeScanCallback = new LeScanCallbackVar(new WeakRef(this));
         }
 
-        this.bluetoothGattCallback.onInit(new WeakRef(this));
+        // this.bluetoothGattCallback.onInit(new WeakRef(this));
 
         this.broadcastReceiver = application.android.registerBroadcastReceiver(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED, (context, intent) => {
             const state = intent.getIntExtra(android.bluetooth.BluetoothAdapter.EXTRA_STATE, android.bluetooth.BluetoothAdapter.ERROR);
@@ -587,13 +1334,13 @@ export class Bluetooth extends BluetoothCommon {
 
                         // if >= Android23 (Marshmallow)
                         if (android.os.Build.VERSION.SDK_INT >= 23 /* android.os.Build.VERSION_CODES.M */) {
-                            const matchMode = ((arg.android && arg.android.matchMode) || MatchMode.AGGRESSIVE)as MatchMode;
+                            const matchMode = ((arg.android && arg.android.matchMode) || MatchMode.AGGRESSIVE) as MatchMode;
                             scanSettings.setMatchMode(androidMatchMode(matchMode));
 
-                            const matchNum = ((arg.android && arg.android.matchNum) || MatchNum.MAX_ADVERTISEMENT)as MatchNum;
+                            const matchNum = ((arg.android && arg.android.matchNum) || MatchNum.MAX_ADVERTISEMENT) as MatchNum;
                             scanSettings.setNumOfMatches(androidMatchNum(matchNum));
 
-                            const callbackType = ((arg.android && arg.android.callbackType) || CallbackType.ALL_MATCHES)as CallbackType;
+                            const callbackType = ((arg.android && arg.android.callbackType) || CallbackType.ALL_MATCHES) as CallbackType;
                             scanSettings.setCallbackType(androidCallbackType(callbackType));
                         }
 
