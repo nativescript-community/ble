@@ -837,9 +837,9 @@ function initBluetoothGattCallback() {
                 return;
             }
 
-            if (stateObject.onReadPromise) {
+            if (stateObject.onReadCallbacks && stateObject.onReadCallbacks.length > 0) {
                 const value = characteristic.getValue();
-                stateObject.onReadPromise({
+                stateObject.onReadCallbacks.shift()({
                     ios: value,
                     value: byteArrayToBuffer(value),
                     characteristicUUID: uuidToString(characteristic.getUuid())
@@ -903,8 +903,8 @@ function initBluetoothGattCallback() {
                 return;
             }
 
-            if (stateObject.onWritePromise) {
-                stateObject.onWritePromise({
+            if (stateObject.onWriteCallbacks && stateObject.onWriteCallbacks.length > 0) {
+                stateObject.onWriteCallbacks.shift()({
                     characteristicUUID: uuidToString(characteristic.getUuid())
                 });
             }
@@ -1045,9 +1045,9 @@ export class Bluetooth extends BluetoothCommon {
             ) => void;
             onDisconnected?: (e: { UUID: string; name: string }) => void;
             device?: android.bluetooth.BluetoothGatt;
-            onReadPromise?;
-            onWritePromise?;
-            onNotifyCallback?;
+            onReadCallbacks?: Array<(result: ReadResult) => void>;
+            onWriteCallbacks?: Array<(result: { characteristicUUID: string }) => void>;
+            onNotifyCallback?: (result: ReadResult) => void;
             advertismentData?: AdvertismentData;
         };
     } = {};
@@ -1482,8 +1482,15 @@ export class Bluetooth extends BluetoothCommon {
         // });
     }
 
+    private addToQueue(args: WrapperOptions, runner: (wrapper: WrapperResult) => Promise<any>) {
+        return this._getWrapper(args).then(wrapper => {
+            return this.gattQueue.add(runner(wrapper));
+        });
+    }
+
     public read(args: ReadOptions) {
-        return this._getWrapper(args).then(
+        return this.addToQueue(
+            args,
             wrapper =>
                 new Promise((resolve, reject) => {
                     try {
@@ -1503,7 +1510,8 @@ export class Bluetooth extends BluetoothCommon {
                         }
 
                         const stateObject = this.connections[args.peripheralUUID];
-                        stateObject.onReadPromise = resolve;
+                        stateObject.onReadCallbacks = stateObject.onReadCallbacks || [];
+                        stateObject.onReadCallbacks.push(resolve);
                         if (!gatt.readCharacteristic(bluetoothGattCharacteristic)) {
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'readCharacteristic', ...args } });
                         }
@@ -1519,7 +1527,8 @@ export class Bluetooth extends BluetoothCommon {
         if (!args.value) {
             return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
         }
-        return this._getWrapper(args).then(
+        return this.addToQueue(
+            args,
             wrapper =>
                 new Promise((resolve, reject) => {
                     try {
@@ -1544,7 +1553,9 @@ export class Bluetooth extends BluetoothCommon {
                         characteristic.setValue(val);
                         characteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
 
-                        this.connections[args.peripheralUUID].onWritePromise = resolve;
+                        const stateObject = this.connections[args.peripheralUUID];
+                        stateObject.onWriteCallbacks = stateObject.onWriteCallbacks || [];
+                        stateObject.onWriteCallbacks.push(resolve);
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
                                 CLog(CLogTypes.info, 'write ---- characteristic:', args.value, printValueToString(val));
@@ -1564,7 +1575,8 @@ export class Bluetooth extends BluetoothCommon {
         if (!args.value) {
             return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
         }
-        return this._getWrapper(args).then(
+        return this.addToQueue(
+            args,
             wrapper =>
                 new Promise((resolve, reject) => {
                     try {
@@ -1589,7 +1601,9 @@ export class Bluetooth extends BluetoothCommon {
                         characteristic.setWriteType(android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
 
                         // using the WRITE_TYPE_NO_RESPONSE, we will get the onCharacteristicWrite callback as soon as the stack is ready and has space to accept a new request.
-                        this.connections[args.peripheralUUID].onWritePromise = resolve;
+                        const stateObject = this.connections[args.peripheralUUID];
+                        stateObject.onWriteCallbacks = stateObject.onWriteCallbacks || [];
+                        stateObject.onWriteCallbacks.push(resolve);
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
                                 CLog(CLogTypes.info, 'writeCharacteristic:', args.value, JSON.stringify(printValueToString(val)));
@@ -1606,7 +1620,8 @@ export class Bluetooth extends BluetoothCommon {
         );
     }
     public startNotifying(args: StartNotifyingOptions) {
-        return this._getWrapper(args).then(
+        return this.addToQueue(
+            args,
             wrapper =>
                 new Promise((resolve, reject) => {
                     try {
@@ -1667,7 +1682,8 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public stopNotifying(args: StopNotifyingOptions) {
-        return this._getWrapper(args).then(
+        return this.addToQueue(
+            args,
             wrapper =>
                 new Promise((resolve, reject) => {
                     try {

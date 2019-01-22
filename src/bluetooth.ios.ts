@@ -23,9 +23,9 @@ import {
  */
 export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDelegate {
     public static ObjCProtocols = [CBPeripheralDelegate];
-    public _onWritePromise;
-    public _onReadPromise;
-    public _onNotifyCallback;
+    public onReadCallbacks?: Array<(result: ReadResult) => void>;
+    public onWriteCallbacks?: Array<(result: { characteristicUUID: string }) => void>;
+    public onNotifyCallback?: (result: ReadResult) => void;
     private _servicesWithCharacteristics;
     private _services: Array<{ UUID: string; characteristics?: Array<{ UUID: string }> }>;
     private _owner: WeakRef<Bluetooth>;
@@ -192,15 +192,14 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
         };
 
         if (result.type === 'read') {
-            if (this._onReadPromise) {
-                this._onReadPromise(result);
-                this._onReadPromise = null;
+            if (this.onReadCallbacks && this.onReadCallbacks.length > 0) {
+                this.onReadCallbacks.shift()(result);
             } else {
                 CLog(CLogTypes.info, 'No _onReadPromise found!');
             }
         } else {
-            if (this._onNotifyCallback) {
-                this._onNotifyCallback(result);
+            if (this.onNotifyCallback) {
+                this.onNotifyCallback(result);
             } else {
                 CLog(CLogTypes.info, '----- CALLBACK IS GONE -----');
             }
@@ -219,11 +218,10 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
      */
     public peripheralDidWriteValueForCharacteristicError(peripheral: CBPeripheral, characteristic: CBCharacteristic, error?: NSError) {
         CLog(CLogTypes.info, `CBPeripheralDelegateImpl.peripheralDidWriteValueForCharacteristicError ---- peripheral: ${peripheral}, characteristic: ${characteristic}, error: ${error}`);
-        if (this._onWritePromise) {
-            this._onWritePromise({
+        if (this.onWriteCallbacks && this.onWriteCallbacks.length > 0) {
+            this.onWriteCallbacks.shift()({
                 characteristicUUID: characteristic.UUID.UUIDString
             });
-            this._onWritePromise = null;
         } else {
             CLog(CLogTypes.warning, 'CBPeripheralDelegateImpl.peripheralDidWriteValueForCharacteristicError ---- No _onWritePromise found!');
         }
@@ -849,9 +847,9 @@ export class Bluetooth extends BluetoothCommon {
                 new Promise((resolve, reject) => {
                     try {
                         // TODO we could (should?) make this characteristic-specific
-                        const delegate = wrapper.peripheral.delegate as CBPeripheralDelegateImpl;
-                        // if (delegate) {
-                        delegate._onReadPromise = resolve;
+                        const delegate = (wrapper.peripheral.delegate as CBPeripheralDelegateImpl);
+                        delegate.onReadCallbacks = delegate.onReadCallbacks || [];
+                        delegate.onReadCallbacks.push(resolve);
                         // }
                         wrapper.peripheral.readValueForCharacteristic(wrapper.characteristic);
                     } catch (ex) {
@@ -880,7 +878,9 @@ export class Bluetooth extends BluetoothCommon {
 
                         // the promise will be resolved from 'didWriteValueForCharacteristic',
                         // but we should make this characteristic-specific (see .read)
-                        (wrapper.peripheral.delegate as CBPeripheralDelegateImpl)._onWritePromise = resolve;
+                        const delegate = (wrapper.peripheral.delegate as CBPeripheralDelegateImpl);
+                        delegate.onWriteCallbacks = delegate.onWriteCallbacks || [];
+                        delegate.onWriteCallbacks.push(resolve);
 
                         wrapper.peripheral.writeValueForCharacteristicType(
                             valueEncoded,
@@ -935,8 +935,8 @@ export class Bluetooth extends BluetoothCommon {
                         CLog(CLogTypes.info, 'startNotifying ---- No "onNotify" callback function specified for "startNotifying()"');
                     };
 
-                // TODO we could (should?) make this characteristic-specific
-                (wrapper.peripheral.delegate as CBPeripheralDelegateImpl)._onNotifyCallback = cb;
+                const delegate = (wrapper.peripheral.delegate as CBPeripheralDelegateImpl);
+                delegate.onNotifyCallback = cb;
                 wrapper.peripheral.setNotifyValueForCharacteristic(true, wrapper.characteristic);
                 return null;
             } catch (ex) {
@@ -950,7 +950,7 @@ export class Bluetooth extends BluetoothCommon {
         return this._getWrapper(args, CBCharacteristicProperties.PropertyNotify).then(wrapper => {
             try {
                 const peripheral = this.findPeripheral(args.peripheralUUID);
-                // peripheral.delegate = null;
+                (peripheral.delegate as CBPeripheralDelegateImpl).onNotifyCallback = null;
                 peripheral.setNotifyValueForCharacteristic(false, wrapper.characteristic);
                 return null;
             } catch (ex) {
