@@ -15,7 +15,6 @@ export class DemoAppModel extends Observable {
         super();
         // enables the console.logs from the Bluetooth source code
         this._bluetooth.debug = true;
-        console.log('enabled', this._bluetooth.enabled);
 
         // using an event listener instead of the 'onDiscovered' callback of 'startScanning'
         this._bluetooth.on(Bluetooth.device_discovered_event, (eventData: any) => {
@@ -39,11 +38,13 @@ export class DemoAppModel extends Observable {
 
     public doIsBluetoothEnabled() {
         console.log('doIsBluetoothEnabled tap');
-        if (this._bluetooth.enabled === false) {
-            dialogs.alert('Bluetooth is DISABLED.');
-        } else {
-            dialogs.alert('Bluetooth is ENABLED.');
-        }
+        this._bluetooth.isBluetoothEnabled().then(enabled => {
+            if (enabled === false) {
+                dialogs.alert('Bluetooth is DISABLED.');
+            } else {
+                dialogs.alert('Bluetooth is ENABLED.');
+            }
+        });
     }
 
     public doEnableBluetooth() {
