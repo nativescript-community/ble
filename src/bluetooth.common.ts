@@ -25,10 +25,48 @@ export const CLog = (type: CLogTypes = 0, ...args) => {
     }
 };
 
+
+export function bluetoothEnabled(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    const originalMethod = descriptor.value as Function; // save a reference to the original method
+
+    // NOTE: Do not use arrow syntax here. Use a function expression in
+    // order to use the correct value of `this` in this method (see notes below)
+    descriptor.value = function(...args: any[]) {
+        return this.isBluetoothEnabled()
+            .then(function(isEnabled) {
+                if (!isEnabled) {
+                    CLog(CLogTypes.info, `${originalMethod.name} ---- Bluetooth is not enabled.`);
+                    return Promise.reject(BluetoothCommon.msg_not_enabled);
+                }
+                return null;
+            })
+            .then(() => {
+                return originalMethod.apply(this, args);
+            });
+    };
+
+    return descriptor;
+}
+
+
 export class BluetoothCommon extends Observable {
     public set debug(value: boolean) {
         BluetoothUtil.debug = value;
     }
+    /*
+     * error messages
+     */
+    public static msg_not_enabled = 'bluetooth_not_enabled';
+    public static msg_not_supported = 'bluetooth_not_supported';
+    public static msg_cant_open_settings = 'cant_open_settings';
+    public static msg_missing_parameter = 'missing_parameter';
+    public static msg_no_peripheral = 'peripheral_not_found';
+    public static msg_no_service = 'service_not_found';
+    public static msg_no_characteristic = 'characteristic_not_found';
+    public static msg_peripheral_not_connected = 'peripheral_not_connected';
+    public static msg_invalid_value = 'invalid_value';
+    public static msg_error_function_call = 'error_function_call';
+    public static msg_characteristic_cant_notify = 'characteristic_cant_notify';
 
     /*
      * String value for hooking into the error_event. This event fires when an error is emitted from CameraPlus.
@@ -117,11 +155,6 @@ export class BluetoothCommon extends Observable {
 
     public events: any /*IBluetoothEvents*/;
 
-    /**
-     * Property to determine if bluetooth is enabled.
-     */
-    readonly enabled: boolean;
-
     requestCoarseLocationPermission() {
         return new Promise(resolve => {
             resolve(true);
@@ -146,8 +179,6 @@ export class BluetoothCommon extends Observable {
         });
     }
 }
-
-
 
 export enum ScanMode {
     LOW_LATENCY,

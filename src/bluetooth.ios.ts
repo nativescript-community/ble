@@ -1,5 +1,6 @@
 import {
     BluetoothCommon,
+    bluetoothEnabled,
     BluetoothUtil,
     CLog,
     CLogTypes,
@@ -14,7 +15,6 @@ import {
     WriteOptions
 } from './bluetooth.common';
 
-declare var DISPATCH_QUEUE_SERIAL;
 /**
  * @link - https://developer.apple.com/documentation/corebluetooth/cbperipheraldelegate
  * The delegate of a CBPeripheral object must adopt the CBPeripheralDelegate protocol.
@@ -27,7 +27,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
     public _onReadPromise;
     public _onNotifyCallback;
     private _servicesWithCharacteristics;
-    private _services;
+    private _services: Array<{ UUID: string; characteristics?: Array<{ UUID: string }> }>;
     private _owner: WeakRef<Bluetooth>;
     private _callback: (result?) => void;
 
@@ -37,9 +37,10 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
 
     public initWithCallback(owner: WeakRef<Bluetooth>, callback: (result?) => void): CBPeripheralDelegateImpl {
         this._owner = owner;
-        CLog(CLogTypes.info, `CBPeripheralDelegateImpl.initWithCallback ---- this._owner: ${this._owner}`);
         this._callback = callback;
+        this._services = [];
         this._servicesWithCharacteristics = [];
+        CLog(CLogTypes.info, `CBPeripheralDelegateImpl.initWithCallback ---- owner: ${owner.get()} ---- callback: ${callback}`);
         return this;
     }
 
@@ -53,9 +54,8 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
      * @param error [NSError] - If an error occurred, the cause of the failure.
      */
     public peripheralDidDiscoverServices(peripheral: CBPeripheral, error?: NSError) {
-        CLog(CLogTypes.info, `CBPeripheralDelegateImpl.peripheralDidDiscoverServices ---- peripheral: ${peripheral}, ${error}`);
+        CLog(CLogTypes.info, `CBPeripheralDelegateImpl.peripheralDidDiscoverServices ---- peripheral: ${peripheral}, ${error}, ${this}, ${this._services}`);
         // map native services to a JS object
-        this._services = [];
         for (let i = 0; i < peripheral.services.count; i++) {
             const service = peripheral.services.objectAtIndex(i);
             this._services.push({
@@ -194,6 +194,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
         if (result.type === 'read') {
             if (this._onReadPromise) {
                 this._onReadPromise(result);
+                this._onReadPromise = null;
             } else {
                 CLog(CLogTypes.info, 'No _onReadPromise found!');
             }
@@ -222,6 +223,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
             this._onWritePromise({
                 characteristicUUID: characteristic.UUID.UUIDString
             });
+            this._onWritePromise = null;
         } else {
             CLog(CLogTypes.warning, 'CBPeripheralDelegateImpl.peripheralDidWriteValueForCharacteristicError ---- No _onWritePromise found!');
         }
@@ -319,19 +321,10 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
      */
     public centralManagerDidConnectPeripheral(central: CBCentralManager, peripheral: CBPeripheral) {
         CLog(CLogTypes.info, `----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral: ${peripheral}`);
-        const UUID = peripheral.identifier.UUIDString;
-        // find the peri in the array and attach the delegate to that
-        // const peri = this._owner.get().findPeripheral(UUID);
-        // CLog(CLogTypes.info, `----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral: cached perio: ${peripheral}`);
 
-        const cb = this._owner.get()._connectCallbacks[UUID];
-        delete this._owner.get()._connectCallbacks[UUID];
-        const delegate = CBPeripheralDelegateImpl.new().initWithCallback(this._owner, cb);
-        // CFRetain(delegate);
-        peripheral.delegate = delegate;
-
-        CLog(CLogTypes.info, "----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral, let's discover service");
         this._owner.get().onPeripheralConnected(peripheral);
+        CLog(CLogTypes.info, "----- CBCentralManagerDelegateImpl centralManager:didConnectPeripheral, let's discover service");
+
         peripheral.discoverServices(null);
     }
 
@@ -358,8 +351,9 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
         } else {
             CLog(CLogTypes.info, `***** centralManagerDidDisconnectPeripheralError() no disconnect callback found *****`);
         }
+        CLog(CLogTypes.info, `CBCentralManagerDelegate.centralManagerDidDisconnectPeripheralError ----`, central, peripheral, error);
+
         this._owner.get().onPeripheralDisconnected(peripheral);
-        peripheral.delegate = null;
     }
 
     /**
@@ -422,12 +416,11 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
      */
     public centralManagerDidUpdateState(central: CBCentralManager) {
         // if (central.state === CBCentralManagerStateUnsupported) {
+        CLog(CLogTypes.info, `CBCentralManagerDelegateImpl.centralManagerDidUpdateState: ${central.state}`);
         if (central.state === CBManagerState.Unsupported) {
             CLog(CLogTypes.warning, `CBCentralManagerDelegateImpl.centralManagerDidUpdateState ---- This hardware does not support Bluetooth Low Energy.`);
         }
-        this._owner.get().sendEvent(Bluetooth.bluetooth_status_event, {
-            state: central.state === CBManagerState.Unsupported ? 'unsupported' : central.state === CBManagerState.PoweredOn ? 'on' : 'off'
-        });
+        this._owner.get().state = central.state;
     }
 
     /**
@@ -539,9 +532,9 @@ export function CBUUIDToString(uuid: CBUUID) {
 }
 
 export class Bluetooth extends BluetoothCommon {
-    private _centralDelegate: CBCentralManagerDelegateImpl;
-    private _centralManager: CBCentralManager;
-    private _cbQueue: NSObject;
+    private _centralDelegate: CBCentralManagerDelegateImpl = null;
+    private _centralManager: CBCentralManager = null;
+    // private _cbQueue: NSObject;
 
     public _discoverPeripherals: { [k: string]: CBPeripheral } = {};
     public _connectedPeripherals: { [k: string]: CBPeripheral } = {};
@@ -552,17 +545,33 @@ export class Bluetooth extends BluetoothCommon {
     public _advData = {};
     public _onDiscovered = null;
 
+    _state: CBManagerState;
+    set state(state: CBManagerState) {
+        if (this._state !== state) {
+            this._state = state;
+            this.sendEvent(BluetoothCommon.bluetooth_status_event, {
+                state: state === CBManagerState.Unsupported ? 'unsupported' : state === CBManagerState.PoweredOn ? 'on' : 'off'
+            });
+        }
+    }
+    get state() {
+        return this._state;
+    }
+
     get centralManager() {
         if (!this._centralManager) {
-            let options: NSDictionary<any, any> = null;
+            const options: NSMutableDictionary<any, any> = new (NSMutableDictionary as any)([true], [CBCentralManagerOptionShowPowerAlertKey]);
             if (this.restoreIdentifier) {
-                options = new (NSDictionary as any)([this.restoreIdentifier, true], [CBCentralManagerOptionRestoreIdentifierKey, CBCentralManagerOptionShowPowerAlertKey]);
+                options.setObjectForKey(this.restoreIdentifier, CBCentralManagerOptionRestoreIdentifierKey);
             }
             // this._cbQueue = dispatch_queue_create('ns.bt.cbqueue', null);
             this._centralDelegate = CBCentralManagerDelegateImpl.new().initWithCallback(new WeakRef(this), obj => {
                 CLog(CLogTypes.info, `---- centralDelegate ---- obj: ${obj}`);
             });
-            this._centralManager = CBCentralManager.alloc().initWithDelegateQueueOptions(this._centralDelegate, this._cbQueue, options);
+            this._centralManager = CBCentralManager.alloc().initWithDelegateQueueOptions(this._centralDelegate, null, options);
+            setTimeout(() => {
+                this.state = this._centralManager.state;
+            }, 100);
             CLog(CLogTypes.info, `this._centralManager: ${this._centralManager}`);
         }
         return this._centralManager;
@@ -570,22 +579,7 @@ export class Bluetooth extends BluetoothCommon {
 
     constructor(private restoreIdentifier: string = 'ns_bluetooth') {
         super();
-        CLog(CLogTypes.info, `*** iOS Bluetooth Constructor *** ${restoreIdentifier}`);
-    }
-
-    // Getters/Setters
-    get enabled(): boolean {
-        // if (!this._centralManager) {
-        //     // tslint:disable-next-line:no-unused-expression
-        //     this.centralManager;
-        // }
-        let state = this.centralManager.state;
-        state = this.centralManager.state;
-        if (state === CBManagerState.PoweredOn) {
-            return true;
-        } else {
-            return false;
-        }
+        console.log(`*** iOS Bluetooth Constructor *** ${restoreIdentifier}`);
     }
 
     public _getState(state: CBPeripheralState) {
@@ -601,12 +595,25 @@ export class Bluetooth extends BluetoothCommon {
         }
     }
 
+    private prepareConnectedPeripheralDelegate(peripheral: CBPeripheral) {
+        if (!peripheral.delegate) {
+            const UUID = peripheral.identifier.UUIDString;
+            const cb = this._connectCallbacks[UUID];
+            delete this._connectCallbacks[UUID];
+            const delegate = CBPeripheralDelegateImpl.new().initWithCallback(new WeakRef(this), cb);
+            CFRetain(delegate);
+            peripheral.delegate = delegate;
+        }
+    }
+
     public onPeripheralDisconnected(peripheral: CBPeripheral) {
         const UUID = peripheral.identifier.UUIDString;
+        peripheral.delegate = null;
         delete this._connectedPeripherals[UUID];
     }
     public onPeripheralConnected(peripheral: CBPeripheral) {
         const UUID = peripheral.identifier.UUIDString;
+        this.prepareConnectedPeripheralDelegate(peripheral);
         this._connectedPeripherals[UUID] = peripheral;
     }
 
@@ -615,7 +622,7 @@ export class Bluetooth extends BluetoothCommon {
             .then(() => {
                 if (!this._centralManager) {
                     // the centralManager return wrong state just after initialization
-                    // so wait a bit
+                    // so create it and wait a bit
                     // tslint:disable-next-line:no-unused-expression
                     this.centralManager;
                     return new Promise(resolve => setTimeout(resolve, 50));
@@ -639,56 +646,47 @@ export class Bluetooth extends BluetoothCommon {
         timer?: number;
         resolve?: Function;
     };
+
+    @bluetoothEnabled
     public startScanning(arg: StartScanningOptions) {
-        return this.isBluetoothEnabled()
-            .then(isEnabled => {
-                if (!isEnabled) {
-                    CLog(CLogTypes.info, 'startScanning ---- Bluetooth is not enabled.');
-                    return Promise.reject('Bluetooth is not enabled.');
-                }
-                return null;
-            })
-            .then(
-                () =>
-                    new Promise((resolve, reject) => {
-                        try {
-                            this._discoverPeripherals = {};
-                            this._onDiscovered = arg.onDiscovered;
+        return new Promise((resolve, reject) => {
+            try {
+                this._discoverPeripherals = {};
+                this._onDiscovered = arg.onDiscovered;
 
-                            let services: any[] = null;
-                            if (arg.filters) {
-                                services = [];
-                                arg.filters.forEach(f => {
-                                    if (f.serviceUUID) {
-                                        services.push(CBUUID.UUIDWithString(f.serviceUUID));
-                                    }
-                                });
-                            }
-                            CLog(CLogTypes.info, 'startScanning ---- services:', services);
-
-                            // TODO: check on the services as any casting
-                            this.centralManager.scanForPeripheralsWithServicesOptions(services as any, null);
-                            if (this.scanningReferTimer) {
-                                clearTimeout(this.scanningReferTimer.timer);
-                                this.scanningReferTimer.resolve();
-                            }
-                            this.scanningReferTimer = {};
-                            if (arg.seconds) {
-                                this.scanningReferTimer.timer = setTimeout(() => {
-                                    // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
-                                    this.centralManager.stopScan();
-                                    resolve();
-                                }, arg.seconds * 1000);
-                                this.scanningReferTimer.resolve = resolve;
-                            } else {
-                                resolve();
-                            }
-                        } catch (ex) {
-                            CLog(CLogTypes.error, 'startScanning ---- error:', ex);
-                            reject(ex);
+                let services: any[] = null;
+                if (arg.filters) {
+                    services = [];
+                    arg.filters.forEach(f => {
+                        if (f.serviceUUID) {
+                            services.push(CBUUID.UUIDWithString(f.serviceUUID));
                         }
-                    })
-            );
+                    });
+                }
+                CLog(CLogTypes.info, 'startScanning ---- services:', services);
+
+                // TODO: check on the services as any casting
+                this.centralManager.scanForPeripheralsWithServicesOptions(services as any, null);
+                if (this.scanningReferTimer) {
+                    clearTimeout(this.scanningReferTimer.timer);
+                    this.scanningReferTimer.resolve();
+                }
+                this.scanningReferTimer = {};
+                if (arg.seconds) {
+                    this.scanningReferTimer.timer = setTimeout(() => {
+                        // note that by now a manual 'stop' may have been invoked, but that doesn't hurt
+                        this.centralManager.stopScan();
+                        resolve();
+                    }, arg.seconds * 1000);
+                    this.scanningReferTimer.resolve = resolve;
+                } else {
+                    resolve();
+                }
+            } catch (ex) {
+                CLog(CLogTypes.error, 'startScanning ---- error:', ex);
+                reject(ex);
+            }
+        });
     }
 
     public enable() {
@@ -705,12 +703,10 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public openBluetoothSettings(url?: string): Promise<void> {
-        console.log('openBluetoothSettings', url);
         return this.isBluetoothEnabled().then(isEnabled => {
             if (!isEnabled) {
                 return Promise.resolve().then(() => {
                     const settingsUrl = NSURL.URLWithString(url || 'App-prefs:root=General&path=BLUETOOTH');
-                    console.log('openBluetoothSettings url ', settingsUrl.absoluteString, UIApplication.sharedApplication.canOpenURL(settingsUrl));
                     if (UIApplication.sharedApplication.canOpenURL(settingsUrl)) {
                         UIApplication.sharedApplication.openURLOptionsCompletionHandler(settingsUrl, null, function(success) {
                             // we get the callback for opening the URL, not enabling the GPS!
@@ -721,7 +717,7 @@ export class Bluetooth extends BluetoothCommon {
                                 return Promise.reject(undefined);
                                 // }
                             } else {
-                                return Promise.reject('cant_open_settings');
+                                return Promise.reject(BluetoothCommon.msg_cant_open_settings);
                             }
                         });
                     }
@@ -730,143 +726,93 @@ export class Bluetooth extends BluetoothCommon {
             return null;
         });
     }
+    @bluetoothEnabled
     public stopScanning() {
-        return this.isBluetoothEnabled()
-            .then(isEnabled => {
-                if (!isEnabled) {
-                    CLog(CLogTypes.info, 'startScanning ---- Bluetooth is not enabled.');
-                    return Promise.reject('Bluetooth is not enabled.');
+        return new Promise((resolve, reject) => {
+            try {
+                this.centralManager.stopScan();
+                if (this.scanningReferTimer) {
+                    this.scanningReferTimer.resolve && this.scanningReferTimer.resolve();
+                    clearTimeout(this.scanningReferTimer.timer);
+                    this.scanningReferTimer = null;
                 }
-                return null;
-            })
-            .then(
-                () =>
-                    new Promise((resolve, reject) => {
-                        try {
-                            this.centralManager.stopScan();
-                            if (this.scanningReferTimer) {
-                                this.scanningReferTimer.resolve && this.scanningReferTimer.resolve();
-                                clearTimeout(this.scanningReferTimer.timer);
-                                this.scanningReferTimer = null;
-                            }
-                            resolve();
-                        } catch (ex) {
-                            CLog(CLogTypes.error, 'stopScanning ---- error:', ex);
-                            reject(ex);
-                        }
-                    })
-            );
+                resolve();
+            } catch (ex) {
+                CLog(CLogTypes.error, 'stopScanning ---- error:', ex);
+                reject(ex);
+            }
+        });
     }
 
-    // note that this doesn't make much sense without scanning first
+    @bluetoothEnabled
     public connect(args: ConnectOptions) {
-        return this.isBluetoothEnabled()
-            .then(isEnabled => {
-                if (!isEnabled) {
-                    CLog(CLogTypes.info, 'startScanning ---- Bluetooth is not enabled.');
-                    return Promise.reject('Bluetooth is not enabled.');
-                }
-                return null;
-            })
-            .then(
-                () =>
-                    new Promise((resolve, reject) => {
-                        try {
-                            if (!args.UUID) {
-                                reject('No UUID was passed');
-                                return;
-                            }
-                            // console.log('test', this._discoverPeripherals);
-                            CLog(CLogTypes.info, 'connect ----', args.UUID);
-                            const peripheral = this.findDiscoverPeripheral(args.UUID);
+        try {
+            if (!args.UUID) {
+                return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'UUID' });
+                // return;
+            }
+            CLog(CLogTypes.info, 'connect ----', args.UUID);
+            const peripheral = this.findDiscoverPeripheral(args.UUID);
 
-                            CLog(CLogTypes.info, 'connect ---- peripheral found', peripheral);
+            CLog(CLogTypes.info, 'connect ---- peripheral found', peripheral);
 
-                            if (!peripheral) {
-                                reject(`Could not find peripheral with UUID: ${args.UUID}`);
-                            } else {
-                                CLog(CLogTypes.info, 'connect ---- Connecting to peripheral with UUID:', args.UUID);
-                                this._connectCallbacks[args.UUID] = args.onConnected;
-                                this._disconnectCallbacks[args.UUID] = args.onDisconnected;
-                                this.centralManager.connectPeripheralOptions(peripheral, null);
-                                resolve();
-                            }
-                        } catch (ex) {
-                            CLog(CLogTypes.error, 'connect ---- error:', ex);
-                            reject(ex);
-                        }
-                    })
-            );
+            if (!peripheral) {
+                return Promise.reject({ msg: BluetoothCommon.msg_no_peripheral, args });
+            } else {
+                CLog(CLogTypes.info, 'connect ---- Connecting to peripheral with UUID:', args.UUID);
+                this._connectCallbacks[args.UUID] = args.onConnected;
+                this._disconnectCallbacks[args.UUID] = args.onDisconnected;
+                this.centralManager.connectPeripheralOptions(peripheral, null);
+                return Promise.resolve();
+            }
+        } catch (ex) {
+            CLog(CLogTypes.error, 'connect ---- error:', ex);
+            return Promise.reject(ex);
+        }
     }
 
-    public disconnect(arg) {
-        return this.isBluetoothEnabled()
-            .then(isEnabled => {
-                if (!isEnabled) {
-                    CLog(CLogTypes.info, 'startScanning ---- Bluetooth is not enabled.');
-                    return Promise.reject('Bluetooth is not enabled.');
+    @bluetoothEnabled
+    public disconnect(args) {
+        try {
+            if (!args.UUID) {
+                return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'UUID' });
+            }
+            const peripheral = this.findPeripheral(args.UUID);
+            if (!peripheral) {
+                return Promise.reject({ msg: BluetoothCommon.msg_no_peripheral, args });
+            } else {
+                CLog(CLogTypes.info, 'disconnect ---- Disconnecting peripheral with UUID', args.UUID);
+                // no need to send an error when already disconnected, but it's wise to check it
+                if (peripheral.state !== CBPeripheralState.Disconnected) {
+                    this.centralManager.cancelPeripheralConnection(peripheral);
+                    // peripheral.delegate = null;
+                    // TODO remove from the peripheralArray as well
                 }
-                return null;
-            })
-            .then(
-                () =>
-                    new Promise((resolve, reject) => {
-                        try {
-                            if (!arg.UUID) {
-                                reject('No UUID was passed');
-                                return;
-                            }
-                            const peripheral = this.findPeripheral(arg.UUID);
-                            if (!peripheral) {
-                                reject('Could not find peripheral with UUID ' + arg.UUID);
-                            } else {
-                                CLog(CLogTypes.info, 'disconnect ---- Disconnecting peripheral with UUID', arg.UUID);
-                                // no need to send an error when already disconnected, but it's wise to check it
-                                if (peripheral.state !== CBPeripheralState.Disconnected) {
-                                    this.centralManager.cancelPeripheralConnection(peripheral);
-                                    // peripheral.delegate = null;
-                                    // TODO remove from the peripheralArray as well
-                                }
-                                resolve();
-                            }
-                        } catch (ex) {
-                            CLog(CLogTypes.error, 'disconnect ---- error:', ex);
-                            reject(ex);
-                        }
-                    })
-            );
+                return Promise.resolve();
+            }
+        } catch (ex) {
+            CLog(CLogTypes.error, 'disconnect ---- error:', ex);
+            return Promise.reject(ex);
+        }
     }
 
-    public isConnected(arg) {
-        return this.isBluetoothEnabled()
-            .then(isEnabled => {
-                if (!isEnabled) {
-                    CLog(CLogTypes.info, 'startScanning ---- Bluetooth is not enabled.');
-                    return Promise.reject('Bluetooth is not enabled.');
-                }
-                return null;
-            })
-            .then(
-                () =>
-                    new Promise((resolve, reject) => {
-                        try {
-                            if (!arg.UUID) {
-                                reject('No UUID was passed');
-                                return;
-                            }
-                            const peripheral = this.findPeripheral(arg.UUID);
-                            if (peripheral === null) {
-                                reject('Could not find peripheral with UUID ' + arg.UUID);
-                            } else {
-                                CLog(CLogTypes.info, 'isConnected ---- checking connection with peripheral UUID:', arg.UUID);
-                                resolve(peripheral.state === CBPeripheralState.Connected);
-                            }
-                        } catch (ex) {
-                            CLog(CLogTypes.error, 'isConnected ---- error:', ex);
-                            reject(ex);
-                        }
-                    })
-            );
+    @bluetoothEnabled
+    public isConnected(args) {
+        try {
+            if (!args.UUID) {
+                return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'UUID' });
+            }
+            const peripheral = this.findPeripheral(args.UUID);
+            if (peripheral === null) {
+                return Promise.reject({ msg: BluetoothCommon.msg_no_peripheral, args });
+            } else {
+                CLog(CLogTypes.info, 'isConnected ---- checking connection with peripheral UUID:', args.UUID);
+                return Promise.resolve(peripheral.state === CBPeripheralState.Connected);
+            }
+        } catch (ex) {
+            CLog(CLogTypes.error, 'isConnected ---- error:', ex);
+            return Promise.reject(ex);
+        }
     }
 
     public findPeripheral = UUID => {
@@ -875,6 +821,7 @@ export class Bluetooth extends BluetoothCommon {
             const periphs = this.centralManager.retrievePeripheralsWithIdentifiers([NSUUID.alloc().initWithUUIDString(UUID)]);
             if (periphs.count > 0) {
                 result = periphs.objectAtIndex(0);
+                this.prepareConnectedPeripheralDelegate(result);
             }
         }
         return result;
@@ -902,7 +849,10 @@ export class Bluetooth extends BluetoothCommon {
                 new Promise((resolve, reject) => {
                     try {
                         // TODO we could (should?) make this characteristic-specific
-                        (wrapper.peripheral.delegate as CBPeripheralDelegateImpl)._onReadPromise = resolve;
+                        const delegate = wrapper.peripheral.delegate as CBPeripheralDelegateImpl;
+                        // if (delegate) {
+                        delegate._onReadPromise = resolve;
+                        // }
                         wrapper.peripheral.readValueForCharacteristic(wrapper.characteristic);
                     } catch (ex) {
                         CLog(CLogTypes.error, 'read ---- error:', ex);
@@ -914,7 +864,7 @@ export class Bluetooth extends BluetoothCommon {
 
     public write(args: WriteOptions) {
         if (!args.value) {
-            return Promise.reject(`You need to provide some data to write in the 'value' property.`);
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
         }
         return this._getWrapper(args, CBCharacteristicProperties.PropertyWrite).then(
             wrapper =>
@@ -925,7 +875,7 @@ export class Bluetooth extends BluetoothCommon {
                             CLog(CLogTypes.info, 'write:', args.value);
                         }
                         if (valueEncoded === null) {
-                            return Promise.reject('Invalid value: ' + args.value);
+                            return Promise.reject({ msg: BluetoothCommon.msg_invalid_value, value: args.value });
                         }
 
                         // the promise will be resolved from 'didWriteValueForCharacteristic',
@@ -952,14 +902,14 @@ export class Bluetooth extends BluetoothCommon {
 
     public writeWithoutResponse(args: WriteOptions) {
         if (!args.value) {
-            return Promise.reject("You need to provide some data to write in the 'value' property");
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
         }
         return this._getWrapper(args, CBCharacteristicProperties.PropertyWriteWithoutResponse).then(wrapper => {
             try {
                 const valueEncoded = this.valueToNSData(args.value, args.encoding);
 
                 if (valueEncoded === null) {
-                    return Promise.reject('Invalid value: ' + args.value);
+                    return Promise.reject({ msg: BluetoothCommon.msg_invalid_value, value: args.value });
                 }
 
                 wrapper.peripheral.writeValueForCharacteristicType(valueEncoded, wrapper.characteristic, CBCharacteristicWriteType.WithoutResponse);
@@ -1011,7 +961,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     private _isEnabled() {
-        return this.centralManager.state === CBManagerState.PoweredOn;
+        return this.state === CBManagerState.PoweredOn;
     }
 
     private _findService(UUID: CBUUID, peripheral: CBPeripheral) {
@@ -1043,104 +993,57 @@ export class Bluetooth extends BluetoothCommon {
         return null;
     }
 
-    private _getWrapper(
-        arg,
-        property: CBCharacteristicProperties
-        // reject
-    ): Promise<{
-        peripheral: CBPeripheral;
-        service: CBService;
-        characteristic: CBCharacteristic;
-    }> {
-        return this.isBluetoothEnabled()
-            .then(isEnabled => {
-                if (!isEnabled) {
-                    return Promise.reject('Bluetooth is not enabled.');
-                }
-                return null;
-            })
-            .then(
-                (): any => {
-                    if (!arg.peripheralUUID) {
-                        return Promise.reject('No peripheralUUID was passed');
-                    }
-                    if (!arg.serviceUUID) {
-                        return Promise.reject('No serviceUUID was passed');
-                    }
-                    if (!arg.characteristicUUID) {
-                        return Promise.reject('No characteristicUUID was passed');
-                    }
-                    const peripheral = this.findPeripheral(arg.peripheralUUID);
-                    if (!peripheral) {
-                        return Promise.reject('Could not find peripheral with UUID ' + arg.peripheralUUID);
-                    }
-
-                    if (peripheral.state !== CBPeripheralState.Connected) {
-                        return Promise.reject('The peripheral is disconnected');
-                    }
-
-                    const serviceUUID = CBUUID.UUIDWithString(arg.serviceUUID);
-                    const service = this._findService(serviceUUID, peripheral);
-                    if (!service) {
-                        return Promise.reject(`Could not find service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`);
-                    }
-
-                    const characteristicUUID = CBUUID.UUIDWithString(arg.characteristicUUID);
-                    let characteristic = this._findCharacteristic(characteristicUUID, service, property);
-
-                    // Special handling for INDICATE. If charateristic with notify is not found, check for indicate.
-                    // if (property === CBCharacteristicPropertyNotify && !characteristic) {
-                    if (property === CBCharacteristicProperties.PropertyNotify && !characteristic) {
-                        characteristic = this._findCharacteristic(characteristicUUID, service, CBCharacteristicProperties.PropertyIndicate);
-                        // characteristic = this._findCharacteristic(characteristicUUID, service, CBCharacteristicProperties.PropertyIndicate PropertyIndicate);
-                    }
-
-                    // As a last resort, try and find ANY characteristic with this UUID, even if it doesn't have the correct properties
-                    if (!characteristic) {
-                        characteristic = this._findCharacteristic(characteristicUUID, service, null);
-                    }
-
-                    if (!characteristic) {
-                        return Promise.reject(
-                            `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`
-                        );
-                    }
-
-                    // with that all being checked, let's return a wrapper object containing all the stuff we found here
-                    return {
-                        peripheral,
-                        service,
-                        characteristic
-                    };
-                }
-            );
-    }
-
-    /**
-     * Value must be a Uint8Array or Uint16Array or
-     * a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
-     */
-    private _encodeValue(value) {
-        // if it's not a string assume it's a UintXArray
-        if (typeof value !== 'string') {
-            return value.buffer;
+    @bluetoothEnabled
+    private _getWrapper(args, property: CBCharacteristicProperties) {
+        if (!args.peripheralUUID) {
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'peripheralUUID' });
         }
-        const parts = value.split(',');
-        if (parts[0].indexOf('x') === -1) {
-            return null;
+        if (!args.serviceUUID) {
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'serviceUUID' });
         }
-        let result;
-        if (parts[0].length === 4) {
-            // eg. 0x01
-            result = new Uint8Array(parts.length);
-        } else {
-            // assuming eg. 0x007F
-            result = new Uint16Array(parts.length);
+        if (!args.characteristicUUID) {
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'characteristicUUID' });
         }
-        for (let i = 0; i < parts.length; i++) {
-            result[i] = parts[i];
+        const peripheral = this.findPeripheral(args.peripheralUUID);
+        if (!peripheral) {
+            return Promise.reject({ msg: BluetoothCommon.msg_no_peripheral, args });
         }
-        return result.buffer;
+
+        if (peripheral.state !== CBPeripheralState.Connected) {
+            return Promise.reject({ msg: BluetoothCommon.msg_peripheral_not_connected, args });
+        }
+
+        const serviceUUID = CBUUID.UUIDWithString(args.serviceUUID);
+        const service = this._findService(serviceUUID, peripheral);
+        if (!service) {
+            return Promise.reject({ msg: BluetoothCommon.msg_no_service, args });
+        }
+
+        const characteristicUUID = CBUUID.UUIDWithString(args.characteristicUUID);
+        let characteristic = this._findCharacteristic(characteristicUUID, service, property);
+
+        // Special handling for INDICATE. If charateristic with notify is not found, check for indicate.
+        // if (property === CBCharacteristicPropertyNotify && !characteristic) {
+        if (property === CBCharacteristicProperties.PropertyNotify && !characteristic) {
+            characteristic = this._findCharacteristic(characteristicUUID, service, CBCharacteristicProperties.PropertyIndicate);
+            // characteristic = this._findCharacteristic(characteristicUUID, service, CBCharacteristicProperties.PropertyIndicate PropertyIndicate);
+        }
+
+        // As a last resort, try and find ANY characteristic with this UUID, even if it doesn't have the correct properties
+        if (!characteristic) {
+            characteristic = this._findCharacteristic(characteristicUUID, service, null);
+        }
+
+        if (!characteristic) {
+            return Promise.reject({ msg: BluetoothCommon.msg_no_characteristic, args });
+        }
+
+        // with that all being checked, let's return a wrapper object containing all the stuff we found here
+        return Promise.resolve({
+            peripheral,
+            service,
+            characteristic
+        });
     }
 
     private nativeEncoding(encoding) {
@@ -1184,11 +1087,6 @@ export class Bluetooth extends BluetoothCommon {
         } else if (type === 'number') {
             return NSData.dataWithData(new Uint8Array([value]).buffer as any);
         } else if (Array.isArray(value)) {
-            // const intRef = new interop.Reference(interop.types.int8, interop.alloc(value.length));
-            // for (let i = 0; i < value.length; i++) {
-            //     intRef[i] = value[i];
-            // }
-            // return NSData.dataWithBytesLength(intRef, value.length);
             return NSData.dataWithData(new Uint8Array(value).buffer as any);
         } else if (value instanceof ArrayBuffer) {
             // for ArrayBuffer to NSData
