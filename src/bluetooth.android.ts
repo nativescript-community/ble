@@ -976,8 +976,8 @@ export class Bluetooth extends BluetoothCommon {
         return this._bluetoothGattCallback;
     }
     // not initializing here, if the Android API is < 21  use LeScanCallback
-    public scanCallback: ScanCallback;
-    public LeScanCallback: LeScanCallback;
+    private scanCallback: ScanCallback;
+    private LeScanCallback: LeScanCallback;
 
     // with gatt all operations must be queued. Parallel operations will fail
     private gattQueue = new Queue({ concurrency: 1 });
