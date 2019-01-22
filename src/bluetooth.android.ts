@@ -1,12 +1,11 @@
 import * as utils from 'tns-core-modules/utils/utils';
 import * as application from 'tns-core-modules/application/application';
-import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes } from './bluetooth.common';
-// import { TNS_BluetoothGattCallback } from './android/TNS_BluetoothGattCallback';
-// import { TNS_LeScanCallback } from './android/TNS_LeScanCallback';
-// import { TNS_ScanCallback } from './android/TNS_ScanCallback';
-import * as Queue from 'p-queue';
 import {
     AdvertismentData,
+    BluetoothCommon,
+    BluetoothUtil,
+    CLog,
+    CLogTypes,
     ConnectionState,
     ConnectOptions,
     DisconnectOptions,
@@ -18,7 +17,11 @@ import {
     StartScanningOptions,
     StopNotifyingOptions,
     WriteOptions
-} from './bluetooth';
+} from './bluetooth.common';
+// import { TNS_BluetoothGattCallback } from './android/TNS_BluetoothGattCallback';
+// import { TNS_LeScanCallback } from './android/TNS_LeScanCallback';
+// import { TNS_ScanCallback } from './android/TNS_ScanCallback';
+import * as Queue from 'p-queue';
 
 let _bluetoothInstance: Bluetooth;
 export function getBluetoothInstance() {
@@ -286,7 +289,7 @@ function initLeScanCallback() {
         get flags() {
             return this.scanRecord.getAdvertiseFlags();
         }
-        get uuids() {
+        get serviceUUIDs() {
             const result = [];
             const serviceUuids = this.scanRecord.getServiceUuids();
             for (let i = 0; i < serviceUuids.length; i++) {
@@ -640,7 +643,7 @@ function initScanCallback() {
         get flags() {
             return this.scanRecord.getAdvertiseFlags();
         }
-        get uuids() {
+        get serviceUUIDs() {
             const result = [];
             const serviceUuids = this.scanRecord.getServiceUuids();
             for (let i = 0; i < serviceUuids.size(); i++) {

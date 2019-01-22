@@ -1,7 +1,19 @@
-import { BluetoothCommon, BluetoothUtil, CLog, CLogTypes } from './bluetooth.common';
-import { ConnectOptions, Peripheral, ReadResult, Service, StartNotifyingOptions, StartScanningOptions, StopNotifyingOptions, WriteOptions } from './bluetooth';
+import {
+    BluetoothCommon,
+    BluetoothUtil,
+    CLog,
+    CLogTypes,
+    ConnectOptions,
+    Peripheral,
+    ReadResult,
+    Service,
+    StartNotifyingOptions,
+    StartScanningOptions,
+    StopNotifyingOptions,
+    WriteOptions
+} from './bluetooth.common';
 
-
+declare var DISPATCH_QUEUE_SERIAL;
 /**
  * @link - https://developer.apple.com/documentation/corebluetooth/cbperipheraldelegate
  * The delegate of a CBPeripheral object must adopt the CBPeripheralDelegate protocol.
@@ -460,7 +472,7 @@ export class AdvertismentData {
     get flags() {
         return -1;
     }
-    get uuids() {
+    get serviceUUIDs() {
         const result = [];
         const serviceUuids = this.advData.objectForKey(CBAdvertisementDataServiceUUIDsKey) as NSArray<CBUUID>;
         if (serviceUuids) {
@@ -528,6 +540,8 @@ export function CBUUIDToString(uuid: CBUUID) {
 export class Bluetooth extends BluetoothCommon {
     private _centralDelegate: CBCentralManagerDelegateImpl;
     private _centralManager: CBCentralManager;
+    private _cbQueue: NSObject;
+    // private _cpQueue: NSObject;
 
     public _discoverPeripherals: { [k: string]: CBPeripheral } = {};
     public _connectedPeripherals: { [k: string]: CBPeripheral } = {};
@@ -544,6 +558,8 @@ export class Bluetooth extends BluetoothCommon {
             if (this.restoreIdentifier) {
                 options = new (NSDictionary as any)([this.restoreIdentifier], [CBCentralManagerOptionRestoreIdentifierKey]);
             }
+            // this._cbQueue = dispatch_queue_create('akylas.bt.cbqueue', DISPATCH_QUEUE_SERIAL);
+            // this._cpQueue = dispatch_queue_create('akylas.bt._cpQueue', DISPATCH_QUEUE_SERIAL);
             this._centralDelegate = CBCentralManagerDelegateImpl.new().initWithCallback(new WeakRef(this), obj => {
                 CLog(CLogTypes.info, `---- centralDelegate ---- obj: ${obj}`);
             });
@@ -560,6 +576,10 @@ export class Bluetooth extends BluetoothCommon {
 
     // Getters/Setters
     get enabled(): boolean {
+        // if (!this._centralManager) {
+        //     // tslint:disable-next-line:no-unused-expression
+        //     this.centralManager;
+        // }
         const state = this.centralManager.state;
         if (state === CBManagerState.PoweredOn) {
             return true;
