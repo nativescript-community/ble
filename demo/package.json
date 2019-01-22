@@ -5,19 +5,19 @@
       "version": "5.0.0"
     },
     "tns-ios": {
-      "version": "5.0.1-rc-2018-11-30-133527-01"
+      "version": "5.1.1"
     }
   },
   "dependencies": {
     "nativescript-bluetooth": "file:../plugin",
     "nativescript-theme-core": "^1.0.4",
-    "tns-core-modules": "~5.1.1"
+    "tns-core-modules": "~5.1.2"
   },
   "devDependencies": {
     "nativescript-css-loader": "~0.26.1",
     "nativescript-dev-typescript": "0.7.9",
     "nativescript-dev-webpack": "~0.19.0",
-    "tns-platform-declarations": "~5.1.1",
+    "tns-platform-declarations": "~5.1.2",
     "ts-loader": "~5.3.3",
     "typescript": "~3.2.2",
     "webpack": "~4.28.4",
