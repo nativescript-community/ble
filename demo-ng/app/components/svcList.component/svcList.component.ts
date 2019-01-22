@@ -7,7 +7,7 @@ import { IPeripheral } from '../../services/bluetooth.service';
 
 @Component({
     selector: 'ble-service-list',
-    templateUrl: 'components/svcList.component/svcList.component.html',
+    templateUrl: 'svcList.component.html',
 })
 export class SvcListComponent implements OnInit {
 

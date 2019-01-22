@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig",
+    "compilerOptions": {
+        "module": "es2015",
+        "moduleResolution": "node"
+    },
+    "include": [
+        "app/**/*",
+        "../src/bluetooth.ios.ts",
+        "../src/bluetooth.common.ts",
+        "../src/bluetooth.d.ts",
+        "references.d.ts"
+    ]
+}

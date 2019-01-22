@@ -6,7 +6,7 @@ import { IPeripheral } from '../../services/bluetooth.service';
 
 @Component({
     selector: 'ble-scan',
-    templateUrl: 'components/scan.component/scan.component.html',
+    templateUrl: 'scan.component.html',
 })
 export class ScanComponent {
 

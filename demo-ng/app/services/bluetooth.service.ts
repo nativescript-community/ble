@@ -5,6 +5,7 @@ import * as dialogs from 'tns-core-modules/ui/dialogs';
 import { Bluetooth, Peripheral, Service, Characteristic, ReadResult } from 'nativescript-bluetooth';
 
 const bluetooth = new Bluetooth();
+bluetooth.debug = true;
 
 export interface IPeripheral extends Peripheral {
     isConnected?: boolean;

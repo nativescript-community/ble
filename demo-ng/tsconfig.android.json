@@ -3,5 +3,9 @@
     "compilerOptions": {
         "module": "es2015",
         "moduleResolution": "node"
-    }
+    },
+    "include": [
+        "../src/**/*.android.ts",
+        "../src/**/*.d.ts"
+    ]
 }

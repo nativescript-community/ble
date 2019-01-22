@@ -4,7 +4,7 @@ import { IPeripheral } from '../../services/bluetooth.service';
 
 @Component({
     selector: 'action-bar-template',
-    templateUrl: 'components/actionBar.component/actionBar.component.html',
+    templateUrl: 'actionBar.component.html',
 })
 export class ActionBarComponent {
 

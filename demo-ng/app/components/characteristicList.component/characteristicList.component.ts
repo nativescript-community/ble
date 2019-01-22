@@ -8,7 +8,7 @@ import { ICharacteristic } from '../../services/bluetooth.service';
 
 @Component({
     selector: 'ble-service-characteristics',
-    templateUrl: 'components/characteristicList.component/characteristicList.component.html',
+    templateUrl: 'characteristicList.component.html',
 })
 export class CharacteristicListComponent implements OnInit {
 

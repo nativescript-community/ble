@@ -5,7 +5,7 @@ import { BluetoothService } from '../../services/bluetooth.service';
 
 @Component({
     selector: 'ble-peripheral-list',
-    templateUrl: 'components/peripheralList.component/peripheralList.component.html',
+    templateUrl: 'peripheralList.component.html',
 })
 export class PeripheralListComponent {
 
