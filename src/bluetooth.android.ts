@@ -167,7 +167,6 @@ function nativeEncoding(encoding: string) {
 
 export function valueToByteArray(value, encoding = 'iso-8859-1') {
     const type = typeof value;
-    console.log('valueToByteArray', value, type, Array.isArray(value), value instanceof ArrayBuffer);
     if (type === 'string') {
         return new java.lang.String(value).getBytes(nativeEncoding(encoding));
     } else if (type === 'number') {
@@ -674,16 +673,16 @@ function initBluetoothGattCallback() {
         return;
     }
     class BluetoothGattCallbackImpl extends android.bluetooth.BluetoothGattCallback {
-        private owner: WeakRef<Bluetooth>;
-        constructor() {
+        // private owner: WeakRef<Bluetooth>;
+        constructor(private owner: WeakRef<Bluetooth>) {
             super();
             return global.__native(this);
         }
 
-        onInit(owner: WeakRef<Bluetooth>) {
-            this.owner = owner;
-            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onInit ---- this.owner: ${this.owner}`);
-        }
+        // onInit() {
+        //     this.owner = owner;
+        //     CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onInit ---- this.owner: ${this.owner}`);
+        // }
 
         /**
          * Callback indicating when GATT client has connected/disconnected to/from a remote GATT server.
@@ -999,6 +998,7 @@ export class Bluetooth extends BluetoothCommon {
 
     get bluetoothGattCallback() {
         if (!this._bluetoothGattCallback) {
+            initBluetoothGattCallback();
             this._bluetoothGattCallback = new BluetoothGattCallback(new WeakRef(this));
         }
         return this._bluetoothGattCallback;
@@ -1484,7 +1484,7 @@ export class Bluetooth extends BluetoothCommon {
 
     private addToQueue(args: WrapperOptions, runner: (wrapper: WrapperResult) => Promise<any>) {
         return this._getWrapper(args).then(wrapper => {
-            return this.gattQueue.add(runner(wrapper));
+            return this.gattQueue.add(() => runner(wrapper));
         });
     }
 
@@ -1668,8 +1668,8 @@ export class Bluetooth extends BluetoothCommon {
                                 };
                             const stateObject = this.connections[args.peripheralUUID];
                             stateObject.onNotifyCallback = cb;
-                            CLog(CLogTypes.info, '--- notifying');
                             resolve();
+                            CLog(CLogTypes.info, '--- startNotifying done');
                         } else {
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeDescriptor', ...args } });
                         }
