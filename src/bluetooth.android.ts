@@ -1608,7 +1608,7 @@ export class Bluetooth extends BluetoothCommon {
                             if (BluetoothUtil.debug) {
                                 CLog(CLogTypes.info, 'writeCharacteristic:', args.value, JSON.stringify(printValueToString(val)));
                             }
-                            // resolve();
+                            resolve();
                         } else {
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeWithoutResponse', ...args } });
                         }
