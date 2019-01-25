@@ -615,15 +615,20 @@ export class Bluetooth extends BluetoothCommon {
         this._connectedPeripherals[UUID] = peripheral;
     }
 
+
+    // needed for consecutive calls to isBluetoothEnabled. Until readyToAskForEnabled, everyone waits!
+    readyToAskForEnabled = false;
     public isBluetoothEnabled(): Promise<boolean> {
+        CLog(CLogTypes.error, 'isBluetoothEnabled', !!this._centralManager);
         return Promise.resolve()
             .then(() => {
-                if (!this._centralManager) {
+                if (!this.readyToAskForEnabled) {
                     // the centralManager return wrong state just after initialization
                     // so create it and wait a bit
                     // tslint:disable-next-line:no-unused-expression
                     this.centralManager;
-                    return new Promise(resolve => setTimeout(resolve, 50));
+                    CLog(CLogTypes.info, 'isBluetoothEnabled waiting a bit');
+                    return new Promise(resolve => setTimeout(resolve, 50)).then(() => this.readyToAskForEnabled = true);
                 }
                 return null;
             })
@@ -632,6 +637,7 @@ export class Bluetooth extends BluetoothCommon {
                     new Promise((resolve, reject) => {
                         try {
                             const isEnabled = this._isEnabled();
+                            CLog(CLogTypes.info, 'isBluetoothEnabled requesting value', isEnabled);
                             resolve(isEnabled);
                         } catch (ex) {
                             CLog(CLogTypes.error, 'isBluetoothEnabled ----', ex);
