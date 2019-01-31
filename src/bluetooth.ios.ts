@@ -535,7 +535,7 @@ export class Bluetooth extends BluetoothCommon {
     }
     get centralManager() {
         if (!this._centralManager) {
-            const options: NSMutableDictionary<any, any> = new (NSMutableDictionary as any)([true], [CBCentralManagerOptionShowPowerAlertKey]);
+            const options: NSMutableDictionary<any, any> = new (NSMutableDictionary as any)([this.showPowerAlertPopup], [CBCentralManagerOptionShowPowerAlertKey]);
             if (this.restoreIdentifier) {
                 options.setObjectForKey(this.restoreIdentifier, CBCentralManagerOptionRestoreIdentifierKey);
             }
@@ -548,7 +548,7 @@ export class Bluetooth extends BluetoothCommon {
         return this._centralManager;
     }
 
-    constructor(private restoreIdentifier: string = 'ns_bluetooth') {
+    constructor(private restoreIdentifier: string = 'ns_bluetooth', private showPowerAlertPopup = false) {
         super();
         console.log(`*** iOS Bluetooth Constructor *** ${restoreIdentifier}`);
     }
