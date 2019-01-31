@@ -48,8 +48,26 @@ export function bluetoothEnabled(target: Object, propertyKey: string, descriptor
     return descriptor;
 }
 
+export function prepareArgs(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    const originalMethod = descriptor.value as Function; // save a reference to the original method
 
-export class BluetoothCommon extends Observable {
+    // NOTE: Do not use arrow syntax here. Use a function expression in
+    // order to use the correct value of `this` in this method (see notes below)
+    descriptor.value = function(...args: any[]) {
+        const paramsToCheck = args[0];
+        ['UUID', 'serviceUUID', 'characteristicUUID', 'peripheralUUID'].forEach(function(k) {
+            if (paramsToCheck[k]) {
+                paramsToCheck[k] = paramsToCheck[k].toLowerCase();
+            }
+        });
+        return originalMethod.apply(this, args);
+    };
+
+    return descriptor;
+}
+
+
+export abstract class BluetoothCommon extends Observable {
     public set debug(value: boolean) {
         BluetoothUtil.debug = value;
     }
@@ -177,6 +195,16 @@ export class BluetoothCommon extends Observable {
             data,
             message: msg
         });
+    }
+
+    public abstract  discoverServices(args: DiscoverServicesOptions);
+    public abstract discoverCharacteristics(args: DiscoverCharacteristicsOptions);
+    public discoverAll(args: DiscoverOptions) {
+        return this.discoverServices(args).then(resultS => {
+            return Promise.all(resultS.services.map(s => this.discoverCharacteristics({ serviceUUID: s.UUID, ...args }).then(resultC => (s.characteristics = resultC.characteristics)))).then(() => ({
+                services: resultS.services
+            }));
+        }) as Promise<{ services: Service[] }>;
     }
 }
 
@@ -358,7 +386,7 @@ export interface ConnectOptions {
             UUID;
             name: string;
             state: ConnectionState;
-            services: any[];
+            services?: Service[];
             advertismentData: AdvertismentData;
         }
     ) => void;
@@ -372,6 +400,8 @@ export interface ConnectOptions {
             name: string;
         }
     ) => void;
+
+    autoDiscoverAll?: boolean;
 }
 
 export interface AdvertismentData {
@@ -407,10 +437,10 @@ export interface Peripheral {
     /**
      * The relative signal strength which more or less can be used to determine how far away the peripheral is.
      */
-    RSSI: number;
+    RSSI?: number;
 
     /**
-     * Once connected to the peripheral a list of services will be set.
+     * Once connected to the peripheral  and if autoDiscoverAll is not false, a list of services will be set.
      */
     services?: Service[];
 
@@ -433,7 +463,7 @@ export interface Service {
     /**
      * A list of service characteristics a client can interact with by reading, writing, subscribing, etc.
      */
-    characteristics: Characteristic[];
+    characteristics?: Characteristic[];
 }
 
 /**
@@ -452,7 +482,7 @@ export interface Characteristic {
     /**
      * An object containing characteristic properties like read, write and notify.
      */
-    properties: {
+    properties?: {
         read: boolean;
         write: boolean;
         writeWithoutResponse: boolean;
@@ -466,12 +496,12 @@ export interface Characteristic {
     /**
      * ignored for now
      */
-    descriptors: any;
+    descriptors?: any;
 
     /**
      * ignored for now
      */
-    permissions: any;
+    permissions?: any;
 }
 
 /**
@@ -489,6 +519,17 @@ export interface ReadOptions extends CRUDOptions {}
 export interface WriteOptions extends CRUDOptions {
     value: any;
     encoding?: string;
+}
+
+export interface DiscoverOptions {
+    peripheralUUID: string;
+}
+export interface DiscoverServicesOptions extends DiscoverOptions {
+    serviceUUIDs?: string[];
+}
+export interface DiscoverCharacteristicsOptions extends DiscoverOptions {
+    serviceUUID: string;
+    characteristicUUIDs?: string[];
 }
 
 // tslint:disable-next-line:no-empty-interface

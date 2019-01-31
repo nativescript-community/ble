@@ -1,4 +1,43 @@
-import { BluetoothCommon, ScanMode, MatchMode, MatchNum, CallbackType, StartScanningOptions, ConnectOptions, DisconnectOptions, ReadResult, ReadOptions, WriteOptions, StartNotifyingOptions, StopNotifyingOptions } from './bluetooth.common';
+import {
+    BluetoothCommon,
+    CallbackType,
+    ConnectOptions,
+    DisconnectOptions,
+    DiscoverCharacteristicsOptions,
+    DiscoverOptions,
+    DiscoverServicesOptions,
+    MatchMode,
+    MatchNum,
+    Peripheral,
+    ReadOptions,
+    ReadResult,
+    ScanMode,
+    StartNotifyingOptions,
+    StartScanningOptions,
+    StopNotifyingOptions,
+    WriteOptions,
+    Service,
+    Characteristic
+} from './bluetooth.common';
+
+export {
+    CallbackType,
+    ConnectOptions,
+    DisconnectOptions,
+    MatchMode,
+    MatchNum,
+    Peripheral,
+    ReadOptions,
+    ReadResult,
+    ScanMode,
+    StartNotifyingOptions,
+    StartScanningOptions,
+    StopNotifyingOptions,
+    WriteOptions,
+    DiscoverServicesOptions,
+    DiscoverCharacteristicsOptions,
+    DiscoverOptions
+};
 
 export class Bluetooth extends BluetoothCommon {
     static readonly android?: {
@@ -99,5 +138,10 @@ export class Bluetooth extends BluetoothCommon {
     fetchUuidsWithSdp(device: any): boolean;
     removeBond(device: any): any;
     adapter: any;
+
+    public discoverServices(args: DiscoverServicesOptions): Promise<{services:Service[]}>;
+    public discoverCharacteristics(args: DiscoverCharacteristicsOptions): Promise<{characteristics:Characteristic[]}>;
+
+    public discoverAll(args: DiscoverOptions): Promise<{services:Service[], characteristics:Characteristic[]}>;
 }
 export function getBluetoothInstance(): Bluetooth;
