@@ -14,14 +14,14 @@ import {
     DiscoverOptions,
     DiscoverServicesOptions,
     Peripheral,
+    prepareArgs,
     ReadOptions,
     ReadResult,
     Service,
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
-    WriteOptions,
-    prepareArgs
+    WriteOptions
 } from './bluetooth.common';
 import * as Queue from 'p-queue';
 
@@ -730,7 +730,6 @@ function initBluetoothGattCallback() {
                     d.onServicesDiscovered(gatt, status);
                 }
             });
-
         }
 
         /**
@@ -1036,7 +1035,6 @@ export class Bluetooth extends BluetoothCommon {
             initLeScanCallback();
             this.LeScanCallback = new LeScanCallbackVar(new WeakRef(this));
         }
-
 
         application.android.registerBroadcastReceiver(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED, (context, intent) => {
             const state = intent.getIntExtra(android.bluetooth.BluetoothAdapter.EXTRA_STATE, android.bluetooth.BluetoothAdapter.ERROR);
@@ -1812,7 +1810,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     @prepareArgs
-    public discoverServices(args: DiscoverServicesOptions): Promise<{services: Service[]}> {
+    public discoverServices(args: DiscoverServicesOptions): Promise<{ services: Service[] }> {
         if (!args.peripheralUUID) {
             return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'peripheralUUID' });
         }
