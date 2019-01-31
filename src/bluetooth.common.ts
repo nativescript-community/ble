@@ -25,7 +25,6 @@ export const CLog = (type: CLogTypes = 0, ...args) => {
     }
 };
 
-
 export function bluetoothEnabled(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
     const originalMethod = descriptor.value as Function; // save a reference to the original method
 
@@ -55,17 +54,19 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
     // order to use the correct value of `this` in this method (see notes below)
     descriptor.value = function(...args: any[]) {
         const paramsToCheck = args[0];
-        ['UUID', 'serviceUUID', 'characteristicUUID', 'peripheralUUID'].forEach(function(k) {
-            if (paramsToCheck[k]) {
-                paramsToCheck[k] = paramsToCheck[k].toLowerCase();
-            }
-        });
+        if (paramsToCheck.hasOwnProperty) {
+            ['serviceUUID', 'characteristicUUID'].forEach(function(k) {
+                if (paramsToCheck[k]) {
+                    console.log('fixing paramter ', k, paramsToCheck[k], typeof paramsToCheck[k]);
+                    paramsToCheck[k] = paramsToCheck[k].toLowerCase();
+                }
+            });
+        }
         return originalMethod.apply(this, args);
     };
 
     return descriptor;
 }
-
 
 export abstract class BluetoothCommon extends Observable {
     public set debug(value: boolean) {
@@ -197,7 +198,7 @@ export abstract class BluetoothCommon extends Observable {
         });
     }
 
-    public abstract  discoverServices(args: DiscoverServicesOptions);
+    public abstract discoverServices(args: DiscoverServicesOptions);
     public abstract discoverCharacteristics(args: DiscoverCharacteristicsOptions);
     public discoverAll(args: DiscoverOptions) {
         return this.discoverServices(args).then(resultS => {
