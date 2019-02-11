@@ -498,7 +498,7 @@ function initLeScanCallback() {
                 };
                 const scanRecord = parseFromBytes(data);
                 const advertismentData = new ScanAdvertisment(scanRecord);
-
+                stateObject.advertismentData = advertismentData;
                 const payload = {
                     type: 'scanResult', // TODO or use different callback functions?
                     UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
@@ -580,6 +580,7 @@ function initScanCallback() {
                 };
             }
             const advertismentData = new ScanAdvertisment(result.getScanRecord());
+            stateObject.advertismentData = advertismentData;
 
             const payload = {
                 type: 'scanResult', // TODO or use different callback functions?
