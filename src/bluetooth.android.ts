@@ -1051,7 +1051,7 @@ export class Bluetooth extends BluetoothCommon {
         let hasPermission = getAndroidSDK() < MARSHMALLOW;
         if (!hasPermission) {
             const ctx = this._getContext();
-            CLog(CLogTypes.info, 'app context', ctx);
+            // CLog(CLogTypes.info, 'app context', ctx);
 
             hasPermission =
                 android.content.pm.PackageManager.PERMISSION_GRANTED === android.support.v4.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
