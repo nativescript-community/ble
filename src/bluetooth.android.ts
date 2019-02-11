@@ -1313,7 +1313,7 @@ export class Bluetooth extends BluetoothCommon {
                             filters.forEach(f => {
                                 const scanFilterBuilder = new android.bluetooth.le.ScanFilter.Builder();
                                 if (f.serviceUUID) {
-                                    scanFilterBuilder.setServiceUuid(new android.os.ParcelUuid(stringToUuid(f.serviceUUID)));
+                                    scanFilterBuilder.setServiceUuid(new android.os.ParcelUuid(stringToUuid(f.serviceUUID.toUpperCase())));
                                 }
                                 if (f.deviceName) {
                                     scanFilterBuilder.setDeviceName(f.deviceName);
