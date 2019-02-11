@@ -1455,7 +1455,7 @@ export class Bluetooth extends BluetoothCommon {
                         name: bluetoothDevice && bluetoothDevice.getName(),
                         state: stateObject.state, // Bluetooth._getState(peripheral.state),
                         services: result ? result.services : undefined,
-                        advertismentData: this.connections[pUUID].advertismentData
+                        advertismentData: stateObject.advertismentData
                     };
                     if (stateObject.onConnected) {
                         stateObject.onConnected(dataToSend);
