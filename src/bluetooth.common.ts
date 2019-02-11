@@ -57,7 +57,6 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
         if (paramsToCheck.hasOwnProperty) {
             ['serviceUUID', 'characteristicUUID'].forEach(function(k) {
                 if (paramsToCheck[k]) {
-                    console.log('fixing paramter ', k, paramsToCheck[k], typeof paramsToCheck[k]);
                     paramsToCheck[k] = paramsToCheck[k].toLowerCase();
                 }
             });
