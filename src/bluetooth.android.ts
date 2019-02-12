@@ -676,6 +676,7 @@ function initBluetoothGattCallback() {
 
         public addSubDelegate(delegate: SubBluetoothGattCallback) {
             const index = this.subDelegates.indexOf(delegate);
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.addSubDelegate ---- index: ${index}, subdelegates:${this.subDelegates.length}`);
             if (index === -1) {
                 this.subDelegates.push(delegate);
             }
@@ -683,6 +684,7 @@ function initBluetoothGattCallback() {
 
         public removeSubDelegate(delegate: SubBluetoothGattCallback) {
             const index = this.subDelegates.indexOf(delegate);
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.removeSubDelegate ---- index: ${index}, subdelegates:${this.subDelegates.length}`);
             if (index !== -1) {
                 this.subDelegates.splice(index, 1);
             }
@@ -694,8 +696,14 @@ function initBluetoothGattCallback() {
          * @param newState [number] - Returns the new connection state. Can be one of STATE_DISCONNECTED or STATE_CONNECTED
          */
         onConnectionStateChange(gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) {
-            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onConnectionStateChange ---- gatt: ${gatt}, status: ${status}, newState: ${newState}`);
+            CLog(
+                CLogTypes.info,
+                `TNS_BluetoothGattCallback.onConnectionStateChange ---- gatt: ${gatt}, device:${gatt.getDevice() &&
+                    gatt.getDevice().getAddress()} status: ${status}, newState: ${newState}, subdelegates:${this.subDelegates.length}`
+            );
             this.subDelegates.forEach(d => {
+                CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onConnectionStateChange ---- testing delegate: ${d}`);
+
                 if (d.onConnectionStateChange) {
                     d.onConnectionStateChange(gatt, status, newState);
                 }
@@ -1392,30 +1400,11 @@ export class Bluetooth extends BluetoothCommon {
             throw { msg: BluetoothCommon.msg_no_peripheral, args };
         } else {
             CLog(CLogTypes.info, 'connect ---- Connecting to peripheral with UUID:', pUUID);
-
-            let gatt;
-
-            // if less than Android23(Marshmallow)
-            if (getAndroidSDK() < MARSHMALLOW) {
-                gatt = bluetoothDevice.connectGatt(
-                    utils.ad.getApplicationContext(), // context
-                    false, // autoconnect
-                    this.bluetoothGattCallback
-                );
-            } else {
-                gatt = bluetoothDevice.connectGatt(
-                    utils.ad.getApplicationContext(), // context
-                    false, // autoconnect
-                    this.bluetoothGattCallback,
-                    android.bluetooth.BluetoothDevice.TRANSPORT_LE // 2
-                );
-            }
-
             Object.assign(this.connections[pUUID], {
                 state: 'connecting',
                 onConnected: args.onConnected,
-                onDisconnected: args.onDisconnected,
-                device: gatt // TODO rename device to gatt?
+                onDisconnected: args.onDisconnected
+                // device: gatt // TODO rename device to gatt?
             });
             return new Promise((resolve, reject) => {
                 const subD = {
@@ -1427,6 +1416,7 @@ export class Bluetooth extends BluetoothCommon {
                         } else {
                             UUID = device.getAddress();
                         }
+                        CLog(CLogTypes.info, 'connect ---- onConnectionStateChange:', UUID, pUUID, newState, status);
                         if (UUID === pUUID) {
                             if (newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED && status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
                                 resolve();
@@ -1437,7 +1427,31 @@ export class Bluetooth extends BluetoothCommon {
                         }
                     }
                 };
-                this._bluetoothGattCallback.addSubDelegate(subD);
+                this.bluetoothGattCallback.addSubDelegate(subD);
+                CLog(CLogTypes.info, 'connect ---- addSubDelegate:');
+                let gatt;
+
+                // if less than Android23(Marshmallow)
+                if (getAndroidSDK() < MARSHMALLOW) {
+                    gatt = bluetoothDevice.connectGatt(
+                        utils.ad.getApplicationContext(), // context
+                        false, // autoconnect
+                        this.bluetoothGattCallback
+                    );
+                } else {
+                    gatt = bluetoothDevice.connectGatt(
+                        utils.ad.getApplicationContext(), // context
+                        false, // autoconnect
+                        this.bluetoothGattCallback,
+                        android.bluetooth.BluetoothDevice.TRANSPORT_LE // 2
+                    );
+                }
+                Object.assign(this.connections[pUUID], {
+                    // state: 'connecting',
+                    // onConnected: args.onConnected,
+                    // onDisconnected: args.onDisconnected,
+                    device: gatt // TODO rename device to gatt?
+                });
             })
                 .then(() => {
                     if (args.autoDiscoverAll !== false) {
@@ -1478,29 +1492,33 @@ export class Bluetooth extends BluetoothCommon {
         if (!connection) {
             throw { msg: BluetoothCommon.msg_peripheral_not_connected, args };
         }
-        return new Promise((resolve, reject) => {
-            const subD = {
-                onConnectionStateChange: (gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) => {
-                    const device = gatt.getDevice();
-                    let UUID: string = null;
-                    if (device == null) {
-                        // happens some time, why ... ?
-                    } else {
-                        UUID = device.getAddress();
-                    }
-                    if (UUID === pUUID) {
-                        if (newState === android.bluetooth.BluetoothProfile.STATE_DISCONNECTED && status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
-                            resolve();
-                        } else {
-                            reject();
-                        }
-                        this._bluetoothGattCallback.removeSubDelegate(subD);
-                    }
-                }
-            };
-            this._bluetoothGattCallback.addSubDelegate(subD);
+        return Promise.resolve().then(() => {
             this.gattDisconnect(connection.device);
         });
+        // return new Promise((resolve, reject) => {
+            // gatt close wont trigger onConnectionStateChange
+            // const subD = {
+            //         onConnectionStateChange: (gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) => {
+            //             const device = gatt.getDevice();
+            //             let UUID: string = null;
+            //             if (device == null) {
+            //                 // happens some time, why ... ?
+            //             } else {
+            //                 UUID = device.getAddress();
+            //             }
+            //             if (UUID === pUUID) {
+            //                 if (newState === android.bluetooth.BluetoothProfile.STATE_DISCONNECTED && status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
+            //                     resolve();
+            //                 } else {
+            //                     reject();
+            //                 }
+            //                 this.bluetoothGattCallback.removeSubDelegate(subD);
+            //             }
+            //         }
+            //     };
+            // this.bluetoothGattCallback.addSubDelegate(subD);
+            // this.gattDisconnect(connection.device);
+        // });
     }
 
     private addToQueue(args: WrapperOptions, runner: (wrapper: WrapperResult) => Promise<any>) {
@@ -1551,14 +1569,14 @@ export class Bluetooth extends BluetoothCommon {
                                     } else {
                                         reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'readCharacteristic', ...args } });
                                     }
-                                    this._bluetoothGattCallback.removeSubDelegate(subD);
+                                    this.bluetoothGattCallback.removeSubDelegate(subD);
                                 }
                             }
                         };
-                        this._bluetoothGattCallback.addSubDelegate(subD);
+                        this.bluetoothGattCallback.addSubDelegate(subD);
                         if (!gatt.readCharacteristic(bluetoothGattCharacteristic)) {
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'readCharacteristic', ...args } });
-                            this._bluetoothGattCallback.removeSubDelegate(subD);
+                            this.bluetoothGattCallback.removeSubDelegate(subD);
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'read ---- error:', ex);
@@ -1618,11 +1636,11 @@ export class Bluetooth extends BluetoothCommon {
                                     } else {
                                         reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'write', ...args } });
                                     }
-                                    this._bluetoothGattCallback.removeSubDelegate(subD);
+                                    this.bluetoothGattCallback.removeSubDelegate(subD);
                                 }
                             }
                         };
-                        this._bluetoothGattCallback.addSubDelegate(subD);
+                        this.bluetoothGattCallback.addSubDelegate(subD);
 
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
@@ -1630,7 +1648,7 @@ export class Bluetooth extends BluetoothCommon {
                             }
                         } else {
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeCharacteristic', ...args } });
-                            this._bluetoothGattCallback.addSubDelegate(subD);
+                            this.bluetoothGattCallback.addSubDelegate(subD);
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'write ---- error:', ex);
@@ -1691,11 +1709,11 @@ export class Bluetooth extends BluetoothCommon {
                                     } else {
                                         reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeWithoutResponse', ...args } });
                                     }
-                                    this._bluetoothGattCallback.removeSubDelegate(subD);
+                                    this.bluetoothGattCallback.removeSubDelegate(subD);
                                 }
                             }
                         };
-                        this._bluetoothGattCallback.addSubDelegate(subD);
+                        this.bluetoothGattCallback.addSubDelegate(subD);
 
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
@@ -1703,7 +1721,7 @@ export class Bluetooth extends BluetoothCommon {
                             }
                         } else {
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeWithoutResponse', ...args } });
-                            this._bluetoothGattCallback.addSubDelegate(subD);
+                            this.bluetoothGattCallback.addSubDelegate(subD);
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'writeWithoutResponse ---- error:', ex);
@@ -1846,14 +1864,14 @@ export class Bluetooth extends BluetoothCommon {
                                     } else {
                                         reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'discoverServices', ...args } });
                                     }
-                                    this._bluetoothGattCallback.removeSubDelegate(subD);
+                                    this.bluetoothGattCallback.removeSubDelegate(subD);
                                 }
                             }
                         };
-                        this._bluetoothGattCallback.addSubDelegate(subD);
+                        this.bluetoothGattCallback.addSubDelegate(subD);
                         if (!gatt.discoverServices()) {
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'discoverServices', ...args } });
-                            this._bluetoothGattCallback.removeSubDelegate(subD);
+                            this.bluetoothGattCallback.removeSubDelegate(subD);
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'read ---- error:', ex);
@@ -1893,6 +1911,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public gattDisconnect(gatt: android.bluetooth.BluetoothGatt) {
+        // gatt close wont trigger onConnectionStateChange
         if (gatt !== null) {
             const device = gatt.getDevice();
             const address = device.getAddress();
