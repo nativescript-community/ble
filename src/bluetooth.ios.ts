@@ -686,24 +686,25 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public openBluetoothSettings(url?: string): Promise<void> {
-        return this.isBluetoothEnabled().then(isEnabled => {
-            if (!isEnabled) {
-                return Promise.resolve().then(() => {
-                    const settingsUrl = NSURL.URLWithString(url || 'App-prefs:root=General&path=BLUETOOTH');
-                    if (UIApplication.sharedApplication.canOpenURL(settingsUrl)) {
-                        UIApplication.sharedApplication.openURLOptionsCompletionHandler(settingsUrl, null, function(success) {
-                            // we get the callback for opening the URL, not enabling the GPS!
-                            if (success) {
-                                return Promise.reject(undefined);
-                            } else {
-                                return Promise.reject(BluetoothCommon.msg_cant_open_settings);
-                            }
-                        });
-                    }
-                });
-            }
-            return null;
-        });
+        return Promise.reject('cant_open_bluetooth_settings');
+        // return this.isBluetoothEnabled().then(isEnabled => {
+        //     if (!isEnabled) {
+        //         return Promise.resolve().then(() => {
+        //             const settingsUrl = NSURL.URLWithString(url || UIApplicationOpenSettingsURLString);
+        //             if (UIApplication.sharedApplication.canOpenURL(settingsUrl)) {
+        //                 UIApplication.sharedApplication.openURLOptionsCompletionHandler(settingsUrl, null, function(success) {
+        //                     // we get the callback for opening the URL, not enabling the bluetooth!
+        //                     if (success) {
+        //                         return Promise.reject(undefined);
+        //                     } else {
+        //                         return Promise.reject(BluetoothCommon.msg_cant_open_settings);
+        //                     }
+        //                 });
+        //             }
+        //         });
+        //     }
+        //     return null;
+        // });
     }
     @bluetoothEnabled
     public stopScanning() {

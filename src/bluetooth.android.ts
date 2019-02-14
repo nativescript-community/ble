@@ -1757,6 +1757,7 @@ export class Bluetooth extends BluetoothCommon {
                         let bluetoothGattDescriptor = characteristic.getDescriptor(clientCharacteristicConfigId) as android.bluetooth.BluetoothGattDescriptor;
                         if (!bluetoothGattDescriptor) {
                             bluetoothGattDescriptor = new android.bluetooth.BluetoothGattDescriptor(clientCharacteristicConfigId, android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE);
+                            bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                             characteristic.addDescriptor(bluetoothGattDescriptor);
                             CLog(CLogTypes.info, 'startNotifying ---- descriptor:', bluetoothGattDescriptor);
                             // Any creation error will trigger the global catch. Ok.
