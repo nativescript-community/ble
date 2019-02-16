@@ -936,48 +936,45 @@ export class Bluetooth extends BluetoothCommon {
         if (!args.value) {
             return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
         }
-        return this._getWrapper(args, CBCharacteristicProperties.PropertyWrite).then(
-            wrapper =>
-                new Promise((resolve, reject) => {
-                    CLog(CLogTypes.info, `write ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
-                    try {
-                        const valueEncoded = this.valueToNSData(args.value, args.encoding);
+        return this._getWrapper(args, CBCharacteristicProperties.PropertyWrite).then(wrapper => {
+            return new Promise((resolve, reject) => {
+                CLog(CLogTypes.info, `write ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
+                const valueEncoded = this.valueToNSData(args.value, args.encoding);
 
-                        if (valueEncoded === null) {
-                            return Promise.reject({ msg: BluetoothCommon.msg_invalid_value, value: args.value });
-                        }
-
-                        return new Promise((resolve, reject) => {
-                            const pUUID = args.peripheralUUID;
-                            const p = wrapper.peripheral;
-                            const subD = {
-                                peripheralDidWriteValueForCharacteristicError: (peripheral: CBPeripheral, characteristic: CBCharacteristic, error?: NSError) => {
-                                    CLog(CLogTypes.info, 'read ---- peripheralDidWriteValueForCharacteristicError', error);
-                                    const UUID = NSUUIDToString(peripheral.identifier);
-                                    const cUUID = CBUUIDToString(characteristic.UUID);
-                                    const sUUID = CBUUIDToString(characteristic.service.UUID);
-                                    if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
-                                        if (error) {
-                                            reject(error.localizedDescription);
-                                        } else {
-                                            resolve();
-                                        }
-                                        p.delegate.removeSubDelegate(subD);
-                                    }
-                                }
-                            };
-                            p.delegate.addSubDelegate(subD);
-                            p.writeValueForCharacteristicType(valueEncoded, wrapper.characteristic, CBCharacteristicWriteType.WithResponse);
-                            if (BluetoothUtil.debug) {
-                                CLog(CLogTypes.info, 'write:', args.value, JSON.stringify(this.valueToString(valueEncoded)));
+                if (valueEncoded === null) {
+                    return reject({ msg: BluetoothCommon.msg_invalid_value, value: args.value });
+                }
+                const pUUID = args.peripheralUUID;
+                const p = wrapper.peripheral;
+                const subD = {
+                    peripheralDidWriteValueForCharacteristicError: (peripheral: CBPeripheral, characteristic: CBCharacteristic, error?: NSError) => {
+                        CLog(CLogTypes.info, 'read ---- peripheralDidWriteValueForCharacteristicError', error);
+                        const UUID = NSUUIDToString(peripheral.identifier);
+                        const cUUID = CBUUIDToString(characteristic.UUID);
+                        const sUUID = CBUUIDToString(characteristic.service.UUID);
+                        if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
+                            if (error) {
+                                reject(error.localizedDescription);
+                            } else {
+                                resolve();
                             }
-                        });
-                    } catch (ex) {
-                        CLog(CLogTypes.error, 'write ---- error:', ex);
-                        return reject(ex);
+                            p.delegate.removeSubDelegate(subD);
+                        }
                     }
-                })
-        );
+                };
+                p.delegate.addSubDelegate(subD);
+                try {
+                    p.writeValueForCharacteristicType(valueEncoded, wrapper.characteristic, CBCharacteristicWriteType.WithResponse);
+                } catch (ex) {
+                    CLog(CLogTypes.error, 'write ---- error:', ex);
+                    p.delegate.removeSubDelegate(subD);
+                    return reject(ex);
+                }
+                if (BluetoothUtil.debug) {
+                    CLog(CLogTypes.info, 'write:', args.value, JSON.stringify(this.valueToString(valueEncoded)));
+                }
+            });
+        });
     }
 
     @prepareArgs
