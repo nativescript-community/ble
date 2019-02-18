@@ -624,7 +624,7 @@ function initScanCallback() {
             return this.scanRecord.getTxPowerLevel();
         }
         get localName() {
-            return this.scanRecord.getDeviceName();
+            return this.scanRecord.getDeviceName().replace('\0', '').replace('�', '');
         }
         get flags() {
             return this.scanRecord.getAdvertiseFlags();
