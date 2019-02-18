@@ -1736,58 +1736,83 @@ export class Bluetooth extends BluetoothCommon {
             args,
             wrapper =>
                 new Promise((resolve, reject) => {
+                    const gatt = wrapper.gatt;
+                    const bluetoothGattService = wrapper.bluetoothGattService;
+                    const characteristicUUID = stringToUuid(args.characteristicUUID);
+
+                    const characteristic = this._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
+                    CLog(CLogTypes.info, `startNotifying ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
+                    if (!characteristic) {
+                        reject({ msg: BluetoothCommon.msg_no_characteristic, args });
+                        return;
+                    }
+
+                    if (!gatt.setCharacteristicNotification(characteristic, true)) {
+                        reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'setCharacteristicNotification', ...args } });
+                        return;
+                    }
+
+                    const clientCharacteristicConfigId = stringToUuid('2902');
+                    let bluetoothGattDescriptor = characteristic.getDescriptor(clientCharacteristicConfigId) as android.bluetooth.BluetoothGattDescriptor;
+                    if (!bluetoothGattDescriptor) {
+                        bluetoothGattDescriptor = new android.bluetooth.BluetoothGattDescriptor(clientCharacteristicConfigId, android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE);
+                        bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                        characteristic.addDescriptor(bluetoothGattDescriptor);
+                        CLog(CLogTypes.info, 'startNotifying ---- descriptor:', bluetoothGattDescriptor);
+                        // Any creation error will trigger the global catch. Ok.
+                    }
+
+                    // prefer notify over indicate
+                    if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY) !== 0) {
+                        bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                    } else if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE) !== 0) {
+                        bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+                    } else {
+                        reject({ msg: BluetoothCommon.msg_characteristic_cant_notify, args });
+                        return;
+                    }
+
+                    const pUUID = args.peripheralUUID;
+                    const subD = {
+                        onDescriptorWrite: (gatt: android.bluetooth.BluetoothGatt, descriptor: android.bluetooth.BluetoothGattDescriptor, status: number) => {
+                            const device = gatt.getDevice();
+                            let UUID: string = null;
+                            if (device == null) {
+                                // happens some time, why ... ?
+                            } else {
+                                UUID = device.getAddress();
+                            }
+
+                            const cUUID = uuidToString(characteristic.getUuid());
+                            const sUUID = uuidToString(characteristic.getService().getUuid());
+                            if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
+                                if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
+                                    const stateObject = this.connections[pUUID];
+                                    const cb =
+                                        args.onNotify ||
+                                        function(result) {
+                                            CLog(CLogTypes.warning, "No 'onNotify' callback function specified for 'startNotifying'");
+                                        };
+                                    stateObject.onNotifyCallback = cb;
+                                    resolve();
+                                } else {
+                                    reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeDescriptor', ...args } });
+                                }
+                                this.bluetoothGattCallback.removeSubDelegate(subD);
+                            }
+                        }
+                    };
+                    this.bluetoothGattCallback.addSubDelegate(subD);
                     try {
-                        const gatt = wrapper.gatt;
-                        const bluetoothGattService = wrapper.bluetoothGattService;
-                        const characteristicUUID = stringToUuid(args.characteristicUUID);
-
-                        const characteristic = this._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
-                        CLog(CLogTypes.info, `startNotifying ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
-                        if (!characteristic) {
-                            reject({ msg: BluetoothCommon.msg_no_characteristic, args });
-                            return;
-                        }
-
-                        if (!gatt.setCharacteristicNotification(characteristic, true)) {
-                            reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'setCharacteristicNotification', ...args } });
-                            return;
-                        }
-
-                        const clientCharacteristicConfigId = stringToUuid('2902');
-                        let bluetoothGattDescriptor = characteristic.getDescriptor(clientCharacteristicConfigId) as android.bluetooth.BluetoothGattDescriptor;
-                        if (!bluetoothGattDescriptor) {
-                            bluetoothGattDescriptor = new android.bluetooth.BluetoothGattDescriptor(clientCharacteristicConfigId, android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE);
-                            bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                            characteristic.addDescriptor(bluetoothGattDescriptor);
-                            CLog(CLogTypes.info, 'startNotifying ---- descriptor:', bluetoothGattDescriptor);
-                            // Any creation error will trigger the global catch. Ok.
-                        }
-
-                        // prefer notify over indicate
-                        if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY) !== 0) {
-                            bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                        } else if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE) !== 0) {
-                            bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
-                        } else {
-                            reject({ msg: BluetoothCommon.msg_characteristic_cant_notify, args });
-                            return;
-                        }
-
                         if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
-                            const cb =
-                                args.onNotify ||
-                                function(result) {
-                                    CLog(CLogTypes.warning, "No 'onNotify' callback function specified for 'startNotifying'");
-                                };
-                            const stateObject = this.connections[args.peripheralUUID];
-                            stateObject.onNotifyCallback = cb;
-                            resolve();
                             CLog(CLogTypes.info, '--- startNotifying done');
                         } else {
+                            this.bluetoothGattCallback.removeSubDelegate(subD);
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeDescriptor', ...args } });
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'startNotifying ---- error:', ex);
+                        this.bluetoothGattCallback.removeSubDelegate(subD);
                         reject(ex);
                     }
                 })
