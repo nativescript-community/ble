@@ -1496,35 +1496,33 @@ export class Bluetooth extends BluetoothCommon {
             this.gattDisconnect(connection.device);
         });
         // return new Promise((resolve, reject) => {
-            // gatt close wont trigger onConnectionStateChange
-            // const subD = {
-            //         onConnectionStateChange: (gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) => {
-            //             const device = gatt.getDevice();
-            //             let UUID: string = null;
-            //             if (device == null) {
-            //                 // happens some time, why ... ?
-            //             } else {
-            //                 UUID = device.getAddress();
-            //             }
-            //             if (UUID === pUUID) {
-            //                 if (newState === android.bluetooth.BluetoothProfile.STATE_DISCONNECTED && status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
-            //                     resolve();
-            //                 } else {
-            //                     reject();
-            //                 }
-            //                 this.bluetoothGattCallback.removeSubDelegate(subD);
-            //             }
-            //         }
-            //     };
-            // this.bluetoothGattCallback.addSubDelegate(subD);
-            // this.gattDisconnect(connection.device);
+        // gatt close wont trigger onConnectionStateChange
+        // const subD = {
+        //         onConnectionStateChange: (gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) => {
+        //             const device = gatt.getDevice();
+        //             let UUID: string = null;
+        //             if (device == null) {
+        //                 // happens some time, why ... ?
+        //             } else {
+        //                 UUID = device.getAddress();
+        //             }
+        //             if (UUID === pUUID) {
+        //                 if (newState === android.bluetooth.BluetoothProfile.STATE_DISCONNECTED && status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
+        //                     resolve();
+        //                 } else {
+        //                     reject();
+        //                 }
+        //                 this.bluetoothGattCallback.removeSubDelegate(subD);
+        //             }
+        //         }
+        //     };
+        // this.bluetoothGattCallback.addSubDelegate(subD);
+        // this.gattDisconnect(connection.device);
         // });
     }
 
     private addToQueue(args: WrapperOptions, runner: (wrapper: WrapperResult) => Promise<any>) {
-        return this._getWrapper(args).then(wrapper => {
-            return this.gattQueue.add(() => runner(wrapper));
-        });
+        return this._getWrapper(args).then(wrapper => this.gattQueue.add(() => runner(wrapper)));
     }
 
     @prepareArgs
@@ -1533,53 +1531,59 @@ export class Bluetooth extends BluetoothCommon {
             args,
             wrapper =>
                 new Promise((resolve, reject) => {
-                    try {
-                        const gatt = wrapper.gatt;
-                        const bluetoothGattService = wrapper.bluetoothGattService;
-                        const characteristicUUID = stringToUuid(args.characteristicUUID);
-                        CLog(CLogTypes.info, `read ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
+                    const gatt = wrapper.gatt;
+                    const bluetoothGattService = wrapper.bluetoothGattService;
+                    const characteristicUUID = stringToUuid(args.characteristicUUID);
+                    CLog(CLogTypes.info, `read ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
 
-                        const bluetoothGattCharacteristic = this._findCharacteristicOfType(bluetoothGattService, characteristicUUID, android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ);
+                    const bluetoothGattCharacteristic = this._findCharacteristicOfType(bluetoothGattService, characteristicUUID, android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ);
 
-                        if (!bluetoothGattCharacteristic) {
-                            reject({ msg: BluetoothCommon.msg_no_characteristic, args });
-                            return;
-                        }
+                    if (!bluetoothGattCharacteristic) {
+                        reject({ msg: BluetoothCommon.msg_no_characteristic, args });
+                        return;
+                    }
 
-                        const pUUID = args.peripheralUUID;
-                        const subD = {
-                            onCharacteristicRead: (gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, status: number) => {
-                                const device = gatt.getDevice();
-                                let UUID: string = null;
-                                if (device == null) {
-                                    // happens some time, why ... ?
-                                } else {
-                                    UUID = device.getAddress();
-                                }
-                                const cUUID = uuidToString(characteristic.getUuid());
-                                const sUUID = uuidToString(characteristic.getService().getUuid());
-                                if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
-                                    if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
-                                        const value = characteristic.getValue();
-                                        resolve({
-                                            android: value,
-                                            value: byteArrayToBuffer(value),
-                                            characteristicUUID: uuidToString(characteristic.getUuid())
-                                        });
-                                    } else {
-                                        reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'readCharacteristic', ...args } });
-                                    }
-                                    this.bluetoothGattCallback.removeSubDelegate(subD);
-                                }
+                    const pUUID = args.peripheralUUID;
+                    const subD = {
+                        onCharacteristicRead: (gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, status: number) => {
+                            const device = gatt.getDevice();
+                            let UUID: string = null;
+                            if (device == null) {
+                                // happens some time, why ... ?
+                            } else {
+                                UUID = device.getAddress();
                             }
-                        };
-                        this.bluetoothGattCallback.addSubDelegate(subD);
+                            const cUUID = uuidToString(characteristic.getUuid());
+                            const sUUID = uuidToString(characteristic.getService().getUuid());
+                            CLog(
+                                CLogTypes.info,
+                                `read ---- got result peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} status:${status}`
+                            );
+                            if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
+                                if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
+                                    const value = characteristic.getValue();
+                                    resolve({
+                                        android: value,
+                                        value: byteArrayToBuffer(value),
+                                        characteristicUUID: cUUID
+                                    });
+                                } else {
+                                    reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'readCharacteristic', ...args } });
+                                }
+                                this.bluetoothGattCallback.removeSubDelegate(subD);
+                            }
+                        }
+                    };
+                    this.bluetoothGattCallback.addSubDelegate(subD);
+                    try {
                         if (!gatt.readCharacteristic(bluetoothGattCharacteristic)) {
-                            reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'readCharacteristic', ...args } });
+                            CLog(CLogTypes.error, 'read ---- error: readCharacteristic returned false');
                             this.bluetoothGattCallback.removeSubDelegate(subD);
+                            reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'readCharacteristic', ...args } });
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'read ---- error:', ex);
+                        this.bluetoothGattCallback.removeSubDelegate(subD);
                         reject(ex);
                     }
                 })
