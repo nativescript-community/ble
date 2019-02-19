@@ -1017,7 +1017,7 @@ export class Bluetooth extends BluetoothCommon {
         return this._getWrapper(args, CBCharacteristicProperties.PropertyWrite).then(wrapper => {
             return new Promise((resolve, reject) => {
                 CLog(CLogTypes.info, `write ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
-                const valueEncoded = this.valueToNSData(args.value, args.encoding);
+                const valueEncoded = valueToNSData(args.value, args.encoding);
 
                 if (valueEncoded === null) {
                     return reject({ msg: BluetoothCommon.msg_invalid_value, value: args.value });
