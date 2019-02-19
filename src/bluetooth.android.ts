@@ -143,9 +143,9 @@ export function uuidToString(uuid) {
 
 // val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
 export function arrayToNativeByteArray(val) {
-    const result = Array.create('byte', val.length);
-
-    for (let i = 0; i < val.length; i++) {
+    const length = val.length;
+    const result = Array.create('byte', length);
+    for (let i = 0; i < length; i++) {
         result[i] = val[i];
     }
     return result;
@@ -154,6 +154,16 @@ export function arrayToNativeByteArray(val) {
 function nativeEncoding(encoding: string) {
     const result = java.nio.charset.Charset.forName(encoding);
     return result;
+}
+
+export function stringToUint8Array(value, encoding = 'iso-8859-1') {
+    const nativeArray = new java.lang.String(value).getBytes(nativeEncoding(encoding));
+    const length = nativeArray.length;
+    const ret = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+        ret[i] = value[i];
+    }
+    return ret;
 }
 
 export function valueToByteArray(value, encoding = 'iso-8859-1') {
@@ -165,7 +175,7 @@ export function valueToByteArray(value, encoding = 'iso-8859-1') {
     } else if (Array.isArray(value)) {
         return arrayToNativeByteArray(value);
     } else if (value instanceof ArrayBuffer) {
-        return arrayToNativeByteArray(new Int8Array(value as ArrayBuffer));
+        return arrayToNativeByteArray(new Uint8Array(value));
     }
     return null;
 }
@@ -173,9 +183,10 @@ export function byteArrayToBuffer(value) {
     if (!value) {
         return null;
     }
-    const ret = new Uint8Array(value.length);
+    const length = value.length;
+    const ret = new Uint8Array(length);
     const isString = typeof value === 'string';
-    for (let i = 0; i < value.length; i++) {
+    for (let i = 0; i < length; i++) {
         ret[i] = isString ? value.charCodeAt(i) : value[i];
     }
     return ret.buffer;

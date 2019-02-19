@@ -19,6 +19,70 @@ import {
     WriteOptions
 } from './bluetooth.common';
 
+function nativeEncoding(encoding: string) {
+    switch (encoding) {
+        case 'utf-8':
+            return NSUTF8StringEncoding;
+        case 'latin2':
+        case 'iso-8859-2':
+            return NSISOLatin2StringEncoding;
+        case 'shift-jis':
+            return NSShiftJISStringEncoding;
+        case 'iso-2022-jp':
+            return NSISO2022JPStringEncoding;
+        case 'euc-jp':
+            return NSJapaneseEUCStringEncoding;
+        case 'windows-1250':
+            return NSWindowsCP1250StringEncoding;
+        case 'windows-1251':
+            return NSWindowsCP1251StringEncoding;
+        case 'windows-1252':
+            return NSWindowsCP1252StringEncoding;
+        case 'windows-1253':
+            return NSWindowsCP1253StringEncoding;
+        case 'windows-1254':
+            return NSWindowsCP1254StringEncoding;
+        case 'utf-16be':
+            return NSUTF16BigEndianStringEncoding;
+        case 'utf-16le':
+            return NSUTF16LittleEndianStringEncoding;
+        default:
+        case 'iso-8859-1':
+        case 'latin1':
+            return NSISOLatin1StringEncoding;
+    }
+}
+
+
+function valueToNSData(value: any, encoding = 'iso-8859-1') {
+    const type = typeof value;
+    if (type === 'string') {
+        return NSString.stringWithString(value).dataUsingEncoding(nativeEncoding(encoding));
+    } else if (type === 'number') {
+        return NSData.dataWithData(new Uint8Array([value]).buffer as any);
+    } else if (Array.isArray(value)) {
+        return NSData.dataWithData(new Uint8Array(value).buffer as any);
+    } else if (value instanceof ArrayBuffer) {
+        // for ArrayBuffer to NSData
+        return NSData.dataWithData(value as any);
+    }
+    return null;
+}
+
+function valueToString(value) {
+    if (value instanceof NSData) {
+        const data = new Uint8Array(interop.bufferFromData(value));
+        const result = [];
+        data.forEach((v, i) => (result[i] = v));
+        return result;
+    }
+    return value;
+}
+export function stringToUint8Array(value, encoding = 'iso-8859-1') {
+    const nativeArray = NSString.stringWithString(value).dataUsingEncoding(nativeEncoding(encoding));;
+    return new Uint8Array(interop.bufferFromData(nativeArray));
+}
+
 import { ios } from 'tns-core-modules/utils/utils';
 
 export type SubPeripheralDelegate = Partial<CBPeripheralDelegate>;
@@ -979,7 +1043,7 @@ export class Bluetooth extends BluetoothCommon {
                     return reject(ex);
                 }
                 if (BluetoothUtil.debug) {
-                    CLog(CLogTypes.info, 'write:', args.value, JSON.stringify(this.valueToString(valueEncoded)));
+                    CLog(CLogTypes.info, 'write:', args.value, JSON.stringify(valueToString(valueEncoded)));
                 }
             });
         });
@@ -994,7 +1058,7 @@ export class Bluetooth extends BluetoothCommon {
         return this._getWrapper(args, CBCharacteristicProperties.PropertyWriteWithoutResponse).then(wrapper => {
             try {
                 CLog(CLogTypes.info, `writeWithoutResponse ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
-                const valueEncoded = this.valueToNSData(args.value, args.encoding);
+                const valueEncoded = valueToNSData(args.value, args.encoding);
 
                 if (valueEncoded === null) {
                     return Promise.reject({ msg: BluetoothCommon.msg_invalid_value, value: args.value });
@@ -1003,7 +1067,7 @@ export class Bluetooth extends BluetoothCommon {
                 wrapper.peripheral.writeValueForCharacteristicType(valueEncoded, wrapper.characteristic, CBCharacteristicWriteType.WithoutResponse);
 
                 if (BluetoothUtil.debug) {
-                    CLog(CLogTypes.info, 'writeWithoutResponse:', args.value, JSON.stringify(this.valueToString(valueEncoded)));
+                    CLog(CLogTypes.info, 'writeWithoutResponse:', args.value, JSON.stringify(valueToString(valueEncoded)));
                 }
 
                 return null;
@@ -1237,62 +1301,5 @@ export class Bluetooth extends BluetoothCommon {
         });
     }
 
-    private nativeEncoding(encoding) {
-        switch (encoding) {
-            case 'utf-8':
-                return NSUTF8StringEncoding;
-            case 'latin2':
-            case 'iso-8859-2':
-                return NSISOLatin2StringEncoding;
-            case 'shift-jis':
-                return NSShiftJISStringEncoding;
-            case 'iso-2022-jp':
-                return NSISO2022JPStringEncoding;
-            case 'euc-jp':
-                return NSJapaneseEUCStringEncoding;
-            case 'windows-1250':
-                return NSWindowsCP1250StringEncoding;
-            case 'windows-1251':
-                return NSWindowsCP1251StringEncoding;
-            case 'windows-1252':
-                return NSWindowsCP1252StringEncoding;
-            case 'windows-1253':
-                return NSWindowsCP1253StringEncoding;
-            case 'windows-1254':
-                return NSWindowsCP1254StringEncoding;
-            case 'utf-16be':
-                return NSUTF16BigEndianStringEncoding;
-            case 'utf-16le':
-                return NSUTF16LittleEndianStringEncoding;
-            default:
-            case 'iso-8859-1':
-            case 'latin1':
-                return NSISOLatin1StringEncoding;
-        }
-    }
-
-    private valueToNSData(value: any, encoding = 'iso-8859-1') {
-        const type = typeof value;
-        if (type === 'string') {
-            return NSString.stringWithString(value).dataUsingEncoding(this.nativeEncoding(encoding));
-        } else if (type === 'number') {
-            return NSData.dataWithData(new Uint8Array([value]).buffer as any);
-        } else if (Array.isArray(value)) {
-            return NSData.dataWithData(new Uint8Array(value).buffer as any);
-        } else if (value instanceof ArrayBuffer) {
-            // for ArrayBuffer to NSData
-            return NSData.dataWithData(value as any);
-        }
-        return null;
-    }
-
-    private valueToString(value) {
-        if (value instanceof NSData) {
-            const data = new Uint8Array(interop.bufferFromData(value));
-            const result = [];
-            data.forEach((v, i) => (result[i] = v));
-            return result;
-        }
-        return value;
-    }
+    
 }
