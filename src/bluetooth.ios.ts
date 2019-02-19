@@ -35,7 +35,10 @@ export interface CBPeripheralWithDelegate extends CBPeripheral {
  */
 export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDelegate {
     public static ObjCProtocols = [CBPeripheralDelegate];
-    public onNotifyCallback?: (result: ReadResult) => void;
+
+    public onNotifyCallbacks: {
+        [k: string]: (result: ReadResult) => void;
+    };
     private _owner: WeakRef<Bluetooth>;
     private subDelegates: SubPeripheralDelegate[];
 
@@ -60,6 +63,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
     public initWithOwner(owner: WeakRef<Bluetooth>): CBPeripheralDelegateImpl {
         this._owner = owner;
         this.subDelegates = [];
+        this.onNotifyCallbacks = {};
         CLog(CLogTypes.info, `CBPeripheralDelegateImpl.initWithOwner: ${owner.get()}`);
         return this;
     }
@@ -153,10 +157,14 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
         }
 
         if (characteristic.isNotifying) {
-            if (this.onNotifyCallback) {
-                this.onNotifyCallback({
+            const cUUID = CBUUIDToString(characteristic.UUID);
+            const sUUID = CBUUIDToString(characteristic.service.UUID);
+            const key = sUUID + '/' + cUUID;
+            if (this.onNotifyCallbacks [key]) {
+                this.onNotifyCallbacks[key]({
                     // type: 'notification',
-                    characteristicUUID: CBUUIDToString(characteristic.UUID),
+                    serviceUUID: sUUID,
+                    characteristicUUID: cUUID,
                     ios: characteristic.value,
                     value: toArrayBuffer(characteristic.value)
                 });
@@ -1017,8 +1025,9 @@ export class Bluetooth extends BluetoothCommon {
                         CLog(CLogTypes.info, 'startNotifying ---- No "onNotify" callback function specified for "startNotifying()"');
                     };
 
-                const delegate = wrapper.peripheral.delegate as CBPeripheralDelegateImpl;
-                delegate.onNotifyCallback = cb;
+                const delegate = wrapper.peripheral.delegate;
+                const key = args.serviceUUID + '/' + args.characteristicUUID;
+                delegate.onNotifyCallbacks[key] = cb;
                 wrapper.peripheral.setNotifyValueForCharacteristic(true, wrapper.characteristic);
                 return null;
             } catch (ex) {
@@ -1034,7 +1043,8 @@ export class Bluetooth extends BluetoothCommon {
             CLog(CLogTypes.info, `stopNotifying ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
             try {
                 const peripheral = this.findPeripheral(args.peripheralUUID);
-                (peripheral.delegate as CBPeripheralDelegateImpl).onNotifyCallback = null;
+                const key = args.serviceUUID + '/' + args.characteristicUUID;
+                delete peripheral.delegate.onNotifyCallbacks[key];
                 peripheral.setNotifyValueForCharacteristic(false, wrapper.characteristic);
                 return null;
             } catch (ex) {

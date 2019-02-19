@@ -780,13 +780,16 @@ function initBluetoothGattCallback() {
                 this.owner.get().gattDisconnect(gatt);
                 return;
             }
-
-            if (stateObject.onNotifyCallback) {
+            const cUUID = uuidToString(characteristic.getUuid());
+            const sUUID = uuidToString(characteristic.getService().getUuid());
+            const key = sUUID + '/' + cUUID;
+            if (stateObject.onNotifyCallbacks && stateObject.onNotifyCallbacks[key]) {
                 const value = characteristic.getValue();
-                stateObject.onNotifyCallback({
+                stateObject.onNotifyCallbacks[key]({
                     android: value,
                     value: byteArrayToBuffer(value),
-                    characteristicUUID: uuidToString(characteristic.getUuid())
+                    serviceUUID: sUUID,
+                    characteristicUUID: cUUID
                 });
             }
         }
@@ -1028,7 +1031,9 @@ export class Bluetooth extends BluetoothCommon {
             ) => void;
             onDisconnected?: (e: { UUID: string; name: string }) => void;
             device?: android.bluetooth.BluetoothGatt;
-            onNotifyCallback?: (result: ReadResult) => void;
+            onNotifyCallbacks?: {
+                [k:string]: (result: ReadResult) => void
+            };
             advertismentData?: AdvertismentData;
         };
     } = {};
@@ -1792,12 +1797,18 @@ export class Bluetooth extends BluetoothCommon {
                             if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
                                 if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
                                     const stateObject = this.connections[pUUID];
-                                    const cb =
-                                        args.onNotify ||
-                                        function(result) {
-                                            CLog(CLogTypes.warning, "No 'onNotify' callback function specified for 'startNotifying'");
-                                        };
-                                    stateObject.onNotifyCallback = cb;
+                                    stateObject.onNotifyCallbacks = stateObject.onNotifyCallbacks || {};
+                                    const key = sUUID + '/' + cUUID;
+                                    const onNotify = args.onNotify;
+                                    stateObject.onNotifyCallbacks[key] = function(result) {
+                                        // CLog(
+                                        //     CLogTypes.warning,
+                                        //     `onNotifyCallback ---- UUID: ${UUID}, pUUID: ${pUUID}, cUUID: ${cUUID}, args.characteristicUUID: ${
+                                        //         args.characteristicUUID
+                                        //     }, sUUID: ${sUUID}, args.serviceUUID: ${args.serviceUUID}, result: ${result}`
+                                        // );
+                                        onNotify(result);
+                                    };
                                     resolve();
                                 } else {
                                     reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeDescriptor', ...args } });
@@ -1843,7 +1854,10 @@ export class Bluetooth extends BluetoothCommon {
                         }
 
                         const stateObject = this.connections[args.peripheralUUID];
-                        stateObject.onNotifyCallback = null;
+                        if (stateObject && stateObject.onNotifyCallbacks) {
+                            const key = args.serviceUUID + '/' + args.characteristicUUID;
+                            delete stateObject.onNotifyCallbacks[key];
+                        }
 
                         if (gatt.setCharacteristicNotification(characteristic, false)) {
                             resolve();
