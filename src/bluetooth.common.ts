@@ -47,6 +47,7 @@ export function bluetoothEnabled(target: Object, propertyKey: string, descriptor
     return descriptor;
 }
 
+const pattern = /0000(.{4})-0000-1000-8000-00805f9b34fb/;
 export function prepareArgs(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
     const originalMethod = descriptor.value as Function; // save a reference to the original method
 
@@ -57,7 +58,9 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
         if (paramsToCheck.hasOwnProperty) {
             ['serviceUUID', 'characteristicUUID'].forEach(function(k) {
                 if (paramsToCheck[k]) {
-                    paramsToCheck[k] = paramsToCheck[k].toLowerCase();
+                    const matcher = (paramsToCheck[k] as string).match(pattern);
+                    // console.log('test regex', paramsToCheck[k], matcher);
+                    paramsToCheck[k] = (matcher && matcher.length > 0 ? matcher[1] : paramsToCheck[k]).toLowerCase();
                 }
             });
         }
@@ -549,10 +552,11 @@ export interface StartNotifyingOptions extends CRUDOptions {
  * Response object for the read function
  */
 export interface ReadResult {
-    value: any;
+    value: ArrayBuffer;
     ios?: any;
     android?: any;
     characteristicUUID: string;
+    serviceUUID: string;
 }
 
 export interface StartAdvertisingOptions {
