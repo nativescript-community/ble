@@ -16,7 +16,8 @@ import {
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
-    WriteOptions
+    WriteOptions,
+    MtuOptions
 } from './bluetooth.common';
 
 function nativeEncoding(encoding: string) {
@@ -1002,7 +1003,12 @@ export class Bluetooth extends BluetoothCommon {
                 })
         );
     }
-
+    public requestMtu(args: MtuOptions) {
+        if (!args.value) {
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
+        }
+        return Promise.resolve(args.value);
+    }
     @prepareArgs
     public write(args: WriteOptions) {
         if (!args.value) {

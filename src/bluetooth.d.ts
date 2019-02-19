@@ -1,6 +1,7 @@
 import {
     BluetoothCommon,
     CallbackType,
+    Characteristic,
     ConnectOptions,
     DisconnectOptions,
     DiscoverCharacteristicsOptions,
@@ -8,16 +9,16 @@ import {
     DiscoverServicesOptions,
     MatchMode,
     MatchNum,
+    MtuOptions,
     Peripheral,
     ReadOptions,
     ReadResult,
     ScanMode,
+    Service,
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
-    WriteOptions,
-    Service,
-    Characteristic
+    WriteOptions
 } from './bluetooth.common';
 
 export {
@@ -115,6 +116,8 @@ export class Bluetooth extends BluetoothCommon {
 
     stopNotifying(options: StopNotifyingOptions): Promise<any>;
 
+    requestMtu(options: MtuOptions): Promise<number>;
+
     // PERIPHERAL MODE FUNCTIONS
     disable(): Promise<any>;
     isPeripheralModeSupported(): Promise<boolean>;
@@ -139,10 +142,10 @@ export class Bluetooth extends BluetoothCommon {
     removeBond(device: any): any;
     adapter: any;
 
-    public discoverServices(args: DiscoverServicesOptions): Promise<{services:Service[]}>;
-    public discoverCharacteristics(args: DiscoverCharacteristicsOptions): Promise<{characteristics:Characteristic[]}>;
+    public discoverServices(args: DiscoverServicesOptions): Promise<{ services: Service[] }>;
+    public discoverCharacteristics(args: DiscoverCharacteristicsOptions): Promise<{ characteristics: Characteristic[] }>;
 
-    public discoverAll(args: DiscoverOptions): Promise<{services:Service[], characteristics:Characteristic[]}>;
+    public discoverAll(args: DiscoverOptions): Promise<{ services: Service[]; characteristics: Characteristic[] }>;
 }
 export function getBluetoothInstance(): Bluetooth;
 

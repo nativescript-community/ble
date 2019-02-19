@@ -21,7 +21,8 @@ import {
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
-    WriteOptions
+    WriteOptions,
+    MtuOptions
 } from './bluetooth.common';
 import * as Queue from 'p-queue';
 
@@ -1606,6 +1607,60 @@ export class Bluetooth extends BluetoothCommon {
         );
     }
 
+
+    @prepareArgs
+    public requestMtu(args: MtuOptions) {
+        if (!args.value) {
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
+        }
+        if (!args.peripheralUUID) {
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'peripheralUUID' });
+        }
+        const pUUID = args.peripheralUUID;
+        const stateObject = this.connections[pUUID];
+        if (!stateObject) {
+            return Promise.reject({ msg: BluetoothCommon.msg_peripheral_not_connected, args });
+        }
+
+        const gatt = stateObject.device;
+
+        return this.gattQueue.add(
+            () =>
+                new Promise((resolve, reject) => {
+                    try {
+                        CLog(CLogTypes.info, 'requestMtu ---- peripheral:', pUUID);
+                        const subD = {
+                            onMtuChanged: (gatt: android.bluetooth.BluetoothGatt, mtu: number, status: number) => {
+                                const device = gatt.getDevice();
+                                let UUID: string = null;
+                                if (device == null) {
+                                    // happens some time, why ... ?
+                                } else {
+                                    UUID = device.getAddress();
+                                }
+                                if (UUID === pUUID) {
+                                    if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
+                                        resolve(mtu);
+                                    } else {
+                                        reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'requestMtu', ...args } });
+                                    }
+                                    this.bluetoothGattCallback.removeSubDelegate(subD);
+                                }
+                            }
+                        };
+                        this.bluetoothGattCallback.addSubDelegate(subD);
+                        if (!gatt.requestMtu(args.value)) {
+                            reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'requestMtu', ...args } });
+                            this.bluetoothGattCallback.removeSubDelegate(subD);
+                        }
+                    } catch (ex) {
+                        CLog(CLogTypes.error, 'requestMtu ---- error:', ex);
+                        reject(ex);
+                    }
+                })
+        );
+    }
+
     @prepareArgs
     public write(args: WriteOptions) {
         if (!args.value) {
@@ -1616,7 +1671,7 @@ export class Bluetooth extends BluetoothCommon {
             wrapper =>
                 new Promise((resolve, reject) => {
                     try {
-                        CLog(CLogTypes.info, `write ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
+                        CLog(CLogTypes.info, `write ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} `);
                         const characteristic = this._findCharacteristicOfType(
                             wrapper.bluetoothGattService,
                             stringToUuid(args.characteristicUUID),

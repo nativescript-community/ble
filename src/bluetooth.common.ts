@@ -521,6 +521,12 @@ export interface WriteOptions extends CRUDOptions {
     encoding?: string;
 }
 
+
+export interface MtuOptions  {
+    value: any;
+    peripheralUUID: string;
+}
+
 export interface DiscoverOptions {
     peripheralUUID: string;
 }
