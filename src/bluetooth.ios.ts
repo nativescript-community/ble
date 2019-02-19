@@ -1159,7 +1159,7 @@ export class Bluetooth extends BluetoothCommon {
             };
             p.delegate.addSubDelegate(subD);
             p.discoverServices(args.serviceUUIDs ? args.serviceUUIDs.map(s => CBUUID.UUIDWithString(s)) : null);
-        }) as Promise<{ services: Service[]; ios: CBService[] }>;
+        });
     }
 
     @bluetoothEnabled
@@ -1217,7 +1217,7 @@ export class Bluetooth extends BluetoothCommon {
             };
             p.delegate.addSubDelegate(subD);
             p.discoverCharacteristicsForService(args.characteristicUUIDs ? args.characteristicUUIDs.map(s => CBUUID.UUIDWithString(s)) : null, service);
-        }) as Promise<{ characteristics: Characteristic[]; ios: CBCharacteristic[] }>;
+        });
     }
 
     private _isEnabled() {

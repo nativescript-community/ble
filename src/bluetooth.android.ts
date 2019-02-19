@@ -636,7 +636,10 @@ function initScanCallback() {
             return this.scanRecord.getTxPowerLevel();
         }
         get localName() {
-            return this.scanRecord.getDeviceName().replace('\0', '').replace('�', '');
+            return this.scanRecord
+                .getDeviceName()
+                .replace('\0', '')
+                .replace('�', '');
         }
         get flags() {
             return this.scanRecord.getAdvertiseFlags();
@@ -1886,7 +1889,6 @@ export class Bluetooth extends BluetoothCommon {
                     this.bluetoothGattCallback.addSubDelegate(subD);
                     try {
                         if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
-                            CLog(CLogTypes.info, '--- startNotifying done');
                         } else {
                             this.bluetoothGattCallback.removeSubDelegate(subD);
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeDescriptor', ...args } });
