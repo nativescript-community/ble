@@ -8,6 +8,7 @@ import {
     ConnectOptions,
     DiscoverCharacteristicsOptions,
     DiscoverServicesOptions,
+    MtuOptions,
     Peripheral,
     prepareArgs,
     ReadOptions,
@@ -16,8 +17,7 @@ import {
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
-    WriteOptions,
-    MtuOptions
+    WriteOptions
 } from './bluetooth.common';
 
 function nativeEncoding(encoding: string) {
@@ -54,7 +54,6 @@ function nativeEncoding(encoding: string) {
     }
 }
 
-
 function valueToNSData(value: any, encoding = 'iso-8859-1') {
     const type = typeof value;
     if (type === 'string') {
@@ -80,7 +79,7 @@ function valueToString(value) {
     return value;
 }
 export function stringToUint8Array(value, encoding = 'iso-8859-1') {
-    const nativeArray = NSString.stringWithString(value).dataUsingEncoding(nativeEncoding(encoding));;
+    const nativeArray = NSString.stringWithString(value).dataUsingEncoding(nativeEncoding(encoding));
     return new Uint8Array(interop.bufferFromData(nativeArray));
 }
 
@@ -225,7 +224,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
             const cUUID = CBUUIDToString(characteristic.UUID);
             const sUUID = CBUUIDToString(characteristic.service.UUID);
             const key = sUUID + '/' + cUUID;
-            if (this.onNotifyCallbacks [key]) {
+            if (this.onNotifyCallbacks[key]) {
                 this.onNotifyCallbacks[key]({
                     // type: 'notification',
                     serviceUUID: sUUID,
@@ -1306,6 +1305,4 @@ export class Bluetooth extends BluetoothCommon {
             characteristic
         });
     }
-
-    
 }

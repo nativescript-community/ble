@@ -31,6 +31,7 @@
         ],
         "interface-name": false,
         "no-reference": false,
+        "no-floating-promises": false,
         "no-shadowed-variable": false,
         "one-variable-per-declaration": false,
         "no-extra-boolean-cast": false,

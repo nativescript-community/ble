@@ -13,6 +13,7 @@ import {
     DiscoverCharacteristicsOptions,
     DiscoverOptions,
     DiscoverServicesOptions,
+    MtuOptions,
     Peripheral,
     prepareArgs,
     ReadOptions,
@@ -21,8 +22,7 @@ import {
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
-    WriteOptions,
-    MtuOptions
+    WriteOptions
 } from './bluetooth.common';
 import * as Queue from 'p-queue';
 
@@ -1047,7 +1047,7 @@ export class Bluetooth extends BluetoothCommon {
             onDisconnected?: (e: { UUID: string; name: string }) => void;
             device?: android.bluetooth.BluetoothGatt;
             onNotifyCallbacks?: {
-                [k:string]: (result: ReadResult) => void
+                [k: string]: (result: ReadResult) => void
             };
             advertismentData?: AdvertismentData;
         };
