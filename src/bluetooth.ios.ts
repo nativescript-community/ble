@@ -1058,7 +1058,7 @@ export class Bluetooth extends BluetoothCommon {
                     return reject(ex);
                 }
                 if (BluetoothUtil.debug) {
-                    CLog(CLogTypes.info, 'write:', args.value, JSON.stringify(valueToString(valueEncoded)));
+                    CLog(CLogTypes.info, 'write:', JSON.stringify(valueToString(valueEncoded)));
                 }
             });
         });
@@ -1082,7 +1082,7 @@ export class Bluetooth extends BluetoothCommon {
                 wrapper.peripheral.writeValueForCharacteristicType(valueEncoded, wrapper.characteristic, CBCharacteristicWriteType.WithoutResponse);
 
                 if (BluetoothUtil.debug) {
-                    CLog(CLogTypes.info, 'writeWithoutResponse:', args.value, JSON.stringify(valueToString(valueEncoded)));
+                    CLog(CLogTypes.info, 'writeWithoutResponse:', JSON.stringify(valueToString(valueEncoded)));
                 }
 
                 return null;

@@ -1726,7 +1726,7 @@ export class Bluetooth extends BluetoothCommon {
 
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
-                                CLog(CLogTypes.info, 'write ---- characteristic:', args.value, printValueToString(val));
+                                CLog(CLogTypes.info, 'write ---- characteristic:', printValueToString(val));
                             }
                         } else {
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeCharacteristic', ...args } });
@@ -1799,7 +1799,7 @@ export class Bluetooth extends BluetoothCommon {
 
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
-                                CLog(CLogTypes.info, 'writeCharacteristic:', args.value, JSON.stringify(printValueToString(val)));
+                                CLog(CLogTypes.info, 'writeCharacteristic:', JSON.stringify(printValueToString(val)));
                             }
                         } else {
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeWithoutResponse', ...args } });
