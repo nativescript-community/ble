@@ -691,7 +691,7 @@ export class Bluetooth extends BluetoothCommon {
                     // tslint:disable-next-line:no-unused-expression
                     this.centralManager;
                     CLog(CLogTypes.info, 'isBluetoothEnabled waiting a bit');
-                    return new Promise(resolve => setTimeout(resolve, 50)).then(() => (this.readyToAskForEnabled = true));
+                    return new Promise(resolve => setTimeout(resolve, 500)).then(() => (this.readyToAskForEnabled = true));
                 }
                 return null;
             })
