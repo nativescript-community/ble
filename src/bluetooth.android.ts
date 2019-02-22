@@ -168,15 +168,19 @@ export function stringToUint8Array(value, encoding = 'iso-8859-1') {
 }
 
 export function valueToByteArray(value, encoding = 'iso-8859-1') {
+    if (value instanceof ArrayBuffer) {
+        return arrayToNativeByteArray(new Uint8Array(value));
+    } else if (value.buffer) {
+        return arrayToNativeByteArray(value);
+
+    } else if (Array.isArray(value)) {
+        return arrayToNativeByteArray(value);
+    }
     const type = typeof value;
     if (type === 'string') {
         return new java.lang.String(value).getBytes(nativeEncoding(encoding));
     } else if (type === 'number') {
         return arrayToNativeByteArray([value]);
-    } else if (Array.isArray(value)) {
-        return arrayToNativeByteArray(value);
-    } else if (value instanceof ArrayBuffer) {
-        return arrayToNativeByteArray(new Uint8Array(value));
     }
     return null;
 }

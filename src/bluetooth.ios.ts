@@ -55,16 +55,26 @@ function nativeEncoding(encoding: string) {
 }
 
 function valueToNSData(value: any, encoding = 'iso-8859-1') {
+    if (value instanceof NSData) {
+        // console.log('valueToNSData converting from NSData');
+        return value;
+    } else if (value instanceof ArrayBuffer) {
+        // for ArrayBuffer to NSData
+        // console.log('valueToNSData converting from ArrayBuffer');
+        return NSData.dataWithData(value as any);
+    } else if (value.buffer) {
+        // typed array
+        // console.log('valueToNSData converting from Typed array', Object.prototype.toString.call(value), value[0], value[1], value[2], value[3]);
+        return NSData.dataWithData(value.buffer);
+    } else if (Array.isArray(value)) {
+        // console.log('valueToNSData converting from Array');
+        return NSData.dataWithData(new Uint8Array(value).buffer as any);
+    }
     const type = typeof value;
     if (type === 'string') {
         return NSString.stringWithString(value).dataUsingEncoding(nativeEncoding(encoding));
     } else if (type === 'number') {
         return NSData.dataWithData(new Uint8Array([value]).buffer as any);
-    } else if (Array.isArray(value)) {
-        return NSData.dataWithData(new Uint8Array(value).buffer as any);
-    } else if (value instanceof ArrayBuffer) {
-        // for ArrayBuffer to NSData
-        return NSData.dataWithData(value as any);
     }
     return null;
 }
