@@ -81,7 +81,7 @@ function valueToNSData(value: any, encoding = 'iso-8859-1') {
 
 function valueToString(value) {
     if (value instanceof NSData) {
-        const data = new Uint8Array(interop.bufferFromData(value));
+        const data = new Int8Array(interop.bufferFromData(value));
         const result = [];
         data.forEach((v, i) => (result[i] = v));
         return result;
