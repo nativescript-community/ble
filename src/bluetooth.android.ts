@@ -24,7 +24,7 @@ import {
     StopNotifyingOptions,
     WriteOptions
 } from './bluetooth.common';
-import * as Queue from 'p-queue';
+import Queue from 'p-queue';
 
 let _bluetoothInstance: Bluetooth;
 export function getBluetoothInstance() {
@@ -172,7 +172,6 @@ export function valueToByteArray(value, encoding = 'iso-8859-1') {
         return arrayToNativeByteArray(new Uint8Array(value));
     } else if (value.buffer) {
         return arrayToNativeByteArray(value);
-
     } else if (Array.isArray(value)) {
         return arrayToNativeByteArray(value);
     }
@@ -1039,19 +1038,11 @@ export class Bluetooth extends BluetoothCommon {
     public connections: {
         [k: string]: {
             state: ConnectionState;
-            onConnected?: (
-                e: {
-                    UUID: string;
-                    name: string;
-                    state: string;
-                    services?: Service[];
-                    advertismentData: AdvertismentData;
-                }
-            ) => void;
+            onConnected?: (e: { UUID: string; name: string; state: string; services?: Service[]; advertismentData: AdvertismentData }) => void;
             onDisconnected?: (e: { UUID: string; name: string }) => void;
             device?: android.bluetooth.BluetoothGatt;
             onNotifyCallbacks?: {
-                [k: string]: (result: ReadResult) => void
+                [k: string]: (result: ReadResult) => void;
             };
             advertismentData?: AdvertismentData;
         };
@@ -1143,7 +1134,7 @@ export class Bluetooth extends BluetoothCommon {
     public enableGPS(): Promise<void> {
         CLog(CLogTypes.info, 'Bluetooth.enableGPS');
         return new Promise((resolve, reject) => {
-            const currentContext = application.android.currentContext as android.app.Activity;
+            const activity = application.android.foregroundActivity || application.android.startActivity;
             if (!this.isGPSEnabled()) {
                 const onActivityResultHandler = (data: application.AndroidActivityResultEventData) => {
                     application.android.off(application.AndroidApplication.activityResultEvent, onActivityResultHandler);
@@ -1156,7 +1147,7 @@ export class Bluetooth extends BluetoothCommon {
                     }
                 };
                 application.android.on(application.AndroidApplication.activityResultEvent, onActivityResultHandler);
-                currentContext.startActivityForResult(new android.content.Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
+                activity.startActivityForResult(new android.content.Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
             } else {
                 resolve();
             }
@@ -1250,7 +1241,7 @@ export class Bluetooth extends BluetoothCommon {
 
     public openBluetoothSettings() {
         return new Promise((resolve, reject) => {
-            const currentContext = application.android.currentContext as android.app.Activity;
+            const activity = application.android.foregroundActivity || application.android.startActivity;
             if (!this._isEnabled()) {
                 const that = this;
                 const onActivityResultHandler = function(data: application.AndroidActivityResultEventData) {
@@ -1264,7 +1255,7 @@ export class Bluetooth extends BluetoothCommon {
                     }
                 };
                 application.android.on(application.AndroidApplication.activityResultEvent, onActivityResultHandler);
-                currentContext.startActivityForResult(new android.content.Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS), 0);
+                activity.startActivityForResult(new android.content.Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS), 0);
             } else {
                 resolve();
             }
@@ -1613,7 +1604,6 @@ export class Bluetooth extends BluetoothCommon {
                 })
         );
     }
-
 
     @prepareArgs
     public requestMtu(args: MtuOptions) {
@@ -1973,9 +1963,7 @@ export class Bluetooth extends BluetoothCommon {
                                 }
                                 if (UUID === pUUID) {
                                     if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
-                                        resolve({
-                                            services: getGattDeviceServiceInfo(gatt)
-                                        });
+                                        resolve(getGattDeviceServiceInfo(gatt));
                                         // resolve();
                                     } else {
                                         reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'discoverServices', ...args } });

@@ -1,54 +1,54 @@
 {
-  "name": "nativescript-bluetooth",
-  "version": "2.0.0-beta.11",
-  "description": "Connect to and interact with Bluetooth LE peripherals",
-  "main": "./bluetooth",
-  "typings": "./bluetooth.d.ts",
-  "nativescript": {
-    "platforms": {
-      "android": "3.0.0",
-      "ios": "3.0.0"
-    }
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/EddyVerbruggen/nativescript-bluetooth.git"
-  },
-  "keywords": [
-    "ecosystem:NativeScript",
-    "NativeScript",
-    "BLE",
-    "Bluetooth",
-    "Bluetooth LE",
-    "Bluetooth Smart",
-    "Bluetooth Low Energy"
-  ],
-  "author": {
-    "name": "Eddy Verbruggen",
-    "email": "eddyverbruggen@gmail.com"
-  },
-  "contributors": [
-    {
-      "name": "Brad Martin",
-      "email": "bmartin@nstudio.io",
-      "url": "https://github.com/bradmartin"
+    "name": "nativescript-bluetooth",
+    "version": "2.0.0-beta.13",
+    "description": "Connect to and interact with Bluetooth LE peripherals",
+    "main": "./bluetooth",
+    "typings": "./bluetooth.d.ts",
+    "nativescript": {
+        "platforms": {
+            "android": "3.0.0",
+            "ios": "3.0.0"
+        }
     },
-    {
-      "name": "Martin Guillon",
-      "email": "martin.guillon@akyasl.fr"
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EddyVerbruggen/nativescript-bluetooth.git"
     },
-    {
-      "name": "Ryan Pendergast",
-      "email": "ryan.pendergast@gmail.com",
-      "url": "https://rynop.com"
+    "keywords": [
+        "ecosystem:NativeScript",
+        "NativeScript",
+        "BLE",
+        "Bluetooth",
+        "Bluetooth LE",
+        "Bluetooth Smart",
+        "Bluetooth Low Energy"
+    ],
+    "author": {
+        "name": "Eddy Verbruggen",
+        "email": "eddyverbruggen@gmail.com"
+    },
+    "contributors": [
+        {
+            "name": "Brad Martin",
+            "email": "bmartin@nstudio.io",
+            "url": "https://github.com/bradmartin"
+        },
+        {
+            "name": "Martin Guillon",
+            "email": "martin.guillon@akyasl.fr"
+        },
+        {
+            "name": "Ryan Pendergast",
+            "email": "ryan.pendergast@gmail.com",
+            "url": "https://rynop.com"
+        }
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/EddyVerbruggen/nativescript-bluetooth/issues"
+    },
+    "homepage": "https://github.com/EddyVerbruggen/nativescript-bluetooth",
+    "dependencies": {
+        "p-queue": "^3.0.0"
     }
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/EddyVerbruggen/nativescript-bluetooth/issues"
-  },
-  "homepage": "https://github.com/EddyVerbruggen/nativescript-bluetooth",
-  "dependencies": {
-    "p-queue": "^3.0.0"
-  }
 }
