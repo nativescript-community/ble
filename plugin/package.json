@@ -49,6 +49,6 @@
     },
     "homepage": "https://github.com/EddyVerbruggen/nativescript-bluetooth",
     "dependencies": {
-        "p-queue": "^3.0.0"
+        "p-queue": "^5.0.0"
     }
 }

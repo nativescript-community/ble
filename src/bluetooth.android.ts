@@ -24,7 +24,7 @@ import {
     StopNotifyingOptions,
     WriteOptions
 } from './bluetooth.common';
-import Queue from 'p-queue';
+import * as pQueue from 'p-queue';
 
 let _bluetoothInstance: Bluetooth;
 export function getBluetoothInstance() {
@@ -720,8 +720,6 @@ function initBluetoothGattCallback() {
                     gatt.getDevice().getAddress()} status: ${status}, newState: ${newState}, subdelegates:${this.subDelegates.length}`
             );
             this.subDelegates.forEach(d => {
-                CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onConnectionStateChange ---- testing delegate: ${d}`);
-
                 if (d.onConnectionStateChange) {
                     d.onConnectionStateChange(gatt, status, newState);
                 }
@@ -1012,7 +1010,7 @@ export class Bluetooth extends BluetoothCommon {
     private LeScanCallback: LeScanCallback;
 
     // with gatt all operations must be queued. Parallel operations will fail
-    gattQueue = new Queue({ concurrency: 1 });
+    gattQueue = new pQueue({ concurrency: 1 });
 
     static readonly android = {
         ScanMode,
@@ -1536,12 +1534,18 @@ export class Bluetooth extends BluetoothCommon {
         // });
     }
 
+    private addToGatQueue(p: () => Promise<any>) {
+        CLog(CLogTypes.info, 'addToGatQueue:', this.gattQueue.size, this.gattQueue.pending, this.gattQueue.isPaused);
+        return this.gattQueue.add(p);
+    }
+
     private addToQueue(args: WrapperOptions, runner: (wrapper: WrapperResult) => Promise<any>) {
-        return this._getWrapper(args).then(wrapper => this.gattQueue.add(() => runner(wrapper)));
+        return this._getWrapper(args).then(wrapper => this.addToGatQueue(() => runner(wrapper)));
     }
 
     @prepareArgs
     public read(args: ReadOptions) {
+        CLog(CLogTypes.info, 'read:', args);
         return this.addToQueue(
             args,
             wrapper =>
@@ -1621,7 +1625,8 @@ export class Bluetooth extends BluetoothCommon {
 
         const gatt = stateObject.device;
 
-        return this.gattQueue.add(
+        CLog(CLogTypes.info, 'requestMtu:', args);
+        return this.addToGatQueue(
             () =>
                 new Promise((resolve, reject) => {
                     try {
@@ -1663,6 +1668,7 @@ export class Bluetooth extends BluetoothCommon {
         if (!args.value) {
             return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
         }
+        CLog(CLogTypes.info, 'write:', args);
         return this.addToQueue(
             args,
             wrapper =>
@@ -1719,8 +1725,9 @@ export class Bluetooth extends BluetoothCommon {
                                 CLog(CLogTypes.info, 'write ---- characteristic:', printValueToString(val));
                             }
                         } else {
+                            CLog(CLogTypes.error, 'write ---- error: writeCharacteristic returned false');
+                            this.bluetoothGattCallback.removeSubDelegate(subD);
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeCharacteristic', ...args } });
-                            this.bluetoothGattCallback.addSubDelegate(subD);
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'write ---- error:', ex);
@@ -1735,11 +1742,14 @@ export class Bluetooth extends BluetoothCommon {
         if (!args.value) {
             return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
         }
+        CLog(CLogTypes.info, 'writeWithoutResponse:', args);
         return this.addToQueue(
             args,
             wrapper =>
                 new Promise((resolve, reject) => {
                     try {
+                        // we need to check again if we are connected because of the gattQueue!!
+
                         CLog(CLogTypes.info, `writeWithoutResponse ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
                         const characteristic = this._findCharacteristicOfType(
                             wrapper.bluetoothGattService,
@@ -1792,8 +1802,9 @@ export class Bluetooth extends BluetoothCommon {
                                 CLog(CLogTypes.info, 'writeCharacteristic:', JSON.stringify(printValueToString(val)));
                             }
                         } else {
+                            CLog(CLogTypes.error, 'writeWithoutResponse ---- error: writeCharacteristic returned false');
+                            this.bluetoothGattCallback.removeSubDelegate(subD);
                             reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeWithoutResponse', ...args } });
-                            this.bluetoothGattCallback.addSubDelegate(subD);
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'writeWithoutResponse ---- error:', ex);
@@ -1804,6 +1815,7 @@ export class Bluetooth extends BluetoothCommon {
     }
     @prepareArgs
     public startNotifying(args: StartNotifyingOptions) {
+        CLog(CLogTypes.info, 'startNotifying:', args);
         return this.addToQueue(
             args,
             wrapper =>
@@ -1898,6 +1910,7 @@ export class Bluetooth extends BluetoothCommon {
 
     @prepareArgs
     public stopNotifying(args: StopNotifyingOptions) {
+        CLog(CLogTypes.info, 'stopNotifying:', args);
         return this.addToQueue(
             args,
             wrapper =>
@@ -1936,18 +1949,21 @@ export class Bluetooth extends BluetoothCommon {
 
     @prepareArgs
     public discoverServices(args: DiscoverServicesOptions): Promise<{ services: Service[] }> {
+        CLog(CLogTypes.info, 'discoverServices:', args);
         if (!args.peripheralUUID) {
             return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'peripheralUUID' });
         }
         const pUUID = args.peripheralUUID;
         const stateObject = this.connections[pUUID];
+        CLog(CLogTypes.info, 'discoverServices1:', pUUID, stateObject);
         if (!stateObject) {
             return Promise.reject({ msg: BluetoothCommon.msg_peripheral_not_connected, args });
         }
 
         const gatt = stateObject.device;
 
-        return this.gattQueue.add(
+        CLog(CLogTypes.info, 'discoverServices2:', pUUID, stateObject);
+        return this.addToGatQueue(
             () =>
                 new Promise((resolve, reject) => {
                     try {

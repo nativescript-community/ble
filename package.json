@@ -57,6 +57,6 @@
     "typescript": "~3.2.2"
   },
   "dependencies": {
-    "p-queue": "^3.0.0"
+    "p-queue": "^5.0.0"
   }
 }
