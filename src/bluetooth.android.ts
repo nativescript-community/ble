@@ -1416,8 +1416,15 @@ export class Bluetooth extends BluetoothCommon {
         if (bluetoothDevice === null) {
             throw { msg: BluetoothCommon.msg_no_peripheral, args };
         } else {
+            let stateObject = this.connections[pUUID];
+            if (!stateObject) {
+                // if device was not "scanned" there is no connections data
+                stateObject = this.connections[pUUID] = {
+                    state: 'disconnected'
+                };
+            }
             CLog(CLogTypes.info, 'connect ---- Connecting to peripheral with UUID:', pUUID);
-            Object.assign(this.connections[pUUID], {
+            Object.assign(stateObject, {
                 state: 'connecting',
                 onConnected: args.onConnected,
                 onDisconnected: args.onDisconnected
