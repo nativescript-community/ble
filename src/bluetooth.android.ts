@@ -2049,7 +2049,7 @@ export class Bluetooth extends BluetoothCommon {
             } else {
                 CLog(CLogTypes.info, 'gattDisconnect ---- no disconnect callback found');
             }
-            this.connections[address] = null;
+            delete this.connections[address];
             // Close this Bluetooth GATT client.
             CLog(CLogTypes.info, 'gattDisconnect ---- Closing GATT client');
             gatt.close();
