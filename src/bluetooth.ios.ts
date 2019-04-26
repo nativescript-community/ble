@@ -834,7 +834,7 @@ export class Bluetooth extends BluetoothCommon {
                         centralManagerDidFailToConnectPeripheralError: (central: CBCentralManager, peripheral: CBPeripheral, error?: NSError) => {
                             const UUID = NSUUIDToString(peripheral.identifier);
                             if (UUID === connectingUUID) {
-                                reject(error.localizedDescription);
+                                reject({msg: error.localizedDescription, status: error.code });
                                 this._centralDelegate.removeSubDelegate(subD);
                             }
                         }
@@ -895,7 +895,7 @@ export class Bluetooth extends BluetoothCommon {
                                 const UUID = NSUUIDToString(peripheral.identifier);
                                 if (UUID === pUUID) {
                                     if (error) {
-                                        reject(error.localizedDescription);
+                                        reject({msg: error.localizedDescription, status: error.code });
                                     } else {
                                         resolve();
                                     }
@@ -990,7 +990,7 @@ export class Bluetooth extends BluetoothCommon {
                             if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
                                 CLog(CLogTypes.info, 'read ---- peripheralDidUpdateValueForCharacteristicError', error);
                                 if (error) {
-                                    reject(error.localizedDescription);
+                                    reject({msg: error.localizedDescription, status: error.code });
                                 } else {
                                     resolve({
                                         characteristicUUID: cUUID,
@@ -1041,7 +1041,7 @@ export class Bluetooth extends BluetoothCommon {
                         const sUUID = CBUUIDToString(characteristic.service.UUID);
                         if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
                             if (error) {
-                                reject(error.localizedDescription);
+                                reject({msg: error.localizedDescription, status: error.code });
                             } else {
                                 resolve();
                             }
@@ -1154,7 +1154,7 @@ export class Bluetooth extends BluetoothCommon {
                     const UUID = NSUUIDToString(peripheral.identifier);
                     if (UUID === pUUID) {
                         if (error) {
-                            reject(error.localizedDescription);
+                            reject({msg: error.localizedDescription, status: error.code });
                         } else {
                             const cbServices = (ios.collections.nsArrayToJSArray(peripheral.services) as any) as CBService[];
                             resolve({
@@ -1201,7 +1201,7 @@ export class Bluetooth extends BluetoothCommon {
                     const sUUID = CBUUIDToString(service.UUID);
                     if (UUID === pUUID && sUUID === args.serviceUUID) {
                         if (error) {
-                            reject(error.localizedDescription);
+                            reject({msg: error.localizedDescription, status: error.code });
                         } else {
                             const cbChars = (ios.collections.nsArrayToJSArray(service.characteristics) as any) as CBCharacteristic[];
 

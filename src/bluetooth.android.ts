@@ -1595,7 +1595,7 @@ export class Bluetooth extends BluetoothCommon {
                                         characteristicUUID: cUUID
                                     });
                                 } else {
-                                    reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'readCharacteristic', ...args } });
+                                    reject({ msg: BluetoothCommon.msg_error_function_call, status, args: { method: 'readCharacteristic', ...args } });
                                 }
                                 this.bluetoothGattCallback.removeSubDelegate(subD);
                             }
@@ -1652,7 +1652,7 @@ export class Bluetooth extends BluetoothCommon {
                                     if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
                                         resolve(mtu);
                                     } else {
-                                        reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'requestMtu', ...args } });
+                                        reject({ msg: BluetoothCommon.msg_error_function_call, status, args: { method: 'requestMtu', ...args } });
                                     }
                                     this.bluetoothGattCallback.removeSubDelegate(subD);
                                 }
@@ -1720,7 +1720,7 @@ export class Bluetooth extends BluetoothCommon {
                                     if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
                                         resolve();
                                     } else {
-                                        reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'write', ...args } });
+                                        reject({ msg: BluetoothCommon.msg_error_function_call, method: 'write', status, args });
                                     }
                                     this.bluetoothGattCallback.removeSubDelegate(subD);
                                 }
@@ -1735,7 +1735,7 @@ export class Bluetooth extends BluetoothCommon {
                         } else {
                             CLog(CLogTypes.error, 'write ---- error: writeCharacteristic returned false');
                             this.bluetoothGattCallback.removeSubDelegate(subD);
-                            reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeCharacteristic', ...args } });
+                            reject({ msg: BluetoothCommon.msg_error_function_call, method: 'writeCharacteristic', status, args });
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'write ---- error:', ex);
@@ -1797,7 +1797,7 @@ export class Bluetooth extends BluetoothCommon {
                                     if (status === android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
                                         resolve();
                                     } else {
-                                        reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeWithoutResponse', ...args } });
+                                        reject({ msg: BluetoothCommon.msg_error_function_call, method: 'writeWithoutResponse', status, args });
                                     }
                                     this.bluetoothGattCallback.removeSubDelegate(subD);
                                 }
@@ -1812,7 +1812,7 @@ export class Bluetooth extends BluetoothCommon {
                         } else {
                             CLog(CLogTypes.error, 'writeWithoutResponse ---- error: writeCharacteristic returned false');
                             this.bluetoothGattCallback.removeSubDelegate(subD);
-                            reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeWithoutResponse', ...args } });
+                            reject({ msg: BluetoothCommon.msg_error_function_call, method: 'writeWithoutResponse', args });
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'writeWithoutResponse ---- error:', ex);
@@ -1894,7 +1894,7 @@ export class Bluetooth extends BluetoothCommon {
                                     };
                                     resolve();
                                 } else {
-                                    reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeDescriptor', ...args } });
+                                    reject({ msg: BluetoothCommon.msg_error_function_call, method: 'writeDescriptor', status, args });
                                 }
                                 this.bluetoothGattCallback.removeSubDelegate(subD);
                             }
@@ -1905,7 +1905,7 @@ export class Bluetooth extends BluetoothCommon {
                         if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
                         } else {
                             this.bluetoothGattCallback.removeSubDelegate(subD);
-                            reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'writeDescriptor', ...args } });
+                            reject({ msg: BluetoothCommon.msg_error_function_call, method: 'writeDescriptor', args });
                         }
                     } catch (ex) {
                         CLog(CLogTypes.error, 'startNotifying ---- error:', ex);
@@ -1990,7 +1990,7 @@ export class Bluetooth extends BluetoothCommon {
                                         resolve(getGattDeviceServiceInfo(gatt));
                                         // resolve();
                                     } else {
-                                        reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'discoverServices', ...args } });
+                                        reject({ msg: BluetoothCommon.msg_error_function_call, method: 'discoverServices', status, args });
                                     }
                                     this.bluetoothGattCallback.removeSubDelegate(subD);
                                 }
@@ -1998,7 +1998,7 @@ export class Bluetooth extends BluetoothCommon {
                         };
                         this.bluetoothGattCallback.addSubDelegate(subD);
                         if (!gatt.discoverServices()) {
-                            reject({ msg: BluetoothCommon.msg_error_function_call, args: { method: 'discoverServices', ...args } });
+                            reject({ msg: BluetoothCommon.msg_error_function_call, method: 'discoverServices', args });
                             this.bluetoothGattCallback.removeSubDelegate(subD);
                         }
                     } catch (ex) {
