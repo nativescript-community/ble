@@ -639,10 +639,14 @@ function initScanCallback() {
             return this.scanRecord.getTxPowerLevel();
         }
         get localName() {
-            return this.scanRecord
-                .getDeviceName()
-                .replace('\0', '')
+            let deviceName = this.scanRecord
+            .getDeviceName();
+            if (deviceName) {
+                deviceName = deviceName.replace('\0', '')
                 .replace('�', '');
+            }
+            return deviceName;
+                
         }
         get flags() {
             return this.scanRecord.getAdvertiseFlags();
