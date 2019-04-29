@@ -1296,7 +1296,7 @@ export class Bluetooth extends BluetoothCommon {
             try {
                 const onPermissionGranted = () => {
                     for (const key in this.connections) {
-                        if (this.connections[key] && this.connections[key].state === 'disconnected') {
+                        if (!!this.connections[key] && this.connections[key].state === 'disconnected') {
                             delete this.connections[key];
                         }
                     }
