@@ -2057,6 +2057,8 @@ export class Bluetooth extends BluetoothCommon {
             // Close this Bluetooth GATT client.
             CLog(CLogTypes.info, 'gattDisconnect ---- Closing GATT client');
             gatt.close();
+            // we need to clear the gattQueue or we might end up in a bad state
+            this.gattQueue.clear();
         }
     }
 
