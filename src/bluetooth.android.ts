@@ -1482,13 +1482,14 @@ export class Bluetooth extends BluetoothCommon {
                 })
                 .then(result => {
                     const stateObject = this.connections[pUUID];
-                    Object.assign(stateObject, {
-                        state: 'connected'
-                    });
+                    if (!stateObject) {
+                        throw { msg: BluetoothCommon.msg_peripheral_not_connected, args };
+                    }
+                    stateObject.state = 'connected';
                     const dataToSend = {
                         UUID: pUUID, // TODO consider renaming to id (and iOS as well)
                         name: bluetoothDevice && bluetoothDevice.getName(),
-                        state: stateObject.state, // Bluetooth._getState(peripheral.state),
+                        state: stateObject.state,
                         services: result ? result.services : undefined,
                         advertismentData: stateObject.advertismentData
                     };
