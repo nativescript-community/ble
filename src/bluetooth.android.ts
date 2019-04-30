@@ -1677,13 +1677,13 @@ export class Bluetooth extends BluetoothCommon {
         if (!args.value) {
             return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
         }
-        CLog(CLogTypes.info, 'write:', args);
+        CLog(CLogTypes.info, `write ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} `);
         return this.addToQueue(
             args,
             wrapper =>
                 new Promise((resolve, reject) => {
                     try {
-                        CLog(CLogTypes.info, `write ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} `);
+                        CLog(CLogTypes.info, `actual write ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} `);
                         const characteristic = this._findCharacteristicOfType(
                             wrapper.bluetoothGattService,
                             stringToUuid(args.characteristicUUID),
@@ -1731,7 +1731,7 @@ export class Bluetooth extends BluetoothCommon {
 
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
-                                CLog(CLogTypes.info, 'write ---- characteristic:', printValueToString(val));
+                                CLog(CLogTypes.info, 'write ---- writeCharacteristic:', JSON.stringify(printValueToString(val)));
                             }
                         } else {
                             CLog(CLogTypes.error, 'write ---- error: writeCharacteristic returned false');
@@ -1751,7 +1751,7 @@ export class Bluetooth extends BluetoothCommon {
         if (!args.value) {
             return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value' });
         }
-        CLog(CLogTypes.info, 'writeWithoutResponse:', args);
+        CLog(CLogTypes.info, `writeWithoutResponse ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
         return this.addToQueue(
             args,
             wrapper =>
@@ -1759,7 +1759,7 @@ export class Bluetooth extends BluetoothCommon {
                     try {
                         // we need to check again if we are connected because of the gattQueue!!
 
-                        CLog(CLogTypes.info, `writeWithoutResponse ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
+                        CLog(CLogTypes.info, `actual writeWithoutResponse ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
                         const characteristic = this._findCharacteristicOfType(
                             wrapper.bluetoothGattService,
                             stringToUuid(args.characteristicUUID),
@@ -1808,7 +1808,7 @@ export class Bluetooth extends BluetoothCommon {
 
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
-                                CLog(CLogTypes.info, 'writeCharacteristic:', JSON.stringify(printValueToString(val)));
+                                CLog(CLogTypes.info, 'write ---- writeCharacteristic:', JSON.stringify(printValueToString(val)));
                             }
                         } else {
                             CLog(CLogTypes.error, 'writeWithoutResponse ---- error: writeCharacteristic returned false');
