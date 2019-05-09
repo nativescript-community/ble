@@ -905,8 +905,6 @@ export class Bluetooth extends BluetoothCommon {
                         };
                         this.centralDelegate.addSubDelegate(subD);
                         CLog(CLogTypes.info, 'disconnect ---- Disconnecting peripheral with UUID', pUUID);
-                        this._connectCallbacks[pUUID] = args.onConnected;
-                        this._disconnectCallbacks[pUUID] = args.onDisconnected;
                         this.centralManager.cancelPeripheralConnection(peripheral);
                     });
                 }
