@@ -11,6 +11,18 @@ export enum CLogTypes {
     error
 }
 
+export class BluetoothError extends Error {
+    arguments?: any; // call argumrents
+    method?: string; // call argumrents
+    status?: number; // call argumrents
+    constructor(message: string, properties?: { [k: string]: any }) {
+        super(message);
+        if (properties) {
+            Object.assign(this, properties);
+        }
+    }
+}
+
 export const CLog = (type: CLogTypes = 0, ...args) => {
     if (BluetoothUtil.debug) {
         if (type === 0) {
@@ -90,89 +102,22 @@ export abstract class BluetoothCommon extends Observable {
     public static msg_characteristic_cant_notify = 'characteristic_cant_notify';
 
     /*
-     * String value for hooking into the error_event. This event fires when an error is emitted from CameraPlus.
-     */
-    public static error_event = 'error_event';
-
-    /*
      * String value for hooking into the bluetooth_status_event. This event fires when the bluetooth state changes.
      */
     public static bluetooth_status_event = 'bluetooth_status_event';
 
     /*
-     * String value for hooking into the bluetooth_enabled_event. This event fires when the bluetooth is enabled.
+     * String value for hooking into the device_connected_event. This event fires when a device is connected.
      */
-    public static bluetooth_enabled_event = 'bluetooth_enabled_event';
-
+    public static device_connected_event = 'device_connected_event';
     /*
-     * String value for hooking into the bluetooth_discoverable_event. This event fires when the bluetooth is discoverable.
+     * String value for hooking into the device_disconnected_event. This event fires when a device is disconnected.
      */
-    public static bluetooth_discoverable_event = 'bluetooth_discoverable_event';
-
+    public static device_disconnected_event = 'device_disconnected_event';
     /*
-     * String value for hooking into the bluetooth_advertise_success_event. This event fires when the bluetooth advertising is successful.
-     */
-    public static bluetooth_advertise_success_event = 'bluetooth_advertise_success_event';
-
-    /*
-     * String value for hooking into the bluetooth_advertise_error. This event fires when the bluetooth advertising throws and error.
-     */
-    public static bluetooth_advertise_failure_event = 'bluetooth_advertise_failure_event';
-
-    /*
-     * String value for hooking into the server_connection_state_changed. This event fires when the server connection state changes.
-     */
-    public static server_connection_state_changed_event = 'server_connection_state_changed_event';
-
-    /*
-     * String value for hooking into the bond_status_change_event. This event fires when the bonding status changes.
-     */
-    public static bond_status_change_event = 'bond_status_change_event';
-
-    /*
-     * String value for hooking into the device_discovered_event. This event fires when a device is discovered when scanning.
+     * String value for hooking into the device_discovered_event. This event fires when a device is discovered.
      */
     public static device_discovered_event = 'device_discovered_event';
-
-    /*
-     * String value for hooking into the device_name_change_event. This event fires when the device name changes.
-     */
-    public static device_name_change_event = 'device_name_change_event';
-
-    /*
-     * String value for hooking into the device_uuid_change. This event fires when the device uuid changes.
-     */
-    public static device_uuid_change_event = 'device_uuid_change_event';
-
-    /*
-     * String value for hooking into the device_acl_disconnected. This event fires when the device acl disconnects.
-     */
-    public static device_acl_disconnected_event = 'device_acl_disconnected_event';
-
-    /*
-     * String value for hooking into the characteristic_write_request. This event fires when a characteristic requests to write.
-     */
-    public static characteristic_write_request_event = 'characteristic_write_request_event';
-
-    /*
-     * String value for hooking into the characteristic_read_request_event. This event fires when a characteristic requests to read.
-     */
-    public static characteristic_read_request_event = 'characteristic_read_request_event';
-
-    /*
-     * String value for hooking into the descriptor_write_request_event. This event fires when a descriptor requests to write.
-     */
-    public static descriptor_write_request_event = 'descriptor_write_request_event';
-
-    /*
-     * String value for hooking into the descriptor_read_request_event. This event fires when a descriptor requests to read.
-     */
-    public static descriptor_read_request_event = 'descriptor_read_request_event';
-
-    /**
-     * String value for hooking into the execute_write_event. This event fires when the Gatt Server executes a write command.
-     */
-    public static execute_write_event = 'execute_write_event';
 
     public events: any /*IBluetoothEvents*/;
 
@@ -384,25 +329,12 @@ export interface ConnectOptions {
     /**
      * Once the peripheral is connected this callback function is invoked.
      */
-    onConnected: (
-        data: {
-            UUID;
-            name: string;
-            state: ConnectionState;
-            services?: Service[];
-            advertismentData: AdvertismentData;
-        }
-    ) => void;
+    onConnected?: (data: { UUID; name: string; state: ConnectionState; services?: Service[]; advertismentData: AdvertismentData }) => void;
 
     /**
      * Once the peripheral is disconnected this callback function is invoked.
      */
-    onDisconnected: (
-        data: {
-            UUID;
-            name: string;
-        }
-    ) => void;
+    onDisconnected?: (data: { UUID; name: string }) => void;
 
     autoDiscoverAll?: boolean;
 }
@@ -524,8 +456,7 @@ export interface WriteOptions extends CRUDOptions {
     encoding?: string;
 }
 
-
-export interface MtuOptions  {
+export interface MtuOptions {
     value: any;
     peripheralUUID: string;
 }
@@ -571,6 +502,7 @@ export interface StartAdvertisingOptions {
 export interface IBluetoothEvents {
     error_event: string;
     bluetooth_enabled_event: string;
+    bluetooth_status_event: string;
     peripheral_connected_event: string;
     bluetooth_advertise_success_event: string;
     bluetooth_advertise_failure_event: string;
