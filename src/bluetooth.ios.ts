@@ -636,6 +636,14 @@ export class Bluetooth extends BluetoothCommon {
         console.log(`*** iOS Bluetooth Constructor *** ${restoreIdentifier}`);
     }
 
+    onListenerAdded(eventName: string, count: number) {
+        CLog(CLogTypes.info, 'onListenerAdded', eventName, count);
+        if (eventName === Bluetooth.bluetooth_status_event) {
+            // ensure centralManager is set
+            const result = this.centralManager;
+        }
+    }
+
     public _getState(state: CBPeripheralState) {
         if (state === CBPeripheralState.Connecting) {
             return 'connecting';

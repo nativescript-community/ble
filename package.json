@@ -57,6 +57,7 @@
     "typescript": "~3.2.2"
   },
   "dependencies": {
+    "nativescript-observable": "^1.0.1",
     "p-queue": "^5.0.0"
   }
 }

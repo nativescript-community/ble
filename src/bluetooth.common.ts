@@ -1,4 +1,4 @@
-import { Observable } from 'tns-core-modules/data/observable/observable';
+import Observable from 'nativescript-observable';
 
 // declare var require;
 export class BluetoothUtil {
@@ -27,12 +27,12 @@ export const CLog = (type: CLogTypes = 0, ...args) => {
     if (BluetoothUtil.debug) {
         if (type === 0) {
             // Info
-            console.log(...args);
+            console.log('[nativescript-bluetooth]', ...args);
         } else if (type === 1) {
             // Warning
-            console.warn(...args);
+            console.warn('[nativescript-bluetooth]', ...args);
         } else if (type === 2) {
-            console.error(...args);
+            console.error('[nativescript-bluetooth]', ...args);
         }
     }
 };
