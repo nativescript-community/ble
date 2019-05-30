@@ -191,7 +191,11 @@ export class Bluetooth extends BluetoothCommon {
         }
 
         const onPermissionGranted = () => {
-          this.connections = {};
+          for (var key in this.connections) {
+            if (this.connections[key] === null || this.connections[key].state === 'disconnected') {
+              delete this.connections[key];
+            }
+          }
 
           const serviceUUIDs = arg.serviceUUIDs || [];
           const uuids = [];

@@ -77,7 +77,15 @@ export class Bluetooth extends BluetoothCommon {
           return;
         }
 
-        this._peripheralArray = NSMutableArray.new();
+        const connectedPeripherals = NSMutableArray.new();
+        for (let i = 0; i < this._peripheralArray.count; i++) {
+          const peripheral = this._peripheralArray.objectAtIndex(i);
+          if (peripheral !== null && this._getState(peripheral.state) === 'connected') {
+            connectedPeripherals.addObject(peripheral);
+          }
+        }
+
+        this._peripheralArray = connectedPeripherals;
         this._onDiscovered = arg.onDiscovered;
         const serviceUUIDs = arg.serviceUUIDs || [];
 
