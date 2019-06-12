@@ -10,6 +10,8 @@
 [twitter-image]:https://img.shields.io/twitter/follow/eddyverbruggen.svg?style=social&label=Follow%20me
 [twitter-url]:https://twitter.com/eddyverbruggen
 
+> ⚠️ This plugin is for Bluetooth Low Energy devices, so spec version 4 and up.
+
 ## Installation
 From the command prompt go to your app's root folder and execute:
 
