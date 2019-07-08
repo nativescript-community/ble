@@ -118,29 +118,6 @@ export class Bluetooth extends BluetoothCommon {
 
     requestMtu(options: MtuOptions): Promise<number>;
 
-    // PERIPHERAL MODE FUNCTIONS
-    disable(): Promise<any>;
-    isPeripheralModeSupported(): Promise<boolean>;
-    stopAdvertising(): Promise<any>;
-    startAdvertising(advertiseOptions: any): Promise<any>;
-    getServerConnectedDevicesMatchingState(state: any): any;
-    getServerConnectedDeviceState(device: any): any;
-    getServerConnectedDevices(): any;
-    cancelServerConnection(device: any);
-    clearServices();
-    offersService(uuidString: string): boolean;
-    getServerService(uuidString: string): any;
-    makeDescriptor(options: any): any;
-    makeCharacteristic(options: any): any;
-    makeService(options: any): any;
-    getAdvertiser(): any;
-    setDiscoverable(): Promise<any>;
-    // startGattServer();
-    // stopGattServer();
-    // setGattServerCallbacks(options: any);
-    fetchUuidsWithSdp(device: any): boolean;
-    removeBond(device: any): any;
-    adapter: any;
 
     public discoverServices(args: DiscoverServicesOptions): Promise<{ services: Service[] }>;
     public discoverCharacteristics(args: DiscoverCharacteristicsOptions): Promise<{ characteristics: Characteristic[] }>;
