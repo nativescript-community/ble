@@ -1,5 +1,4 @@
-// /// <reference path="../node_modules/tns-platform-declarations/android.d.ts" />
-/// <reference path="../typings/android27.d.ts" />
+/// <reference path="../node_modules/tns-platform-declarations/android-27.d.ts" />
 
 import * as utils from 'tns-core-modules/utils/utils';
 import * as application from 'tns-core-modules/application';
@@ -22,6 +21,15 @@ import { TNS_ScanCallback } from './TNS_ScanCallback';
 const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 const ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 224;
+
+declare let android, global: any;
+
+const AppPackageName = useAndroidX() ? global.androidx.core.app : android.support.v4.app;
+const ContentPackageName = useAndroidX() ? global.androidx.core.content : android.support.v4.content;
+
+function useAndroidX () {
+  return global.androidx && global.androidx.appcompat;
+}
 
 export class Bluetooth extends BluetoothCommon {
   // @link - https://developer.android.com/reference/android/content/Context.html#BLUETOOTH_SERVICE
@@ -86,7 +94,7 @@ export class Bluetooth extends BluetoothCommon {
 
       hasPermission =
         android.content.pm.PackageManager.PERMISSION_GRANTED ===
-        (android.support.v4.content.ContextCompat as any).checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
+          ContentPackageName.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
     }
     CLog(CLogTypes.info, 'Bluetooth.coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
     return hasPermission;
@@ -116,7 +124,7 @@ export class Bluetooth extends BluetoothCommon {
       application.android.on(application.AndroidApplication.activityRequestPermissionsEvent, permissionCb);
 
       // invoke the permission dialog
-      (android.support.v4.app.ActivityCompat as any).requestPermissions(
+      AppPackageName.ActivityCompat.requestPermissions(
         this._getActivity(),
         [android.Manifest.permission.ACCESS_COARSE_LOCATION],
         ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE
@@ -213,7 +221,7 @@ export class Bluetooth extends BluetoothCommon {
               return;
             }
           } else {
-            let scanFilters = null as java.util.ArrayList;
+            let scanFilters = null as java.util.ArrayList<android.bluetooth.le.ScanFilter>;
             if (uuids.length > 0) {
               scanFilters = new java.util.ArrayList();
               for (const u in uuids) {
