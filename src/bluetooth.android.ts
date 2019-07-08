@@ -49,6 +49,28 @@ function getAndroidSDK() {
     return ANDROID_SDK;
 }
 
+let _useAndroidX;
+function useAndroidX() {
+    if (_useAndroidX === undefined) {
+        _useAndroidX = !!(global as any).androidx && !!(global as any).androidx.appcompat;
+    }
+    return _useAndroidX;
+}
+let _ContentPackageName: typeof android.support.v4.content;
+function ContentPackageName() {
+    if (_ContentPackageName === undefined) {
+        _ContentPackageName = useAndroidX() ? (global as any).androidx.core.content : android.support.v4.content;
+    }
+    return _ContentPackageName;
+}
+let _AppPackageName: typeof android.support.v4.app;
+function AppPackageName() {
+    if (_AppPackageName === undefined) {
+        _AppPackageName = useAndroidX() ? (global as any).androidx.core.app : android.support.v4.app;
+    }
+    return _AppPackageName;
+}
+
 const LOLLIPOP = 21;
 const MARSHMALLOW = 23;
 
@@ -1087,7 +1109,7 @@ export class Bluetooth extends BluetoothCommon {
             // CLog(CLogTypes.info, 'app context', ctx);
 
             hasPermission =
-                android.content.pm.PackageManager.PERMISSION_GRANTED === android.support.v4.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
+                android.content.pm.PackageManager.PERMISSION_GRANTED === ContentPackageName().ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
         }
         CLog(CLogTypes.info, 'coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
         return hasPermission;
@@ -1123,7 +1145,7 @@ export class Bluetooth extends BluetoothCommon {
             application.android.on(application.AndroidApplication.activityRequestPermissionsEvent, permissionCb);
 
             // invoke the permission dialog
-            android.support.v4.app.ActivityCompat.requestPermissions(this._getActivity(), [android.Manifest.permission.ACCESS_COARSE_LOCATION], ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE);
+            AppPackageName().ActivityCompat.requestPermissions(this._getActivity(), [android.Manifest.permission.ACCESS_COARSE_LOCATION], ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE);
         });
     }
     getAndroidLocationManager(): android.location.LocationManager {
