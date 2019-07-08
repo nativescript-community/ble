@@ -1,8 +1,3 @@
-/// <reference path="../node_modules/tns-platform-declarations/ios.d.ts" />
-
-declare var NSMakeRange;
-
-import { ios as iOS_Utils } from 'tns-core-modules/utils/utils';
 import {
   BluetoothCommon,
   CLog,
@@ -35,12 +30,7 @@ export class Bluetooth extends BluetoothCommon {
 
   // Getters/Setters
   get enabled(): boolean {
-    const state = this._centralManager.state;
-    if (state === CBManagerState.PoweredOn) {
-      return true;
-    } else {
-      return false;
-    }
+    return this._centralManager.state === CBManagerState.PoweredOn;
   }
 
   public _getState(state: CBPeripheralState) {
@@ -485,9 +475,7 @@ export class Bluetooth extends BluetoothCommon {
 
     if (!characteristic) {
       reject(
-        `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
-          arg.serviceUUID
-        } on peripheral with UUID ${arg.peripheralUUID}`
+        `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`
       );
       return null;
     }
