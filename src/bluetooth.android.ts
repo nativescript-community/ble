@@ -25,8 +25,7 @@ import {
     StopNotifyingOptions,
     WriteOptions
 } from './bluetooth.common';
-import * as pQueue from 'p-queue';
-
+import PQueue from 'p-queue';
 let _bluetoothInstance: Bluetooth;
 export function getBluetoothInstance() {
     if (!_bluetoothInstance) {
@@ -1034,7 +1033,7 @@ export class Bluetooth extends BluetoothCommon {
     private LeScanCallback: LeScanCallback;
 
     // with gatt all operations must be queued. Parallel operations will fail
-    gattQueue = new pQueue({ concurrency: 1 });
+    gattQueue: PQueue = new PQueue({ concurrency: 1 }) as any;
 
     static readonly android = {
         ScanMode,

@@ -47,23 +47,23 @@
   },
   "homepage": "https://github.com/eddyverbruggen/nativescript-bluetooth",
   "devDependencies": {
-    "@types/node": "^10.14.8",
+    "@types/node": "^12.6.8",
     "esdoc": "^1.1.0",
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "esdoc-publish-markdown-plugin": "^1.1.0",
     "esdoc-standard-plugin": "^1.0.0",
     "esdoc-typescript-plugin": "^1.0.1",
-    "prettier": "^1.17.1",
+    "prettier": "^1.18.2",
     "rimraf": "^2.6.3",
-    "tns-core-modules": "^5.4.1",
-    "tns-platform-declarations": "^5.4.1",
-    "tslint": "^5.17.0",
+    "tns-core-modules": "^6.0.1",
+    "tns-platform-declarations": "^6.0.1",
+    "tslint": "^5.18.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-config-standard": "^8.0.1",
     "typescript": "~3.5.1"
   },
   "dependencies": {
     "nativescript-observable": "^1.0.1",
-    "p-queue": "^5.0.0"
+    "p-queue": "^6.1.0"
   }
 }
