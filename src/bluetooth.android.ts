@@ -702,6 +702,7 @@ export interface BluetoothGattCallbackWithSubCallback extends android.bluetooth.
     addSubDelegate(delegate: SubBluetoothGattCallback);
     removeSubDelegate(delegate: SubBluetoothGattCallback);
 }
+export type DisconnectListener = (gatt: android.bluetooth.BluetoothGatt) => void;
 function initBluetoothGattCallback() {
     if (BluetoothGattCallback) {
         return;
@@ -1113,6 +1114,18 @@ export class Bluetooth extends BluetoothCommon {
         }
         this.broadcastRegistered = false;
         application.android.unregisterBroadcastReceiver(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED);
+    }
+    onListenerAdded(eventName: string, count: number) {
+        CLog(CLogTypes.info, 'onListenerAdded', eventName, count);
+        if (eventName === Bluetooth.bluetooth_status_event) {
+            this.registerBroadcast();
+        }
+    }
+    onListenerRemoved(eventName: string, count: number) {
+        CLog(CLogTypes.info, 'onListenerRemoved', eventName, count);
+        if (eventName === Bluetooth.bluetooth_status_event && count === 0) {
+            this.unregisterBroadcast();
+        }
     }
     stop() {
         this.unregisterBroadcast();
@@ -1692,10 +1705,12 @@ export class Bluetooth extends BluetoothCommon {
                                     );
                                 }
                                 this.bluetoothGattCallback.removeSubDelegate(subD);
+                                this.removeDisconnectListener(reject);
                             }
                         }
                     };
                     this.bluetoothGattCallback.addSubDelegate(subD);
+                    this.addDisconnectListener(reject);
                     try {
                         if (!gatt.readCharacteristic(bluetoothGattCharacteristic)) {
                             CLog(CLogTypes.error, 'read ---- error: readCharacteristic returned false');
@@ -1708,6 +1723,7 @@ export class Bluetooth extends BluetoothCommon {
                     } catch (ex) {
                         CLog(CLogTypes.error, 'read ---- error:', ex);
                         this.bluetoothGattCallback.removeSubDelegate(subD);
+                        this.removeDisconnectListener(reject);
                         reject(
                             new BluetoothError(ex.message, {
                                 stack: ex.stackTrace,
@@ -1778,12 +1794,15 @@ export class Bluetooth extends BluetoothCommon {
                                         reject(error);
                                     }
                                     this.bluetoothGattCallback.removeSubDelegate(subD);
+                                    this.removeDisconnectListener(reject);
                                 }
                             }
                         };
                         this.bluetoothGattCallback.addSubDelegate(subD);
+                        this.addDisconnectListener(reject);
                         if (!gatt.requestMtu(args.value)) {
                             this.bluetoothGattCallback.removeSubDelegate(subD);
+                            this.removeDisconnectListener(reject);
                             throw new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                 method: 'requestMtu',
                                 arguments: args
@@ -1862,10 +1881,12 @@ export class Bluetooth extends BluetoothCommon {
                                         reject({ msg: BluetoothCommon.msg_error_function_call, method: 'write', status, args });
                                     }
                                     this.bluetoothGattCallback.removeSubDelegate(subD);
+                                    this.removeDisconnectListener(reject);
                                 }
                             }
                         };
                         this.bluetoothGattCallback.addSubDelegate(subD);
+                        this.addDisconnectListener(reject);
 
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
@@ -1874,6 +1895,7 @@ export class Bluetooth extends BluetoothCommon {
                         } else {
                             CLog(CLogTypes.error, 'write ---- error: writeCharacteristic returned false');
                             this.bluetoothGattCallback.removeSubDelegate(subD);
+                            this.removeDisconnectListener(reject);
                             throw new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                 method: 'writeCharacteristic',
                                 arguments: args
@@ -1961,10 +1983,12 @@ export class Bluetooth extends BluetoothCommon {
                                         reject(error);
                                     }
                                     this.bluetoothGattCallback.removeSubDelegate(subD);
+                                    this.removeDisconnectListener(reject);
                                 }
                             }
                         };
                         this.bluetoothGattCallback.addSubDelegate(subD);
+                        this.addDisconnectListener(reject);
 
                         if (wrapper.gatt.writeCharacteristic(characteristic)) {
                             if (BluetoothUtil.debug) {
@@ -1973,6 +1997,7 @@ export class Bluetooth extends BluetoothCommon {
                         } else {
                             CLog(CLogTypes.error, 'writeWithoutResponse ---- error: writeCharacteristic returned false');
                             this.bluetoothGattCallback.removeSubDelegate(subD);
+                            this.removeDisconnectListener(reject);
                             throw new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                 method: 'writeWithoutResponse',
                                 arguments: args
@@ -2084,14 +2109,17 @@ export class Bluetooth extends BluetoothCommon {
                                     );
                                 }
                                 this.bluetoothGattCallback.removeSubDelegate(subD);
+                                this.removeDisconnectListener(reject);
                             }
                         }
                     };
                     this.bluetoothGattCallback.addSubDelegate(subD);
+                    this.addDisconnectListener(reject);
                     try {
                         if (gatt.writeDescriptor(bluetoothGattDescriptor)) {
                         } else {
                             this.bluetoothGattCallback.removeSubDelegate(subD);
+                            this.removeDisconnectListener(reject);
                             throw new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                 method: 'writeDescriptor',
                                 arguments: args
@@ -2212,12 +2240,15 @@ export class Bluetooth extends BluetoothCommon {
                                         );
                                     }
                                     this.bluetoothGattCallback.removeSubDelegate(subD);
+                                    this.removeDisconnectListener(reject);
                                 }
                             }
                         };
                         this.bluetoothGattCallback.addSubDelegate(subD);
+                        this.addDisconnectListener(reject);
                         if (!gatt.discoverServices()) {
                             this.bluetoothGattCallback.removeSubDelegate(subD);
+                            this.removeDisconnectListener(reject);
                             throw new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                 method: 'discoverServices',
                                 arguments: args
@@ -2272,10 +2303,18 @@ export class Bluetooth extends BluetoothCommon {
         const bluetoothGattService = gatt.getService(serviceUUID);
         if (bluetoothGattService) {
             return Promise.resolve();
+                delete this.connections[address];
+                delete this.connections[address];
+                delete this.connections[address];
         } else {
             return Promise.reject(
                 new BluetoothError(BluetoothCommon.msg_no_service, {
                     arguments: args
+            // Close this Bluetooth GATT client.
+            CLog(CLogTypes.info, 'gattDisconnect ---- Closing GATT client');
+            gatt.close();
+            // we need to clear the gattQueue or we might end up in a bad state
+            this.gattQueue.clear();
                 })
             );
         }
@@ -2285,12 +2324,31 @@ export class Bluetooth extends BluetoothCommon {
         return this.discoverServices(args);
     }
 
+    private disconnectListeners: DisconnectListener[] = [];
+
+    public addDisconnectListener(delegate: DisconnectListener) {
+        const index = this.disconnectListeners.indexOf(delegate);
+        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.addDisconnectListener ---- index: ${index}, subdelegates:${this.disconnectListeners.length}`);
+        if (index === -1) {
+            this.disconnectListeners.push(delegate);
+        }
+    }
+
+    public removeDisconnectListener(delegate: DisconnectListener) {
+        const index = this.disconnectListeners.indexOf(delegate);
+        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.removeDisconnectListener ---- index: ${index}, subdelegates:${this.disconnectListeners.length}`);
+        if (index !== -1) {
+            this.disconnectListeners.splice(index, 1);
+        }
+    }
     public gattDisconnect(gatt: android.bluetooth.BluetoothGatt) {
         // gatt close wont trigger onConnectionStateChange
         if (gatt !== null) {
             const device = gatt.getDevice();
             const address = device.getAddress();
             CLog(CLogTypes.info, 'gattDisconnect ---- device:', address);
+            this.disconnectListeners.forEach(d => d(gatt));
+            this.disconnectListeners = [];
 
             this.sendEvent(Bluetooth.device_disconnected_event, {
                 UUID: address,
@@ -2303,7 +2361,6 @@ export class Bluetooth extends BluetoothCommon {
                     UUID: address,
                     name: device.getName()
                 });
-                delete this.connections[address];
             } else {
                 CLog(CLogTypes.info, 'gattDisconnect ---- no disconnect callback found');
             }
