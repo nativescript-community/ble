@@ -55,17 +55,17 @@ function useAndroidX() {
     }
     return _useAndroidX;
 }
-let _ContentPackageName: typeof android.support.v4.content;
+let _ContentPackageName: typeof androidx.core.content;
 function ContentPackageName() {
     if (_ContentPackageName === undefined) {
-        _ContentPackageName = useAndroidX() ? (global as any).androidx.core.content : android.support.v4.content;
+        _ContentPackageName = useAndroidX() ? (global as any).androidx.core.content : (android as any).support.v4.content;
     }
     return _ContentPackageName;
 }
-let _AppPackageName: typeof android.support.v4.app;
+let _AppPackageName: typeof androidx.core.app;
 function AppPackageName() {
     if (_AppPackageName === undefined) {
-        _AppPackageName = useAndroidX() ? (global as any).androidx.core.app : android.support.v4.app;
+        _AppPackageName = useAndroidX() ? (global as any).androidx.core.app : (android as any).support.v4.app;
     }
     return _AppPackageName;
 }
