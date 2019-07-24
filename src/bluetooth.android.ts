@@ -1611,7 +1611,8 @@ export class Bluetooth extends BluetoothCommon {
             );
         }
         return Promise.resolve().then(() => {
-            this.gattDisconnect(connection.device);
+            // this.gattDisconnect(connection.device);
+            connection.device.disconnect();
         });
         // return new Promise((resolve, reject) => {
         // gatt close wont trigger onConnectionStateChange
