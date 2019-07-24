@@ -1080,6 +1080,13 @@ export class Bluetooth extends BluetoothCommon {
             initLeScanCallback();
             this.LeScanCallback = new LeScanCallbackVar(new WeakRef(this));
         }
+    }
+    broadcastRegistered = false;
+    registerBroadcast() {
+        if (this.broadcastRegistered) {
+            return;
+        }
+        this.broadcastRegistered = true;
         CLog(CLogTypes.info, 'Android Bluetooth  registering for state change');
         application.android.registerBroadcastReceiver(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED, (context: android.content.Context, intent: android.content.Intent) => {
             const state = intent.getIntExtra(android.bluetooth.BluetoothAdapter.EXTRA_STATE, android.bluetooth.BluetoothAdapter.ERROR);
@@ -1100,6 +1107,16 @@ export class Bluetooth extends BluetoothCommon {
             }
         });
     }
+    unregisterBroadcast() {
+        if (!this.broadcastRegistered) {
+            return;
+        }
+        this.broadcastRegistered = false;
+        application.android.unregisterBroadcastReceiver(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED);
+    }
+    stop() {
+        this.unregisterBroadcast();
+    }
 
     public coarseLocationPermissionGranted() {
         let hasPermission = getAndroidSDK() < MARSHMALLOW;
@@ -1107,8 +1124,7 @@ export class Bluetooth extends BluetoothCommon {
             const ctx = this._getContext();
             // CLog(CLogTypes.info, 'app context', ctx);
 
-            hasPermission =
-                android.content.pm.PackageManager.PERMISSION_GRANTED === ContentPackageName().ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
+            hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED === ContentPackageName().ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
         }
         CLog(CLogTypes.info, 'coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
         return hasPermission;

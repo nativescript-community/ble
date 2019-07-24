@@ -123,6 +123,8 @@ export class Bluetooth extends BluetoothCommon {
     public discoverCharacteristics(args: DiscoverCharacteristicsOptions): Promise<{ characteristics: Characteristic[] }>;
 
     public discoverAll(args: DiscoverOptions): Promise<{ services: Service[]; characteristics: Characteristic[] }>;
+
+    stop();
 }
 export function getBluetoothInstance(): Bluetooth;
 

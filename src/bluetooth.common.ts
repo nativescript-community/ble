@@ -154,6 +154,7 @@ export abstract class BluetoothCommon extends Observable {
             }));
         }) as Promise<{ services: Service[] }>;
     }
+    stop() {}
 }
 
 export enum ScanMode {
