@@ -2304,18 +2304,10 @@ export class Bluetooth extends BluetoothCommon {
         const bluetoothGattService = gatt.getService(serviceUUID);
         if (bluetoothGattService) {
             return Promise.resolve();
-                delete this.connections[address];
-                delete this.connections[address];
-                delete this.connections[address];
         } else {
             return Promise.reject(
                 new BluetoothError(BluetoothCommon.msg_no_service, {
                     arguments: args
-            // Close this Bluetooth GATT client.
-            CLog(CLogTypes.info, 'gattDisconnect ---- Closing GATT client');
-            gatt.close();
-            // we need to clear the gattQueue or we might end up in a bad state
-            this.gattQueue.clear();
                 })
             );
         }
@@ -2347,7 +2339,12 @@ export class Bluetooth extends BluetoothCommon {
         if (gatt !== null) {
             const device = gatt.getDevice();
             const address = device.getAddress();
-            CLog(CLogTypes.info, 'gattDisconnect ---- device:', address);
+
+            // Close this Bluetooth GATT client.
+            CLog(CLogTypes.info, 'gattDisconnect ---- Closing GATT client', address, device);
+            gatt.close();
+            // we need to clear the gattQueue or we might end up in a bad state
+            this.gattQueue.clear();
             this.disconnectListeners.forEach(d => d(gatt));
             this.disconnectListeners = [];
 
@@ -2365,11 +2362,7 @@ export class Bluetooth extends BluetoothCommon {
             } else {
                 CLog(CLogTypes.info, 'gattDisconnect ---- no disconnect callback found');
             }
-            // Close this Bluetooth GATT client.
-            CLog(CLogTypes.info, 'gattDisconnect ---- Closing GATT client');
-            gatt.close();
-            // we need to clear the gattQueue or we might end up in a bad state
-            this.gattQueue.clear();
+            delete this.connections[address];
         }
     }
 
