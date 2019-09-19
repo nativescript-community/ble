@@ -55,12 +55,12 @@
     "esdoc-typescript-plugin": "^1.0.1",
     "prettier": "^1.18.2",
     "rimraf": "^2.6.3",
-    "tns-core-modules": "^6.0.1",
-    "tns-platform-declarations": "^6.0.1",
+    "tns-core-modules": "^6.0.4",
+    "tns-platform-declarations": "^6.0.4",
     "tslint": "^5.18.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-config-standard": "^8.0.1",
-    "typescript": "~3.5.1"
+    "typescript": "~3.5.3"
   },
   "dependencies": {
     "nativescript-observable": "^1.0.1",
