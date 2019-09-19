@@ -1573,12 +1573,15 @@ export class Bluetooth extends BluetoothCommon {
                         ) as any;
                     }
                     stateObject.state = 'connected';
+                    const adv = stateObject.advertismentData;
                     const dataToSend = {
                         UUID: pUUID, // TODO consider renaming to id (and iOS as well)
                         name: bluetoothDevice && bluetoothDevice.getName(),
                         state: stateObject.state,
                         services: result ? result.services : undefined,
-                        advertismentData: stateObject.advertismentData
+                        localName: adv.localName,
+                        manufacturerId: adv.manufacturerId,
+                        advertismentData: adv
                     };
                     if (stateObject.onConnected) {
                         stateObject.onConnected(dataToSend);

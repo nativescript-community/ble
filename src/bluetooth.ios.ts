@@ -885,12 +885,15 @@ export class Bluetooth extends BluetoothCommon {
                         return undefined;
                     })
                     .then(result => {
+                        const adv = this._advData[connectingUUID];
                         const dataToSend = {
                             UUID: connectingUUID,
                             name: peripheral.name,
+                            localName: adv.localName,
                             state: this._getState(peripheral.state),
                             services: result ? result.services : undefined,
-                            advertismentData: this._advData[connectingUUID]
+                            manufacturerId: adv.manufacturerId,
+                            advertismentData: adv
                         };
                         delete this._advData[connectingUUID];
                         const cb = this._connectCallbacks[connectingUUID];
