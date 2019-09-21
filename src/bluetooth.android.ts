@@ -246,7 +246,7 @@ declare class LeScanCallback extends android.bluetooth.BluetoothAdapter.LeScanCa
 let LeScanCallbackVar: typeof LeScanCallback;
 
 function initLeScanCallback() {
-    if (LeScanCallback) {
+    if (LeScanCallbackVar) {
         return;
     }
 
