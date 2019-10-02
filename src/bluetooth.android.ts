@@ -1361,16 +1361,25 @@ export class Bluetooth extends BluetoothCommon {
             this.scanningReferTimer = null;
         }
     }
+
+    public clearAdvertismentCache() {
+        for (const key in this.connections) {
+            if (!!this.connections[key] && this.connections[key].state === 'disconnected') {
+                delete this.connections[key];
+            }
+        }
+    }
+
     @bluetoothEnabled
     public startScanning(args: StartScanningOptions) {
         return new Promise((resolve, reject) => {
             try {
                 const onPermissionGranted = () => {
-                    for (const key in this.connections) {
-                        if (!!this.connections[key] && this.connections[key].state === 'disconnected') {
-                            delete this.connections[key];
-                        }
-                    }
+                    // for (const key in this.connections) {
+                    //     if (!!this.connections[key] && this.connections[key].state === 'disconnected') {
+                    //         delete this.connections[key];
+                    //     }
+                    // }
 
                     const filters = args.filters || [];
 
@@ -2365,7 +2374,7 @@ export class Bluetooth extends BluetoothCommon {
             } else {
                 CLog(CLogTypes.info, 'gattDisconnect ---- no disconnect callback found');
             }
-            delete this.connections[address];
+            // delete this.connections[address];
         }
     }
 

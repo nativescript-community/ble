@@ -833,6 +833,11 @@ export class Bluetooth extends BluetoothCommon {
         });
     }
 
+
+    public clearAdvertismentCache() {
+        this._advData = {};
+    }
+
     @bluetoothEnabled
     @prepareArgs
     public connect(args: ConnectOptions) {
@@ -895,7 +900,7 @@ export class Bluetooth extends BluetoothCommon {
                             manufacturerId: adv.manufacturerId,
                             advertismentData: adv
                         };
-                        delete this._advData[connectingUUID];
+                        // delete this._advData[connectingUUID];
                         const cb = this._connectCallbacks[connectingUUID];
                         if (cb) {
                             cb(dataToSend);
