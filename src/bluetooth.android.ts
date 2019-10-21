@@ -615,23 +615,24 @@ function initScanCallback() {
                 stateObject = this.owner.get().connections[result.getDevice().getAddress()] = {
                     state: 'disconnected'
                 };
-            }
-            const advertismentData = new ScanAdvertisment(result.getScanRecord());
-            stateObject.advertismentData = advertismentData;
 
-            const payload = {
-                type: 'scanResult', // TODO or use different callback functions?
-                UUID: result.getDevice().getAddress(),
-                name: result.getDevice().getName(),
-                RSSI: result.getRssi(),
-                localName: advertismentData.localName,
-                state: 'disconnected',
-                manufacturerId: advertismentData.manufacturerId,
-                advertismentData
-            };
-            CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
-            this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
-            this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
+                const advertismentData = new ScanAdvertisment(result.getScanRecord());
+                stateObject.advertismentData = advertismentData;
+
+                const payload = {
+                    type: 'scanResult', // TODO or use different callback functions?
+                    UUID: result.getDevice().getAddress(),
+                    name: result.getDevice().getName(),
+                    RSSI: result.getRssi(),
+                    localName: advertismentData.localName,
+                    state: 'disconnected',
+                    manufacturerId: advertismentData.manufacturerId,
+                    advertismentData
+                };
+                CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
+                this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
+                this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
+            }
         }
     }
 
@@ -2375,6 +2376,7 @@ export class Bluetooth extends BluetoothCommon {
                 CLog(CLogTypes.info, 'gattDisconnect ---- no disconnect callback found');
             }
             // delete this.connections[address];
+            this.connections[address] = null;
         }
     }
 
