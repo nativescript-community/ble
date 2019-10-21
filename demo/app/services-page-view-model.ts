@@ -24,11 +24,9 @@ export class ServicesViewModel extends Observable {
       UUID: this.peripheral.UUID,
       // NOTE: we could just use the promise as this cb is only invoked once
       onConnected: peripheral => {
-        console.log(
-          "------- Peripheral connected: " + JSON.stringify(peripheral)
-        );
+        console.log("Peripheral connected: " + JSON.stringify(peripheral));
         peripheral.services.forEach(value => {
-          console.log("---- ###### adding service: " + value.UUID);
+          console.log("###### adding service: " + value.UUID);
           this.discoveredServices.push(value);
         });
         this.isLoading = false;
@@ -36,12 +34,13 @@ export class ServicesViewModel extends Observable {
       onDisconnected: peripheral => {
         dialogs.alert({
           title: "Disconnected",
-          message:
-            "Disconnected from peripheral: " + JSON.stringify(peripheral),
+          message: "Disconnected from peripheral: " + JSON.stringify(peripheral),
           okButtonText: "Okay"
         });
       }
-    });
+    })
+        .then(() => console.log("Connected to peripheral"))
+        .catch(err => console.log(`Error connecting to peripheral: ${err}`));
   }
 
   public onServiceTap(args) {
@@ -63,31 +62,31 @@ export class ServicesViewModel extends Observable {
   public onDisconnectTap(args) {
     console.log("Disconnecting peripheral " + this.peripheral.UUID);
     this._bluetooth
-      .disconnect({
-        UUID: this.peripheral.UUID
-      })
-      .then(
-        () => {
-          // going back to previous page
-          topmost().navigate({
-            moduleName: "main-page",
-            animated: true,
-            transition: {
-              name: "slideRight"
+        .disconnect({
+          UUID: this.peripheral.UUID
+        })
+        .then(
+            () => {
+              // going back to previous page
+              topmost().navigate({
+                moduleName: "main-page",
+                animated: true,
+                transition: {
+                  name: "slideRight"
+                }
+              });
+            },
+            err => {
+              console.log(err);
+              // still going back to previous page
+              topmost().navigate({
+                moduleName: "main-page",
+                animated: true,
+                transition: {
+                  name: "slideRight"
+                }
+              });
             }
-          });
-        },
-        err => {
-          console.log(err);
-          // still going back to previous page
-          topmost().navigate({
-            moduleName: "main-page",
-            animated: true,
-            transition: {
-              name: "slideRight"
-            }
-          });
-        }
-      );
+        );
   }
 }

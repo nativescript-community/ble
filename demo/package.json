@@ -2,42 +2,24 @@
   "nativescript": {
     "id": "org.nativescript.bluetoothdemo",
     "tns-android": {
-      "version": "3.4.1"
+      "version": "6.0.0"
     },
     "tns-ios": {
-      "version": "3.4.1"
+      "version": "6.0.1"
     }
   },
   "dependencies": {
     "nativescript-bluetooth": "file:../src",
     "nativescript-theme-core": "^1.0.4",
-    "tns-core-modules": "~3.4.0"
+    "tns-core-modules": "6.0.1"
   },
   "devDependencies": {
-    "awesome-typescript-loader": "~3.1.3",
-    "babel-traverse": "6.12.0",
-    "babel-types": "6.11.1",
-    "babylon": "6.8.4",
-    "copy-webpack-plugin": "~4.0.1",
-    "extract-text-webpack-plugin": "~3.0.0",
-    "filewalker": "0.1.2",
-    "jasmine-core": "^2.8.0",
-    "karma": "^1.7.1",
-    "karma-jasmine": "^1.1.0",
-    "karma-nativescript-launcher": "^0.4.0",
+    "babel-traverse": "6.26.0",
+    "babel-types": "6.26.0",
+    "babylon": "6.18.0",
     "lazy": "1.0.11",
-    "nativescript-css-loader": "~0.26.0",
-    "nativescript-dev-typescript": "libs",
-    "nativescript-dev-webpack": "~0.9.0",
-    "raw-loader": "~0.5.1",
-    "resolve-url-loader": "~2.1.0",
-    "tns-platform-declarations": "~3.4.0",
-    "typescript": "~2.4.0",
-    "webpack": "~3.8.1",
-    "webpack-bundle-analyzer": "^2.8.2",
-    "webpack-sources": "~1.0.1",
-    "css-loader": "~0.28.7",
-    "nativescript-worker-loader": "~0.8.1",
-    "uglifyjs-webpack-plugin": "~1.1.6"
+    "nativescript-dev-webpack": "1.0.1",
+    "tns-platform-declarations": "6.0.1",
+    "typescript": "~3.4.1"
   }
 }

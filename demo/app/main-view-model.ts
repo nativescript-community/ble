@@ -1,7 +1,9 @@
+import { View } from "tns-core-modules/ui/core/view";
 import * as dialogs from 'tns-core-modules/ui/dialogs';
 import { Observable } from 'tns-core-modules/data/observable';
 import { ObservableArray } from 'tns-core-modules/data/observable-array';
-import { topmost } from 'tns-core-modules/ui/frame';
+import { topmost } from "tns-core-modules/ui/frame";
+import { Page } from "tns-core-modules/ui/page";
 import { Prop } from './utils/obs-prop';
 import { Bluetooth, Peripheral } from 'nativescript-bluetooth';
 
@@ -50,7 +52,10 @@ export class DemoAppModel extends Observable {
     const peri = this.peripherals.getItem(args.index);
     console.log('--- peripheral selected: ' + peri.UUID);
 
-    var navigationEntry = {
+    // const view = <View>args.view;
+    // const page = <Page>view.page;
+
+    topmost().navigate({
       moduleName: 'services-page',
       context: {
         info: 'something you want to pass to your page',
@@ -58,8 +63,7 @@ export class DemoAppModel extends Observable {
         peripheral: peri
       },
       animated: true
-    };
-    topmost().navigate(navigationEntry);
+    });
   }
 
   // this one 'manually' checks for permissions
