@@ -1,4 +1,5 @@
 import {
+    AdvertismentData,
     BluetoothCommon,
     CallbackType,
     Characteristic,
@@ -22,6 +23,7 @@ import {
 } from './bluetooth.common';
 
 export {
+    AdvertismentData,
     CallbackType,
     ConnectOptions,
     DisconnectOptions,
@@ -31,6 +33,7 @@ export {
     ReadOptions,
     ReadResult,
     ScanMode,
+    Service,
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
