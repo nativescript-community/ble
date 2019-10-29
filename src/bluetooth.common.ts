@@ -21,6 +21,9 @@ export class BluetoothError extends Error {
             Object.assign(this, properties);
         }
     }
+    toString() {
+        return `[BluetoothError]:${this.message}, ${this.method}, ${JSON.stringify(this.arguments)}`;
+    }
 }
 
 export const CLog = (type: CLogTypes = 0, ...args) => {
@@ -97,6 +100,7 @@ export abstract class BluetoothCommon extends Observable {
     public static msg_no_service = 'service_not_found';
     public static msg_no_characteristic = 'characteristic_not_found';
     public static msg_peripheral_not_connected = 'peripheral_not_connected';
+    public static msg_peripheral_disconnected = 'peripheral_disconnected';
     public static msg_invalid_value = 'invalid_value';
     public static msg_error_function_call = 'error_function_call';
     public static msg_characteristic_cant_notify = 'characteristic_cant_notify';
