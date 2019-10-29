@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Connect to and interact with Bluetooth LE peripherals",
   "scripts": {
-    "tsc": "tsc -skipLibCheck && cp src/bluetooth.d.ts plugin",
+    "tsc": "cp src/bluetooth.d.ts plugin && tsc -skipLibCheck",
     "build": "npm i && npm run tsc",
     "test.android": "npm i && npm run tsc && npm run tslint && cd demo && tns build android && tns test android --justlaunch",
     "test.ios": "npm i && npm run tsc && npm run tslint && cd demo && tns build ios && tns test ios --justlaunch",
