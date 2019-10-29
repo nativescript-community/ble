@@ -50,6 +50,6 @@
     "homepage": "https://github.com/EddyVerbruggen/nativescript-bluetooth",
     "dependencies": {
         "nativescript-observable": "^1.0.1",
-        "p-queue": "^6.1.0"
+        "p-queue": "^6.2.0"
     }
 }
