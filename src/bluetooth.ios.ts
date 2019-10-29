@@ -1101,6 +1101,7 @@ export class Bluetooth extends BluetoothCommon {
                 })
         );
     }
+    @prepareArgs
     public requestMtu(args: MtuOptions) {
         if (!args.value) {
             return Promise.reject(
@@ -1110,7 +1111,14 @@ export class Bluetooth extends BluetoothCommon {
                 })
             );
         }
-        return Promise.resolve(args.value);
+        return this._getWrapper(args, CBCharacteristicProperties.PropertyWrite).then(wrapper => {
+            return Promise.resolve(
+                Math.min(
+                    wrapper.peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithoutResponse),
+                    wrapper.peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithResponse)
+                )
+            );
+        });
     }
     @prepareArgs
     public write(args: WriteOptions) {
