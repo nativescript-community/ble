@@ -3,7 +3,6 @@ import {
     bluetoothEnabled,
     BluetoothError,
     BluetoothUtil,
-    Characteristic,
     CLog,
     CLogTypes,
     ConnectOptions,
@@ -421,7 +420,11 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
     public centralManagerDidDiscoverPeripheralAdvertisementDataRSSI(central: CBCentralManager, peripheral: CBPeripheral, advData: NSDictionary<string, any>, RSSI: number) {
         const UUIDString = NSUUIDToString(peripheral.identifier);
         CLog(CLogTypes.info, `CBCentralManagerDelegateImpl.centralManagerDidDiscoverPeripheralAdvertisementDataRSSI ---- ${peripheral.name} @ ${UUIDString} @ ${RSSI} @ ${advData}`);
-        this._owner.get().adddDiscoverPeripheral(peripheral);
+        const owner: Bluetooth = this._owner && this._owner.get();
+        if (!owner) {
+            return;
+        }
+        owner.adddDiscoverPeripheral(peripheral);
 
         const advertismentData = new AdvertismentData(advData);
 
@@ -434,11 +437,11 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
             state: this._owner.get()._getState(peripheral.state),
             manufacturerId: advertismentData.manufacturerId
         };
-        this._owner.get()._advData[UUIDString] = advertismentData;
-        if (this._owner.get()._onDiscovered) {
-            this._owner.get()._onDiscovered(payload);
+        owner._advData[UUIDString] = advertismentData;
+        if (owner._onDiscovered) {
+            owner._onDiscovered(payload);
         }
-        this._owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
+        owner.sendEvent(Bluetooth.device_discovered_event, payload);
     }
 
     /**
@@ -833,7 +836,6 @@ export class Bluetooth extends BluetoothCommon {
         });
     }
 
-
     public clearAdvertismentCache() {
         this._advData = {};
     }
@@ -1009,7 +1011,7 @@ export class Bluetooth extends BluetoothCommon {
         }
     }
 
-    public findPeripheral = UUID => {
+    public findPeripheral(UUID) {
         let result = this._connectedPeripherals[UUID] || this._discoverPeripherals[UUID];
         if (!result) {
             const periphs = this.centralManager.retrievePeripheralsWithIdentifiers([NSUUID.alloc().initWithUUIDString(UUID)]);
@@ -1020,13 +1022,13 @@ export class Bluetooth extends BluetoothCommon {
         }
         return result as CBPeripheralWithDelegate;
     }
-    public adddDiscoverPeripheral = peripheral => {
+    public adddDiscoverPeripheral(peripheral) {
         const UUID = NSUUIDToString(peripheral.identifier);
         if (!this._discoverPeripherals[UUID]) {
             this._discoverPeripherals[UUID] = peripheral;
         }
     }
-    public findDiscoverPeripheral = UUID => {
+    public findDiscoverPeripheral(UUID) {
         let result = this._discoverPeripherals[UUID];
         if (!result) {
             const periphs = this.centralManager.retrievePeripheralsWithIdentifiers([NSUUID.alloc().initWithUUIDString(UUID)]);
