@@ -22,7 +22,7 @@
             <GridLayout rows="*">
               <ListView items="{{ peripherals }}" itemTap="{{ onPeripheralTap }}" separatorColor="#90c3d4">
                 <ListView.itemTemplate>
-                  <StackLayout orientation="horizontal" class="padded-label">
+                  <StackLayout orientation="horizontal" class="padded-label" longPress="onPeripheralTestTap">
                     <StackLayout class="padded-label-stack">
                       <Image horizontalAlignment="right" width="30" src="~/res/signal-strength.png" />
                       <Label horizontalAlignment="right" width="30" text="{{ RSSI }}" class="rssi-label" />

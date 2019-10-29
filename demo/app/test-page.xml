@@ -1,0 +1,26 @@
+<Page 
+  xmlns="http://www.nativescript.org/tns.xsd" loaded="pageLoaded">
+  <StackLayout class="p-10">
+    <StackLayout class="tab-content">
+      <Label text="{{ 'Peripheral Name: ' + peripheral.name }}" class="h3 title" textWrap="true" />
+      <Label text="{{ 'UUID: ' + peripheral.UUID }}" class="h3" textWrap="true" />
+      <Label text="{{ 'LocalName: ' + advertismentData.localName }}" class="h3" textWrap="true" />
+      <Label text="{{ 'manufactureId: ' + (companyIdentifier[advertismentData.manufacturerId] || advertismentData.manufacturerId ) }}" class="h3" textWrap="true" />
+      <Label text="{{ formatData('manufactureData', 'manufactureData') }}" class="h3" textWrap="true" />
+      <Label text="{{ formatData('serviceUUIDs', 'serviceUUIDs') }}" class="h3" textWrap="true" />
+      <Button text="{{connected ? 'Stop' : 'Start'}}" tap="{{ onStartTap }}" class="{{'btn ' + (connected? 'btn-red':'btn-blue')}}" />
+    </StackLayout>
+    <ActivityIndicator busy="{{ isLoading }}"/>
+    <Label text="Services: " class="title-postfix" />
+    <GridLayout rows="*">
+      <ListView items="{{ discoveredServices }}" itemTap="{{ onServiceTap }}" separatorColor="#90c3d4">
+        <ListView.itemTemplate>
+          <StackLayout col="0" class="tab-content">
+            <Label text="{{ name }}" />
+            <Label text="{{ UUID }}" visibility="{{ name != UUID ? 'visible' : 'collapse' }}" />
+          </StackLayout>
+        </ListView.itemTemplate>
+      </ListView>
+    </GridLayout>
+  </StackLayout>
+</Page>

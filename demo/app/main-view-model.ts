@@ -75,6 +75,21 @@ export class DemoAppModel extends Observable {
         topmost().navigate(navigationEntry);
     }
 
+    public onPeripheralTestTap(peri) {
+        this.doStopScanning();
+        console.log('!!&&&&***** Long press item with index ' + peri);
+        console.log('--- peripheral selected: ' + peri.UUID);
+
+        const navigationEntry = {
+            moduleName: 'test-page',
+            context: {
+                peripheral: peri
+            },
+            animated: true
+        };
+        topmost().navigate(navigationEntry);
+    }
+
     // this one 'manually' checks for permissions
     public doScanForHeartrateMontitor() {
         this._bluetooth.hasCoarseLocationPermission().then(granted => {
