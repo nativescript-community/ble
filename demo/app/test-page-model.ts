@@ -1,11 +1,11 @@
 import { AdvertismentData, getBluetoothInstance, Peripheral, Service } from 'nativescript-bluetooth';
 import { GPS, Options as GeolocationOptions } from 'nativescript-gps';
-import { ApplicationEventData, on as applicationOn, resumeEvent, suspendEvent } from 'tns-core-modules/application';
-import { Observable } from 'tns-core-modules/data/observable';
-import { ObservableArray } from 'tns-core-modules/data/observable-array';
-import * as dialogs from 'tns-core-modules/ui/dialogs';
-import { Accuracy } from 'tns-core-modules/ui/enums/enums';
-import { topmost } from 'tns-core-modules/ui/frame';
+import { ApplicationEventData, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
+import { Observable } from '@nativescript/core/data/observable';
+import { ObservableArray } from '@nativescript/core/data/observable-array';
+import * as dialogs from '@nativescript/core/ui/dialogs';
+import { Accuracy } from '@nativescript/core/ui/enums/enums';
+import { topmost } from '@nativescript/core/ui/frame';
 import { Prop } from './utils/obs-prop';
 
 

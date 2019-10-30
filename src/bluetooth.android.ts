@@ -1,5 +1,5 @@
-import * as utils from 'tns-core-modules/utils/utils';
-import * as application from 'tns-core-modules/application/application';
+import * as utils from '@nativescript/core/utils/utils';
+import * as application from '@nativescript/core/application';
 import {
     AdvertismentData,
     BluetoothCommon,

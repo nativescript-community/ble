@@ -15,7 +15,7 @@ const { AngularCompilerPlugin } = require('@ngtools/webpack');
 
 module.exports = env => {
     // Add your custom Activities, Services and other Android app components here.
-    const appComponents = ['tns-core-modules/ui/frame', 'tns-core-modules/ui/frame/activity'];
+    const appComponents = ['@nativescript/core/ui/frame', '@nativescript/core/ui/frame/activity'];
 
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
     if (!platform) {

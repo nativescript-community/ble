@@ -1,7 +1,7 @@
-import * as dialogs from 'tns-core-modules/ui/dialogs';
-import { Observable } from 'tns-core-modules/data/observable';
-import { ObservableArray } from 'tns-core-modules/data/observable-array';
-import { topmost } from 'tns-core-modules/ui/frame';
+import * as dialogs from '@nativescript/core/ui/dialogs';
+import { Observable } from '@nativescript/core/data/observable';
+import { ObservableArray } from '@nativescript/core/data/observable-array';
+import { topmost } from '@nativescript/core/ui/frame';
 import { Prop } from './utils/obs-prop';
 import { Bluetooth, getBluetoothInstance, Peripheral } from 'nativescript-bluetooth';
 

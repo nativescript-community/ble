@@ -13,9 +13,17 @@
 ## Installation
 From the command prompt go to your app's root folder and execute:
 
+if using @nativescript
 ```
 tns plugin add nativescript-bluetooth
 ```
+
+if using tns-core-modules
+```
+tns plugin add nativescript-bluetooth@2.0.0-beta.27
+```
+
+
 
 And do yourself a favor by adding TypeScript support to your nativeScript app:
 

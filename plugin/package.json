@@ -1,6 +1,6 @@
 {
     "name": "nativescript-bluetooth",
-    "version": "2.0.0-beta.27",
+    "version": "3.0.0-beta.1",
     "description": "Connect to and interact with Bluetooth LE peripherals",
     "main": "./bluetooth",
     "typings": "./bluetooth.d.ts",
@@ -49,7 +49,7 @@
     },
     "homepage": "https://github.com/EddyVerbruggen/nativescript-bluetooth",
     "dependencies": {
-        "nativescript-observable": "^1.0.1",
+        "nativescript-observable": "^2.0.1",
         "p-queue": "^6.2.0"
     }
 }

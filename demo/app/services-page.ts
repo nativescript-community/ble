@@ -1,4 +1,4 @@
-import { Page } from 'tns-core-modules/ui/page';
+import { Page } from '@nativescript/core/ui/page';
 import { ServicesViewModel } from './services-page-view-model';
 
 export function pageLoaded(args) {

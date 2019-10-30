@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { Observable, Subscription, fromEventPattern } from 'rxjs';
 import { takeWhile } from 'rxjs/operators';
-import * as dialogs from 'tns-core-modules/ui/dialogs';
+import * as dialogs from '@nativescript/core/ui/dialogs';
 import { Bluetooth, Peripheral, Service, Characteristic, ReadResult } from 'nativescript-bluetooth';
 
 const bluetooth = new Bluetooth();

@@ -93,7 +93,7 @@ export function stringToUint8Array(value, encoding = 'iso-8859-1') {
     return new Uint8Array(interop.bufferFromData(nativeArray));
 }
 
-import { ios } from 'tns-core-modules/utils/utils';
+import { ios } from '@nativescript/core/utils/utils';
 
 export type SubPeripheralDelegate = Partial<CBPeripheralDelegate>;
 export type SubCentralManagerDelegate = Partial<CBCentralManagerDelegate>;

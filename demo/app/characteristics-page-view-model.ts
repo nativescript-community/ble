@@ -1,5 +1,5 @@
-import * as dialogs from 'tns-core-modules/ui/dialogs';
-import { Observable } from 'tns-core-modules/data/observable';
+import * as dialogs from '@nativescript/core/ui/dialogs';
+import { Observable } from '@nativescript/core/data/observable';
 import { Bluetooth, getBluetoothInstance, Peripheral, ReadResult, Service } from 'nativescript-bluetooth';
 import { Prop } from './utils/obs-prop';
 
