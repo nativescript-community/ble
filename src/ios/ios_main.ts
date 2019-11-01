@@ -218,12 +218,20 @@ export class Bluetooth extends BluetoothCommon {
     });
   }
 
-  public findPeripheral(UUID): CBPeripheral {
+  public findPeripheral(UUID, suggestedPeripheral?: CBPeripheral): CBPeripheral {
     for (let i = 0; i < this._peripheralArray.count; i++) {
       const peripheral = this._peripheralArray.objectAtIndex(i);
       if (UUID === peripheral.identifier.UUIDString) {
+        if (!!suggestedPeripheral) {
+          this._peripheralArray.replaceObjectAtIndexWithObject(i, suggestedPeripheral);
+          return suggestedPeripheral;
+        }
         return peripheral;
       }
+    }
+    if (!!suggestedPeripheral) {
+      this._peripheralArray.addObject(suggestedPeripheral);
+      return suggestedPeripheral;
     }
     return null;
   }
@@ -475,7 +483,9 @@ export class Bluetooth extends BluetoothCommon {
 
     if (!characteristic) {
       reject(
-        `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${arg.serviceUUID} on peripheral with UUID ${arg.peripheralUUID}`
+        `Could not find characteristic with UUID ${arg.characteristicUUID} on service with UUID ${
+          arg.serviceUUID
+        } on peripheral with UUID ${arg.peripheralUUID}`
       );
       return null;
     }
