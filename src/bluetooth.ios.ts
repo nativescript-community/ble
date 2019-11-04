@@ -1113,14 +1113,18 @@ export class Bluetooth extends BluetoothCommon {
                 })
             );
         }
-        return this._getWrapper(args, CBCharacteristicProperties.PropertyWrite).then(wrapper => {
-            return Promise.resolve(
-                Math.min(
-                    wrapper.peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithoutResponse),
-                    wrapper.peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithResponse)
-                )
-            );
-        });
+        const peripheral = this.findPeripheral(args.peripheralUUID);
+        if (!peripheral) {
+            return Promise.reject(new BluetoothError(BluetoothCommon.msg_no_peripheral, { arguments: args }));
+        }
+        // return this._getWrapper(args, CBCharacteristicProperties.PropertyWrite).then(wrapper => {
+        return Promise.resolve(
+            Math.min(
+                peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithoutResponse),
+                peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithResponse)
+            )
+        );
+        // });
     }
     @prepareArgs
     public write(args: WriteOptions) {
