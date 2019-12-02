@@ -1,4 +1,5 @@
 import Observable from 'nativescript-observable';
+import { BaseError } from 'make-error';
 
 // declare var require;
 export class BluetoothUtil {
@@ -11,7 +12,7 @@ export enum CLogTypes {
     error
 }
 
-export class BluetoothError extends Error {
+export class BluetoothError extends BaseError {
     arguments?: any; // call argumrents
     method?: string; // call argumrents
     status?: number; // call argumrents
@@ -22,7 +23,7 @@ export class BluetoothError extends Error {
         }
     }
     toString() {
-        return `[BluetoothError]:${this.message}, ${this.method}, ${JSON.stringify(this.arguments)}`;
+        return `[BluetoothError]:${this.message}, ${this.method}, ${this.status}, ${JSON.stringify(this.arguments)}`;
     }
 }
 
@@ -104,6 +105,11 @@ export abstract class BluetoothCommon extends Observable {
     public static msg_invalid_value = 'invalid_value';
     public static msg_error_function_call = 'error_function_call';
     public static msg_characteristic_cant_notify = 'characteristic_cant_notify';
+
+    public static UUIDKey = 'UUID'
+    public static serviceUUIDKey = 'serviceUUID'
+    public static peripheralUUIDKey = 'peripheralUUID'
+    public static characteristicUUIDKey = 'characteristicUUID'
 
     /*
      * String value for hooking into the bluetooth_status_event. This event fires when the bluetooth state changes.
