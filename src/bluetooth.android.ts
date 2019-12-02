@@ -70,6 +70,7 @@ function AppPackageName() {
     return _AppPackageName;
 }
 
+const JELLY_BEAN = 18;
 const LOLLIPOP = 21;
 const MARSHMALLOW = 23;
 
@@ -1085,7 +1086,7 @@ export class Bluetooth extends BluetoothCommon {
         if (android.os.Build.VERSION.SDK_INT >= LOLLIPOP) {
             initScanCallback();
             this.scanCallback = new ScanCallbackVar(new WeakRef(this));
-        } else {
+        } else if (android.os.Build.VERSION.SDK_INT >= JELLY_BEAN) {
             initLeScanCallback();
             this.LeScanCallback = new LeScanCallbackVar(new WeakRef(this));
         }
