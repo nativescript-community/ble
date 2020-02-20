@@ -51,7 +51,7 @@ export function bluetoothEnabled(target: Object, propertyKey: string, descriptor
             .then(function(isEnabled) {
                 if (!isEnabled) {
                     CLog(CLogTypes.info, `${originalMethod.name} ---- Bluetooth is not enabled.`);
-                    return Promise.reject(BluetoothCommon.msg_not_enabled);
+                    return Promise.reject(new Error(BluetoothCommon.msg_not_enabled));
                 }
                 return null;
             })
