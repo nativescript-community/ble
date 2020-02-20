@@ -17,13 +17,13 @@
         "noEmitOnError": false,
         "noImplicitAny": false,
         "noImplicitReturns": true,
-        "noImplicitUseStrict": false,
+        "noImplicitUseStrict": true,
         "noFallthroughCasesInSwitch": true,
         "baseUrl": ".",
         "outDir": "./plugin",
         "rootDir": "src",
         "paths": {
-            "*": ["./node_modules/tns-core-modules/*", "./node_modules/*"]
+            "*": ["./node_modules/*"]
         }
     },
     "include": ["src/**/*.ts", "./references.d.ts", "./src/references.d.ts"],
