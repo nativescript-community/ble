@@ -640,7 +640,7 @@ function initScanCallback() {
         constructor(private scanRecord: android.bluetooth.le.ScanRecord) {}
         get manufacturerData() {
             const data = this.scanRecord.getManufacturerSpecificData();
-            const size = data.size();
+            const size = data ? data.size() : 0;
             if (size > 0) {
                 const mKey = data.keyAt(0);
                 return byteArrayToBuffer(data.get(mKey));
@@ -652,7 +652,7 @@ function initScanCallback() {
         }
         get manufacturerId() {
             const data = this.scanRecord.getManufacturerSpecificData();
-            const size = data.size();
+            const size = data ? data.size() : 0;
             if (size > 0) {
                 return data.keyAt(0);
             }
@@ -674,15 +674,18 @@ function initScanCallback() {
         get serviceUUIDs() {
             const result = [];
             const serviceUuids = this.scanRecord.getServiceUuids();
-            for (let i = 0; i < serviceUuids.size(); i++) {
-                result.push(uuidToString(serviceUuids[i]));
+            if (serviceUuids) {
+                for (let i = 0; i < serviceUuids.size(); i++) {
+                    result.push(uuidToString(serviceUuids[i]));
+                }
             }
+
             return result;
         }
         get serviceData() {
             const result = {};
             const serviceData = this.scanRecord.getServiceData();
-            if (serviceData.size() > 0) {
+            if (serviceData && serviceData.size() > 0) {
                 const entries = serviceData.entrySet().iterator();
                 while (entries.hasNext()) {
                     const entry = entries.next();
@@ -1908,7 +1911,7 @@ export class Bluetooth extends BluetoothCommon {
     public write(args: WriteOptions) {
         const methodName = 'write';
         if (!args.value) {
-            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value', method:methodName });
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: 'value', method: methodName });
         }
         CLog(CLogTypes.info, methodName, args);
         return this.addToQueue(
