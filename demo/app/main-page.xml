@@ -5,7 +5,7 @@
       <TabViewItem title="Demo">
         <TabViewItem.view>
           <StackLayout class="p-10">
-            <GridLayout columns="*, *" rows="auto, auto, auto, auto" horizontalAlignment="center">
+            <GridLayout columns="*, *" rows="auto, auto, auto, auto, auto" horizontalAlignment="center">
               <Button row="0" android:col="0" ios:colSpan="2" text="Is Bluetooth Enabled?" tap="{{ doIsBluetoothEnabled }}" class="btn btn-primary" />
               <android>
                 <Button row="0" col="1" text="Enable Bluetooth" tap="{{ doEnableBluetooth }}" class="btn btn-green" />
@@ -17,6 +17,10 @@
                 <Button text="Beacon" tap="{{ doScanForBeacon }}" class="btn btn-green" />
               </StackLayout>
               <Button row="3" colSpan="2" text="Stop Scan" tap="{{ doStopScanning }}" class="btn btn-red" />
+              <StackLayout row="4" colSpan="2" orientation="horizontal">
+                <Button text="Start beacon" tap="{{ doStartBeacon }}" class="btn btn-green" />
+                <Button text="Stop beacon" tap="{{ doStopBeacon }}" class="btn btn-red" />
+              </StackLayout>
             </GridLayout>
             <ActivityIndicator busy="{{ isLoading }}" />
             <GridLayout rows="*">

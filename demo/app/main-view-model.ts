@@ -228,6 +228,19 @@ export class DemoAppModel extends Observable {
         );
     }
 
+    public doStartBeacon() {
+        //let serviceUuid = 'B9401000-F5F8-466E-AFF9-25556B57FE6D';
+        let serviceUuid = '0000FEAA-0000-1000-8000-00805F9B34FB';
+        let serviceData = '0x10';
+        let name = 'test CoronaBeacon';
+        this._bluetooth.startBeaconAdvertising(serviceUuid, serviceData, name);
+    }
+
+    public doStopBeacon() {
+        this._bluetooth.stopBeaconAdvertising();
+    }
+
+
     /*
   DemoAppModel.prototype.doWrite = function () {
     // send 1 byte to switch a light on

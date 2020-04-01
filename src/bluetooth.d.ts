@@ -132,6 +132,13 @@ export class Bluetooth extends BluetoothCommon {
     stop();
 
     public clearAdvertismentCache();
+
+    /**
+     * Beacon support.
+     */
+    startBeaconAdvertising(serviceUuid, serviceData, name);
+
+    stopBeaconAdvertising();
 }
 export function getBluetoothInstance(): Bluetooth;
 
