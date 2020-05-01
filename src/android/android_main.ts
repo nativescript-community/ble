@@ -18,7 +18,7 @@ import { TNS_BluetoothGattCallback } from './TNS_BluetoothGattCallback';
 import { TNS_LeScanCallback } from './TNS_LeScanCallback';
 import { TNS_ScanCallback } from './TNS_ScanCallback';
 
-const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
+const ACCESS_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 const ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 224;
 
@@ -26,8 +26,11 @@ declare let android, global: any;
 
 const AppPackageName = useAndroidX() ? global.androidx.core.app : android.support.v4.app;
 const ContentPackageName = useAndroidX() ? global.androidx.core.content : android.support.v4.content;
+const LocationPermission = useAndroidX()
+  ? android.Manifest.permission.ACCESS_FINE_LOCATION
+  : android.Manifest.permission.ACCESS_COARSE_LOCATION;
 
-function useAndroidX () {
+function useAndroidX() {
   return global.androidx && global.androidx.appcompat;
 }
 
@@ -86,7 +89,14 @@ export class Bluetooth extends BluetoothCommon {
     }
   }
 
+  /**
+   * @deprecated Use `isLocationPermissionGranted`
+   */
   public coarseLocationPermissionGranted() {
+    return this.isLocationPermissionGranted();
+  }
+
+  public isLocationPermissionGranted() {
     let hasPermission = android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M;
     if (!hasPermission) {
       const ctx = this._getContext();
@@ -94,16 +104,23 @@ export class Bluetooth extends BluetoothCommon {
 
       hasPermission =
         android.content.pm.PackageManager.PERMISSION_GRANTED ===
-          ContentPackageName.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
+        ContentPackageName.ContextCompat.checkSelfPermission(ctx, LocationPermission);
     }
-    CLog(CLogTypes.info, 'Bluetooth.coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
+    CLog(CLogTypes.info, 'Bluetooth.isLocationPermissionGranted ---- ACCESS_LOCATION permission granted?', hasPermission);
     return hasPermission;
   }
 
+  /**
+   * @deprecated Use `requestLocationPermission`
+   */
   public requestCoarseLocationPermission(callback?: () => void): Promise<boolean> {
+    return this.requestLocationPermission(callback);
+  }
+
+  public requestLocationPermission(callback?: () => void): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const permissionCb = (args: application.AndroidActivityRequestPermissionsEventData) => {
-        if (args.requestCode === ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
+        if (args.requestCode === ACCESS_LOCATION_PERMISSION_REQUEST_CODE) {
           application.android.off(application.AndroidApplication.activityRequestPermissionsEvent, permissionCb);
 
           for (let i = 0; i < args.permissions.length; i++) {
@@ -124,11 +141,7 @@ export class Bluetooth extends BluetoothCommon {
       application.android.on(application.AndroidApplication.activityRequestPermissionsEvent, permissionCb);
 
       // invoke the permission dialog
-      AppPackageName.ActivityCompat.requestPermissions(
-        this._getActivity(),
-        [android.Manifest.permission.ACCESS_COARSE_LOCATION],
-        ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE
-      );
+      AppPackageName.ActivityCompat.requestPermissions(this._getActivity(), [LocationPermission], ACCESS_LOCATION_PERMISSION_REQUEST_CODE);
     });
   }
 
@@ -280,12 +293,12 @@ export class Bluetooth extends BluetoothCommon {
           }
         };
 
-        if (arg.skipPermissionCheck !== true && !this.coarseLocationPermissionGranted()) {
+        if (arg.skipPermissionCheck !== true && !this.isLocationPermissionGranted()) {
           CLog(
             CLogTypes.info,
             'Bluetooth.startScanning ---- Coarse Location Permission not granted on Android device, will request permission.'
           );
-          this.requestCoarseLocationPermission(onPermissionGranted);
+          this.requestLocationPermission(onPermissionGranted);
         } else {
           onPermissionGranted();
         }
