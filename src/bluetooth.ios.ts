@@ -291,7 +291,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
             if (characteristic.isNotifying) {
                 CLog(CLogTypes.info, `CBPeripheralDelegateImpl.peripheralDidUpdateNotificationStateForCharacteristicError ---- Notification began on ${characteristic}`);
             } else {
-                CLog(CLogTypes.info, `CBPeripheralDelegateImpl.peripheralDidUpdateNotificationStateForCharacteristicError ---- Notification stopped on  ${characteristic}, consider disconnecting`);
+                CLog(CLogTypes.info, `CBPeripheralDelegateImpl.peripheralDidUpdateNotificationStateForCharacteristicError ---- Notification stopped on  ${characteristic}`);
                 // Bluetooth._manager.cancelPeripheralConnection(peripheral);
             }
         }
@@ -1083,9 +1083,7 @@ export class Bluetooth extends BluetoothCommon {
                                     })
                                 );
                             }
-                            if (characteristic.isNotifying) {
-                                return;
-                            }
+                            
                             const UUID = NSUUIDToString(peripheral.identifier);
                             const cUUID = CBUUIDToString(characteristic.UUID);
                             const sUUID = CBUUIDToString(characteristic.service.UUID);
