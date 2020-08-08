@@ -9,7 +9,7 @@
     "nativescript-bluetooth": "file:../plugin",
     "nativescript-gps": "1.2.18",
     "nativescript-theme-core": "^2.0.24",
-    "tns-core-modules": "~6.1.2"
+    "@nativescript/core": "~6.1.2"
   },
   "devDependencies": {
     "nativescript-css-loader": "~0.26.1",
