@@ -55,6 +55,12 @@ export class Bluetooth extends BluetoothCommon {
      * restoreIdentifier is optional and only used on iOS
      */
     constructor(restoreIndentifier?: string);
+
+    /**
+     * everything needed to clear on app close 
+     */
+    clear();
+
     /**
      * If true console logs will be output to help debug NativeScript-Bluetooth.
      */

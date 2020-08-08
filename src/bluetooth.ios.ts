@@ -600,6 +600,12 @@ export class Bluetooth extends BluetoothCommon {
     public _advData = {};
     public _onDiscovered = null;
 
+
+
+    clear() {
+        // doing nothing on ios
+    }
+
     _state: CBManagerState;
     set state(state: CBManagerState) {
         if (this._state !== state) {
@@ -713,9 +719,7 @@ export class Bluetooth extends BluetoothCommon {
                 }
                 return null;
             })
-            .then(
-                () => this._isEnabled()
-            );
+            .then(() => this._isEnabled());
     }
     scanningReferTimer: {
         timer?: NodeJS.Timeout;
@@ -784,7 +788,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public openBluetoothSettings(url?: string): Promise<void> {
-        return Promise.reject( new BluetoothError(BluetoothCommon.msg_cant_open_settings));
+        return Promise.reject(new BluetoothError(BluetoothCommon.msg_cant_open_settings));
         // return this.isBluetoothEnabled().then(isEnabled => {
         //     if (!isEnabled) {
         //         return Promise.resolve().then(() => {
@@ -1083,7 +1087,7 @@ export class Bluetooth extends BluetoothCommon {
                                     })
                                 );
                             }
-                            
+
                             const UUID = NSUUIDToString(peripheral.identifier);
                             const cUUID = CBUUIDToString(characteristic.UUID);
                             const sUUID = CBUUIDToString(characteristic.service.UUID);
