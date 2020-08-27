@@ -7,7 +7,7 @@
         "tsc": "cp src/bluetooth.d.ts plugin && tsc -skipLibCheck -d",
         "build.plugin": " \\cp README.md plugin/ && rm -f .tsbuildinfo && npm run tsc",
         "clean": "rimraf ./plugin/**/*.d.ts ./plugin/**/*.js ./plugin/**/*.js.map plugin/node_modules plugin/package-lock.json",
-        "build": "npm i && npm run tsc",
+        "build": "npm run tsc",
         "test.android": "npm i && npm run tsc && npm run tslint && cd demo && tns build android && tns test android --justlaunch",
         "test.ios": "npm i && npm run tsc && npm run tslint && cd demo && tns build ios && tns test ios --justlaunch",
         "tslint": "tslint \"src/**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\"",
