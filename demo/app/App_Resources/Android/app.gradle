@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Add your native dependencies here:
 
 // Uncomment to add recyclerview-v7 dependency
@@ -14,3 +15,14 @@ android {
     additionalParameters "--no-version-vectors"  
   }  
 } 
+=======
+android {
+  defaultConfig {
+    minSdkVersion 17
+    generatedDensities = []
+  }
+  aaptOptions {
+    additionalParameters "--no-version-vectors"
+  }
+}
+>>>>>>> c604db08cd8769f11fdb1180cf509fd0bb877e13

@@ -1,3 +1,2 @@
-<Frame xmlns="http://www.nativescript.org/tns.xsd" defaultPage="main-page" >
-  
+<Frame defaultPage="main-page">
 </Frame>
