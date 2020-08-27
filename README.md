@@ -37,7 +37,7 @@ Want to dive in quickly? Check out [the demo app](https://github.com/EddyVerbrug
 
 #### Discovery
 - [startScanning](#startscanning)
-- [stopScanning](#startscanning)
+- [stopScanning](#stopcanning)
 
 #### Connectivity
 - [connect](#connect)
