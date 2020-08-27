@@ -36,7 +36,7 @@ export function getBluetoothInstance() {
 
 export { AdvertismentData, Peripheral, ReadResult, Service };
 
-const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
+const ACCESS_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 const ACTION_REQUEST_BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 224;
 const GATT_SUCCESS = 0;
@@ -1157,22 +1157,22 @@ export class Bluetooth extends BluetoothCommon {
             const ctx = this._getContext();
             // CLog(CLogTypes.info, 'app context', ctx);
 
-            hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED === ContentPackageName().ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION);
+            hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED === ContentPackageName().ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_FINE_LOCATION);
         }
-        CLog(CLogTypes.info, 'coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
+        CLog(CLogTypes.info, 'coarseLocationPermissionGranted ---- ACCESS_FINE_LOCATION permission granted?', hasPermission);
         return hasPermission;
     }
 
-    public hasCoarseLocationPermission() {
+    public hasLocationPermission() {
         return new Promise(resolve => {
             resolve(this.coarseLocationPermissionGranted());
         });
     }
 
-    public requestCoarseLocationPermission(callback?: () => void): Promise<boolean> {
+    public requestLocationPermission(callback?: () => void): Promise<boolean> {
         return new Promise((resolve, reject) => {
             let permissionCb = (args: AndroidActivityRequestPermissionsEventData) => {
-                if (args.requestCode === ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
+                if (args.requestCode === ACCESS_LOCATION_PERMISSION_REQUEST_CODE) {
                     andApp.off(AndroidApplication.activityRequestPermissionsEvent, permissionCb);
                     permissionCb = null;
                     for (let i = 0; i < args.permissions.length; i++) {
@@ -1193,15 +1193,15 @@ export class Bluetooth extends BluetoothCommon {
             andApp.on(AndroidApplication.activityRequestPermissionsEvent, permissionCb);
 
             // invoke the permission dialog
-            AppPackageName().ActivityCompat.requestPermissions(this._getActivity(), [android.Manifest.permission.ACCESS_COARSE_LOCATION], ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE);
+            AppPackageName().ActivityCompat.requestPermissions(this._getActivity(), [android.Manifest.permission.ACCESS_FINE_LOCATION], ACCESS_LOCATION_PERMISSION_REQUEST_CODE);
         });
     }
     getAndroidLocationManager(): android.location.LocationManager {
         return (andApp.context as android.content.Context).getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager;
     }
     public isGPSEnabled() {
-        if (!this.hasCoarseLocationPermission()) {
-            return this.requestCoarseLocationPermission().then(() => this.isGPSEnabled());
+        if (!this.hasLocationPermission()) {
+            return this.requestLocationPermission().then(() => this.isGPSEnabled());
         }
         const result = this.getAndroidLocationManager().isProviderEnabled(android.location.LocationManager.GPS_PROVIDER);
         if (BluetoothUtil.debug) {
@@ -1501,7 +1501,7 @@ export class Bluetooth extends BluetoothCommon {
 
                 if (args.skipPermissionCheck !== true && !this.coarseLocationPermissionGranted()) {
                     CLog(CLogTypes.info, methodName, '---- Coarse Location Permission not granted on Android device, will request permission.');
-                    this.requestCoarseLocationPermission(onPermissionGranted);
+                    this.requestLocationPermission(onPermissionGranted);
                 } else {
                     onPermissionGranted();
                 }
