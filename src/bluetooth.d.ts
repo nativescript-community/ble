@@ -62,11 +62,6 @@ export class Bluetooth extends BluetoothCommon {
     clear();
 
     /**
-     * If true console logs will be output to help debug NativeScript-Bluetooth.
-     */
-    debug: boolean;
-
-    /**
      * Property to determine if bluetooth is enabled.
      */
     readonly enabled: boolean;

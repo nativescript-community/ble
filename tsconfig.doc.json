@@ -1,0 +1,5 @@
+{
+    "extends": "./tsconfig",
+    "include": ["src/bluetooth.d.ts"],
+    "exclude": ["node_modules", "plugin"]
+}

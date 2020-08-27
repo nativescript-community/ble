@@ -1,13 +1,13 @@
 {
   "name": "demo-ng",
   "version": "1.1.0",
-  "description": "Demo NativeScript-Angular app for the nativescript-bluetooth plugin",
+  "description": "Demo NativeScript-Angular app for the @nativescript-community/ble plugin",
   "author": "Brad Powell",
   "contributors": [
     "Ryan Pendergast <ryan.pendergast@gmail.com>"
   ],
   "nativescript": {
-    "id": "org.nativescript.nativescript-bluetooth-demo-ng",
+    "id": "org.nativescript.@nativescript-community/ble-demo-ng",
     "tns-android": {
       "version": "5.1.0"
     },
@@ -25,7 +25,7 @@
     "@angular/platform-browser": "~7.2.1",
     "@angular/platform-browser-dynamic": "~7.2.1",
     "@angular/router": "~7.2.1",
-    "nativescript-bluetooth": "file:../plugin",
+    "@nativescript-community/ble": "file:../plugin",
     "nativescript-angular": "~7.1.2",
     "nativescript-theme-core": "~1.0.4",
     "reflect-metadata": "~0.1.13",

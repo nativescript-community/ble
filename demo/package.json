@@ -6,7 +6,7 @@
     }
   },
   "dependencies": {
-    "nativescript-bluetooth": "file:../plugin",
+    "@nativescript-community/ble": "file:../plugin",
     "nativescript-gps": "1.2.18",
     "nativescript-theme-core": "^2.0.24",
     "@nativescript/core": "~6.1.2"

@@ -31,12 +31,12 @@ export const CLog = (type: CLogTypes = 0, ...args) => {
     if (BluetoothUtil.debug) {
         if (type === 0) {
             // Info
-            console.log('[nativescript-bluetooth]', ...args);
+            console.log('[@nativescript-community/ble]', ...args);
         } else if (type === 1) {
             // Warning
-            console.warn('[nativescript-bluetooth]', ...args);
+            console.warn('[@nativescript-community/ble]', ...args);
         } else if (type === 2) {
-            console.error('[nativescript-bluetooth]', ...args);
+            console.error('[@nativescript-community/ble]', ...args);
         }
     }
 };
@@ -89,6 +89,9 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
 export abstract class BluetoothCommon extends Observable {
     public set debug(value: boolean) {
         BluetoothUtil.debug = value;
+    }
+    public get debug():boolean {
+        return BluetoothUtil.debug;
     }
     /*
      * error messages

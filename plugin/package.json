@@ -1,5 +1,5 @@
 {
-    "name": "nativescript-bluetooth",
+    "name": "@nativescript-community/ble",
     "version": "3.0.0-beta.12",
     "description": "Connect to and interact with Bluetooth LE peripherals",
     "main": "./bluetooth",
@@ -12,7 +12,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/EddyVerbruggen/nativescript-bluetooth.git"
+        "url": "https://github.com/EddyVerbruggen/@nativescript-community/ble.git"
     },
     "keywords": [
         "ecosystem:NativeScript",
@@ -45,9 +45,9 @@
     ],
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/EddyVerbruggen/nativescript-bluetooth/issues"
+        "url": "https://github.com/EddyVerbruggen/@nativescript-community/ble/issues"
     },
-    "homepage": "https://github.com/EddyVerbruggen/nativescript-bluetooth",
+    "homepage": "https://github.com/EddyVerbruggen/@nativescript-community/ble",
     "dependencies": {
         "make-error":"1.3.5",
         "nativescript-observable": "^2.0.1",

@@ -1,4 +1,4 @@
-import { AdvertismentData, getBluetoothInstance, Peripheral, Service } from 'nativescript-bluetooth';
+import { AdvertismentData, getBluetoothInstance, Peripheral, Service } from '@nativescript-community/ble';
 import { GPS, Options as GeolocationOptions } from 'nativescript-gps';
 import { ApplicationEventData, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
 import { Observable } from '@nativescript/core/data/observable';

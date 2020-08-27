@@ -2,7 +2,7 @@ import * as dialogs from '@nativescript/core/ui/dialogs';
 import { topmost } from '@nativescript/core/ui/frame';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { fromObject, Observable } from '@nativescript/core/data/observable';
-import { AdvertismentData, Bluetooth, getBluetoothInstance, Peripheral, Service } from 'nativescript-bluetooth';
+import { AdvertismentData, Bluetooth, getBluetoothInstance, Peripheral, Service } from '@nativescript-community/ble';
 import { Prop } from './utils/obs-prop';
 
 const companyIdentifier = require('./companyIdentifiers.json');

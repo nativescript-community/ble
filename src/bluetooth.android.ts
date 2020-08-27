@@ -512,6 +512,7 @@ function initLeScanCallback() {
         }
     }
 
+    @NativeClass
     class LeScanCallbackImpl extends android.bluetooth.BluetoothAdapter.LeScanCallback {
         onPeripheralDiscovered: (data: Peripheral) => void;
 
@@ -567,6 +568,7 @@ function initScanCallback() {
     if (ScanCallbackVar) {
         return;
     }
+    @NativeClass
     class ScanCallBackImpl extends android.bluetooth.le.ScanCallback {
         onPeripheralDiscovered: (data: Peripheral) => void;
 
@@ -711,6 +713,7 @@ function initBluetoothGattCallback() {
     if (BluetoothGattCallback) {
         return;
     }
+    @NativeClass
     class BluetoothGattCallbackImpl extends android.bluetooth.BluetoothGattCallback {
         // private owner: WeakRef<Bluetooth>;
         constructor(private owner: WeakRef<Bluetooth>) {

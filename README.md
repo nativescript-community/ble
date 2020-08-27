@@ -1,12 +1,12 @@
-# NativeScript <img src="https://github.com/EddyVerbruggen/nativescript-bluetooth/raw/master/media/bluetooth.gif" height="20px" alt="Bluetooth"/> plugin
+# NativeScript <img src="https://github.com/EddyVerbruggen/@nativescript-community/ble/raw/master/media/bluetooth.gif" height="20px" alt="Bluetooth"/> plugin
 
 [![NPM version][npm-image]][npm-url]
 [![Downloads][downloads-image]][npm-url]
 [![Twitter Follow][twitter-image]][twitter-url]
 
-[npm-image]:http://img.shields.io/npm/v/nativescript-bluetooth.svg
-[npm-url]:https://npmjs.org/package/nativescript-bluetooth
-[downloads-image]:http://img.shields.io/npm/dm/nativescript-bluetooth.svg
+[npm-image]:http://img.shields.io/npm/v/@nativescript-community/ble.svg
+[npm-url]:https://npmjs.org/package/@nativescript-community/ble
+[downloads-image]:http://img.shields.io/npm/dm/@nativescript-community/ble.svg
 [twitter-image]:https://img.shields.io/twitter/follow/eddyverbruggen.svg?style=social&label=Follow%20me
 [twitter-url]:https://twitter.com/eddyverbruggen
 
@@ -15,12 +15,7 @@ From the command prompt go to your app's root folder and execute:
 
 if using @nativescript
 ```
-tns plugin add nativescript-bluetooth
-```
-
-if using tns-core-modules
-```
-tns plugin add nativescript-bluetooth@2.0.0-beta.27
+tns plugin add @nativescript-community/ble
 ```
 
 
@@ -32,7 +27,7 @@ tns install typescript
 ```
 
 ## API
-Want to dive in quickly? Check out [the demo app](https://github.com/EddyVerbruggen/nativescript-bluetooth-demo)! Otherwise, mix and match these functions as you see fit:
+Want to dive in quickly? Check out [the demo app](https://github.com/EddyVerbruggen/@nativescript-community/ble-demo)! Otherwise, mix and match these functions as you see fit:
 
 #### Prerequisites
 - [isBluetoothEnabled](#isbluetoothenabled)
@@ -58,9 +53,10 @@ Want to dive in quickly? Check out [the demo app](https://github.com/EddyVerbrug
 ### isBluetoothEnabled
 Reports if bluetooth is enabled.
 
-```js
+```typescript
 // require the plugin
-var bluetooth = require("nativescript-bluetooth");
+import { Bluetooth } from '@nativescript-community/ble';
+var bluetooth = new Bluetooth();
 
 bluetooth.isBluetoothEnabled().then(
   function(enabled) {
@@ -81,7 +77,7 @@ Note that `hasCoarseLocationPermission ` will return true when:
 * You're using a device running Android < 6, or
 * You've already granted permission.
 
-```js
+```typescript
 bluetooth.hasCoarseLocationPermission().then(
   function(granted) {
     // if this is 'false' you probably want to call 'requestCoarseLocationPermission' now
@@ -93,7 +89,7 @@ bluetooth.hasCoarseLocationPermission().then(
 ### requestCoarseLocationPermission
 __Since plugin version 1.2.0 the `startScanning` function will handle this internally so it's no longer mandatory to add permission checks to your code.__
 
-```js
+```typescript
 // if no permission was granted previously this will open a user consent screen
 bluetooth.requestCoarseLocationPermission().then(
   function(granted) {
@@ -105,7 +101,7 @@ bluetooth.requestCoarseLocationPermission().then(
 ### enable (Android only)
 The promise will be rejected on iOS
 
-```js
+```typescript
 // This turns bluetooth on, will return false if the user denied the request.
 bluetooth.enable().then(
   function(enabled) {
@@ -150,7 +146,7 @@ This function will receive an object representing the peripheral which contains 
     flags?:number
   }` (optional)
 
-```js
+```typescript
 bluetooth.startScanning({
   filters: [{serviceUUID:'180d'}],
   seconds: 4,
@@ -169,7 +165,7 @@ At any time during a scan, being one where you passed in a number or seconds or 
 
 You may for instance want to stop scanning when the peripheral you found in `startScanning`'s `onDiscovered` callback matches your criteria.
 
-```js
+```typescript
 bluetooth.stopScanning().then(function() {
   console.log("scanning stopped");
 });
@@ -178,7 +174,7 @@ bluetooth.stopScanning().then(function() {
 ### connect
 Pass in the UUID of the peripheral you want to connect to and once a connection has been established the `onConnected` callback function will be invoked. This callback will received the peripheral object as before, but it's now enriched with a `services` property. An example of the returned peripheral object could be:
 
-```js
+```typescript
   peripheral: {
     UUID: '3424-542-4534-53454',
     name: 'Polar P7 Heartrate Monitor',
@@ -202,7 +198,7 @@ Pass in the UUID of the peripheral you want to connect to and once a connection 
 
 Here's the `connect` function in action with an implementation of `onConnected` that simply dumps the entire peripheral object to the console:
 
-```js
+```typescript
 bluetooth.connect({
   UUID: '04343-23445-45243-423434',
   onConnected: function (peripheral) {
@@ -225,7 +221,7 @@ Also note that `onDisconnected` function: if you try to interact with the periph
 ### disconnect
 Once done interacting with the peripheral be a good citizen and disconnect. This will allow other applications establishing a connection.
 
-```js
+```typescript
 bluetooth.disconnect({
   UUID: '34234-5453-4453-54545'
 }).then(function() {
@@ -241,7 +237,7 @@ If a peripheral has a service that has a characteristic where `properties.read` 
 
 The promise will receive an object like this:
 
-```js
+```typescript
 {
   value: <ArrayBuffer>, // an ArrayBuffer which you can use to decode (see example below)
   ios: <72>, // the platform-specific binary value of the characteristic: NSData (iOS), byte[] (Android)
@@ -252,7 +248,7 @@ The promise will receive an object like this:
 
 Armed with this knowledge, let's invoke the `read` function:
 
-```js
+```typescript
 bluetooth.read({
   peripheralUUID: '34234-5453-4453-54545',
   serviceUUID: '180d',
@@ -271,7 +267,7 @@ If a peripheral has a service that has a characteristic where `properties.write`
 
 The value may be a string or any array type value. If you pass a string you should pass the encoding too
 
-```js
+```typescript
 bluetooth.write({
   peripheralUUID: '34134-5453-4453-54545',
   serviceUUID: '180e',
@@ -292,7 +288,7 @@ If a peripheral has a service that has a characteristic where `properties.notify
 
 Usage is very much like `read`, but the result won't be sent to the promise, but to the `onNotify` callback function you pass in. This is because multiple notifications can be received and a promise can only resolve once. The value of the object sent to `onNotify` is the same as the one you get in the promise of `read`.
 
-```js
+```typescript
 bluetooth.startNotifying({
   peripheralUUID: '34234-5453-4453-54545',
   serviceUUID: '180d',
@@ -309,7 +305,7 @@ bluetooth.startNotifying({
 ### stopNotifying
 Enough is enough. When you're no longer interested in the values the peripheral is sending you do this:
 
-```js
+```typescript
 bluetooth.stopNotifying({
   peripheralUUID: '34234-5453-4453-54545',
   serviceUUID: '180d',
@@ -325,22 +321,8 @@ bluetooth.stopNotifying({
 The app using bluetooth can generate many console.log messages - one for each characteristic read, write, change.
 This can be reduced by calling `bluetooth.setCharacteristicLogging(false)`.
 
-## Changelog
-* 1.3.0  Added `manufacturerId` and `manufacturerData` to the `onDiscovered` callback of `startScanning`.
-* 1.2.0  Automatic permission handling on Android. Added `enable` so your app can now switch on Bluetooth if the user allows it (Android only).
-* 1.1.5  Added `setCharacteristicLogging` to reduce logging
-* 1.1.4  TypeScript fix and TS definition fix in package.json
-* 1.1.3  TypeScript fix
-* 1.1.2  Better Android M compatibility
-* 1.1.1  Better Android permission handling
-* 1.1.0  To be compatible with any Bluetooth device out there, the value returned from `read` and `notify` is now an `ArrayBuffer`.
-* 1.0.0  Initial release
-
 ## Troubleshooting
 Get a merge issue in AndroidManifest.xml? Remove the platforms/android folder and rebuild.
 
 ## Future work
-* Find an even better way to write values.
-* Support other properties of a characteristic.
-* Report advertising data peripherals broadcast.
 * Support interacting with multiple characteristics of the same peripheral at the same time.

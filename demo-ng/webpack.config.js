@@ -83,9 +83,9 @@ module.exports = env => {
         console.log('running webpack for live development', srcFullPath);
         aliases = Object.assign(aliases, {
             '#': srcFullPath,
-            'nativescript-bluetooth$': '#/bluetooth.' + platform,
-            'nativescript-bluetooth': '#',
-            'nativescript-bluetooth/src/bluetooth.ts':'#/bluetooth.d.ts'
+            '@nativescript-community/ble$': '#/bluetooth.' + platform,
+            '@nativescript-community/ble': '#',
+            '@nativescript-community/ble/src/bluetooth.ts':'#/bluetooth.d.ts'
         });
     }
     // const replacementFunc = function(path)  {

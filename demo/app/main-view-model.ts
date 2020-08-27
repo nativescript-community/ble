@@ -3,7 +3,7 @@ import { Observable } from '@nativescript/core/data/observable';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { topmost } from '@nativescript/core/ui/frame';
 import { Prop } from './utils/obs-prop';
-import { Bluetooth, getBluetoothInstance, Peripheral } from 'nativescript-bluetooth';
+import { Bluetooth, getBluetoothInstance, Peripheral } from '@nativescript-community/ble';
 
 export class DemoAppModel extends Observable {
     @Prop() public isLoading = false;

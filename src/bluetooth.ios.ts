@@ -93,7 +93,7 @@ export function stringToUint8Array(value, encoding = 'iso-8859-1') {
     return new Uint8Array(interop.bufferFromData(nativeArray));
 }
 
-import { ios } from '@nativescript/core/utils/utils';
+import { iOSNativeHelper } from '@nativescript/core/utils/native-helper';
 
 export type SubPeripheralDelegate = Partial<CBPeripheralDelegate>;
 export type SubCentralManagerDelegate = Partial<CBCentralManagerDelegate>;
@@ -107,6 +107,7 @@ export interface CBPeripheralWithDelegate extends CBPeripheral {
  * The delegate uses this protocol’s methods to monitor the discovery, exploration, and interaction of a remote peripheral’s services and properties.
  * There are no required methods in this protocol.
  */
+@NativeClass
 export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDelegate {
     public static ObjCProtocols = [CBPeripheralDelegate];
 
@@ -316,6 +317,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
  * The optional methods of the protocol allow the delegate to monitor the discovery, connectivity, and retrieval of peripheral devices.
  * The only required method of the protocol indicates the availability of the central manager, and is called when the central manager’s state is updated.
  */
+@NativeClass
 export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralManagerDelegate {
     static ObjCProtocols = [CBCentralManagerDelegate];
 
@@ -1370,7 +1372,7 @@ export class Bluetooth extends BluetoothCommon {
                                 })
                             );
                         } else {
-                            const cbServices = (ios.collections.nsArrayToJSArray(peripheral.services) as any) as CBService[];
+                            const cbServices = (iOSNativeHelper.collections.nsArrayToJSArray(peripheral.services) as any) as CBService[];
                             resolve({
                                 ios: cbServices,
                                 services: cbServices.map(cbs => ({ UUID: CBUUIDToString(cbs.UUID), name: cbs.UUID.toString() }))
@@ -1449,7 +1451,7 @@ export class Bluetooth extends BluetoothCommon {
                                 })
                             );
                         } else {
-                            const cbChars = (ios.collections.nsArrayToJSArray(service.characteristics) as any) as CBCharacteristic[];
+                            const cbChars = (iOSNativeHelper.collections.nsArrayToJSArray(service.characteristics) as any) as CBCharacteristic[];
 
                             resolve({
                                 ios: cbChars,

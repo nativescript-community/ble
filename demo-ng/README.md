@@ -1,6 +1,6 @@
 # NativeScript Angular Bluetooth demo
 
-This is based on an [un-merged PR](https://github.com/EddyVerbruggen/nativescript-bluetooth-demo/pull/15) from [Brad Powell](https://github.com/bapowell).
+This is based on an [un-merged PR](https://github.com/EddyVerbruggen/@nativescript-community/ble-demo/pull/15) from [Brad Powell](https://github.com/bapowell).
 
 I took his codebase, upgraded it to Angular 7.1 and NativeScript 5.1 and made some small tweaks to get it running.
 
