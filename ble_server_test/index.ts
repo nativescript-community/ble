@@ -2,7 +2,7 @@ import * as blenoTypings from 'bleno';
 
 let bleno: typeof blenoTypings;
 if (/^darwin/.test(process.platform)) {
-    bleno = require('bleno-mac');
+    bleno = require('bleno');
 } else {
     bleno = require('bleno');
 }

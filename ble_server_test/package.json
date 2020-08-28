@@ -7,14 +7,14 @@
         "start": "BLENO_DEVICE_NAME=echo ts-node index.ts"
     },
     "dependencies": {
-        "bleno-mac": "github:farfromrefug/bleno-mac"
+        "bleno": "github:ptx2/bleno#native-macos-bindings"
     },
     "author": "",
     "license": "ISC",
     "devDependencies": {
         "@types/bleno": "^0.4.1",
         "@types/node": "^12.7.12",
-        "ts-node": "^8.4.1",
+        "ts-node": "^9.0.0",
         "typescript": "^3.6.4"
     }
 }
