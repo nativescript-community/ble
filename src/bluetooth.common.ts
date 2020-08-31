@@ -9,7 +9,7 @@ export class BluetoothUtil {
 export enum CLogTypes {
     info,
     warning,
-    error
+    error,
 }
 
 export class BluetoothError extends BaseError {
@@ -46,18 +46,16 @@ export function bluetoothEnabled(target: Object, propertyKey: string, descriptor
 
     // NOTE: Do not use arrow syntax here. Use a function expression in
     // order to use the correct value of `this` in this method (see notes below)
-    descriptor.value = function(...args: any[]) {
+    descriptor.value = function (...args: any[]) {
         return this.isBluetoothEnabled()
-            .then(function(isEnabled) {
+            .then(function (isEnabled) {
                 if (!isEnabled) {
                     CLog(CLogTypes.info, `${originalMethod.name} ---- Bluetooth is not enabled.`);
                     return Promise.reject(new Error(BluetoothCommon.msg_not_enabled));
                 }
                 return null;
             })
-            .then(() => {
-                return originalMethod.apply(this, args);
-            });
+            .then(() => originalMethod.apply(this, args));
     };
 
     return descriptor;
@@ -69,10 +67,10 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
 
     // NOTE: Do not use arrow syntax here. Use a function expression in
     // order to use the correct value of `this` in this method (see notes below)
-    descriptor.value = function(...args: any[]) {
+    descriptor.value = function (...args: any[]) {
         const paramsToCheck = args[0];
         if (paramsToCheck.hasOwnProperty) {
-            ['serviceUUID', 'characteristicUUID'].forEach(function(k) {
+            ['serviceUUID', 'characteristicUUID'].forEach(function (k) {
                 if (paramsToCheck[k]) {
                     const matcher = (paramsToCheck[k] as string).match(pattern);
                     // console.log('test regex', paramsToCheck[k], matcher);
@@ -90,7 +88,7 @@ export abstract class BluetoothCommon extends Observable {
     public set debug(value: boolean) {
         BluetoothUtil.debug = value;
     }
-    public get debug():boolean {
+    public get debug(): boolean {
         return BluetoothUtil.debug;
     }
     /*
@@ -109,10 +107,10 @@ export abstract class BluetoothCommon extends Observable {
     public static msg_error_function_call = 'error_function_call';
     public static msg_characteristic_cant_notify = 'characteristic_cant_notify';
 
-    public static UUIDKey = 'UUID'
-    public static serviceUUIDKey = 'serviceUUID'
-    public static peripheralUUIDKey = 'peripheralUUID'
-    public static characteristicUUIDKey = 'characteristicUUID'
+    public static UUIDKey = 'UUID';
+    public static serviceUUIDKey = 'serviceUUID';
+    public static peripheralUUIDKey = 'peripheralUUID';
+    public static characteristicUUIDKey = 'characteristicUUID';
 
     /*
      * String value for hooking into the bluetooth_status_event. This event fires when the bluetooth state changes.
@@ -134,16 +132,20 @@ export abstract class BluetoothCommon extends Observable {
 
     public events: any /*IBluetoothEvents*/;
 
-    requestCoarseLocationPermission() {
-        return new Promise(resolve => {
-            resolve(true);
-        });
+    public abstract isBluetoothEnabled(): Promise<boolean>;
+
+    public isGPSEnabled() {
+        return Promise.resolve(true); // we dont need to check for GPS in the bluetooth iOS module
+    }
+    public enableGPS(): Promise<void> {
+        return Promise.resolve(); // we dont need to check for GPS in the bluetooth iOS module
+    }
+    requestLocationPermission() {
+        return Promise.resolve(true);
     }
 
-    hasCoarseLocationPermission() {
-        return new Promise(resolve => {
-            resolve(true);
-        });
+    hasLocationPermission() {
+        return Promise.resolve(true);
     }
 
     /**
@@ -154,18 +156,18 @@ export abstract class BluetoothCommon extends Observable {
             eventName,
             object: this,
             data,
-            message: msg
+            message: msg,
         });
     }
 
     public abstract discoverServices(args: DiscoverServicesOptions);
     public abstract discoverCharacteristics(args: DiscoverCharacteristicsOptions);
     public discoverAll(args: DiscoverOptions) {
-        return this.discoverServices(args).then(resultS => {
-            return Promise.all(resultS.services.map(s => this.discoverCharacteristics({ serviceUUID: s.UUID, ...args }).then(resultC => (s.characteristics = resultC.characteristics)))).then(() => ({
-                services: resultS.services
-            }));
-        }) as Promise<{ services: Service[] }>;
+        return this.discoverServices(args).then((resultS) =>
+            Promise.all(resultS.services.map((s) => this.discoverCharacteristics({ serviceUUID: s.UUID, ...args }).then((resultC) => (s.characteristics = resultC.characteristics)))).then(() => ({
+                services: resultS.services,
+            }))
+        ) as Promise<{ services: Service[] }>;
     }
     stop() {}
 }
@@ -174,27 +176,27 @@ export enum ScanMode {
     LOW_LATENCY,
     BALANCED,
     LOW_POWER,
-    OPPORTUNISTIC
+    OPPORTUNISTIC,
 }
 export enum MatchMode {
     AGGRESSIVE,
-    STICKY
+    STICKY,
 }
 
 export enum MatchNum {
     MAX_ADVERTISEMENT,
     FEW_ADVERTISEMENT,
-    ONE_ADVERTISEMENT
+    ONE_ADVERTISEMENT,
 }
 export enum CallbackType {
     ALL_MATCHES,
     FIRST_MATCH,
-    MATCH_LOST
+    MATCH_LOST,
 }
 export enum Phy {
     LE_1M,
     LE_CODED,
-    LE_ALL_SUPPORTED
+    LE_ALL_SUPPORTED,
 }
 
 export type ConnectionState = 'connected' | 'connecting' | 'disconnected';
@@ -207,12 +209,12 @@ export interface StartScanningOptions {
      * Zero or more services which the peripheral needs to broadcast.
      * Default: [], which matches any peripheral.
      */
-    filters?: Array<{
+    filters?: {
         serviceUUID?: string;
         deviceName?: string;
         deviceAddress?: string;
         manufacturerData?: ArrayBuffer;
-    }>;
+    }[];
 
     /**
      * The number of seconds to scan for services.
