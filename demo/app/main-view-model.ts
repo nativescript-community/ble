@@ -3,7 +3,7 @@ import { Observable } from '@nativescript/core/data/observable';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { topmost } from '@nativescript/core/ui/frame';
 import { Prop } from './utils/obs-prop';
-import { Bluetooth, getBluetoothInstance, Peripheral } from '@nativescript-community/ble';
+import { Bluetooth, Peripheral, getBluetoothInstance } from '@nativescript-community/ble';
 
 export class DemoAppModel extends Observable {
     @Prop() public isLoading = false;
@@ -92,9 +92,9 @@ export class DemoAppModel extends Observable {
 
     // this one 'manually' checks for permissions
     public doScanForHeartrateMontitor() {
-        this._bluetooth.hasCoarseLocationPermission().then(granted => {
+        this._bluetooth.hasLocationPermission().then(granted => {
             if (!granted) {
-                this._bluetooth.requestCoarseLocationPermission().then(
+                this._bluetooth.requestLocationPermission().then(
                     // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
                     granted2 => {
                         dialogs.alert({
@@ -141,7 +141,7 @@ export class DemoAppModel extends Observable {
 
     // this one 'manually' checks for permissions
     public doScanForBeacon() {
-        this._bluetooth.hasCoarseLocationPermission().then(granted => {
+        this._bluetooth.hasLocationPermission().then(granted => {
             if (!granted) {
                 this._bluetooth.requestCoarseLocationPermission().then(
                     // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below

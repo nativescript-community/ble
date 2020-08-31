@@ -2,7 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { Observable, Subscription, fromEventPattern } from 'rxjs';
 import { takeWhile } from 'rxjs/operators';
 import * as dialogs from '@nativescript/core/ui/dialogs';
-import { Bluetooth, Peripheral, Service, Characteristic, ReadResult } from '@nativescript-community/ble';
+import { Bluetooth, Characteristic, Peripheral, ReadResult, Service } from '@nativescript-community/ble';
 
 const bluetooth = new Bluetooth();
 bluetooth.debug = true;
@@ -85,7 +85,7 @@ export class BluetoothService {
         console.log('Creating BluetoothService');
     }
 
-    public peripheralList: Array<IPeripheral> = []; // public storage for the list of last-scanned peripherals
+    public peripheralList: IPeripheral[] = []; // public storage for the list of last-scanned peripherals
     public isScanning = false;
 
     private isBluetoothEnabled: boolean;
@@ -215,9 +215,9 @@ export class BluetoothService {
         console.log(`scanForPeripherals(${JSON.stringify(serviceUUIDs)}, ${seconds}) called`);
 
         // Android 6 needs this permission to scan for peripherals in the background.
-        bluetooth.hasCoarseLocationPermission().then(granted => {
+        bluetooth.hasLocationPermission().then(granted => {
             if (!granted) {
-                bluetooth.requestCoarseLocationPermission();
+                bluetooth.requestLocationPermission();
                 return false;
             }
         });
@@ -227,9 +227,7 @@ export class BluetoothService {
         this.scanSubscription = this.startScan(serviceUUIDs, seconds)
             .pipe(
                 takeWhile(
-                    (peripheral: IPeripheral, idx: number): boolean => {
-                        return peripheral.UUID !== BluetoothService.SIGNAL_STOP_PERIPHERAL().UUID;
-                    }
+                    (peripheral: IPeripheral, idx: number): boolean => peripheral.UUID !== BluetoothService.SIGNAL_STOP_PERIPHERAL().UUID
                 )
             )
             .subscribe(
@@ -259,7 +257,7 @@ export class BluetoothService {
                 bluetooth
                     .startScanning({
                         filters,
-                        seconds: seconds,
+                        seconds,
                         onDiscovered: (peripheral: IPeripheral) => handler(peripheral),
                         skipPermissionCheck: false
                     })
@@ -380,7 +378,7 @@ export class BluetoothService {
                 peripheralUUID: characteristic.serviceRef.peripheralRef.UUID,
                 serviceUUID: characteristic.serviceRef.UUID,
                 characteristicUUID: characteristic.UUID,
-                value: value
+                value
             })
             .then(
                 res => {
@@ -425,7 +423,7 @@ export class BluetoothService {
                 peripheralUUID: characteristic.serviceRef.peripheralRef.UUID,
                 serviceUUID: characteristic.serviceRef.UUID,
                 characteristicUUID: characteristic.UUID,
-                value: value
+                value
             })
             .then(
                 res => {
