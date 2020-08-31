@@ -19,7 +19,7 @@ import {
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
-    WriteOptions
+    WriteOptions,
 } from './bluetooth.common';
 
 export {
@@ -40,7 +40,7 @@ export {
     WriteOptions,
     DiscoverServicesOptions,
     DiscoverCharacteristicsOptions,
-    DiscoverOptions
+    DiscoverOptions,
 };
 
 export class Bluetooth extends BluetoothCommon {
@@ -57,7 +57,7 @@ export class Bluetooth extends BluetoothCommon {
     constructor(restoreIndentifier?: string);
 
     /**
-     * everything needed to clear on app close 
+     * everything needed to clear on app close
      */
     clear();
 
@@ -100,7 +100,7 @@ export class Bluetooth extends BluetoothCommon {
     /**
      * Required for Android 6+ to be able to scan for peripherals in the background.
      */
-    hasCoarseLocationPermission(): Promise<boolean>;
+    hasLocationPermission(): Promise<boolean>;
 
     /**
      * Required for Android 6+ to be able to scan for peripherals in the background.
@@ -128,7 +128,6 @@ export class Bluetooth extends BluetoothCommon {
     // on iOS, iOS automatically request mtu  ( iOS < 10 ? 158 : 185). So this method only returns the value read from the Peripheral
     // on android an mtu request is done. The returned value is the confirmed mtu value by the device (can be lower)
     requestMtu(options: MtuOptions): Promise<number>;
-
 
     public discoverServices(args: DiscoverServicesOptions): Promise<{ services: Service[] }>;
     public discoverCharacteristics(args: DiscoverCharacteristicsOptions): Promise<{ characteristics: Characteristic[] }>;
