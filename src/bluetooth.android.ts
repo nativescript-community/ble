@@ -1127,10 +1127,11 @@ export class Bluetooth extends BluetoothCommon {
         if (!hasPermission) {
             const ctx = this._getContext();
             // CLog(CLogTypes.info, 'app context', ctx);
+            const neededPermision = getAndroidSDK() < 29 ? android.Manifest.permission.ACCESS_COARSE_LOCATION : android.Manifest.permission.ACCESS_FINE_LOCATION;
 
-            hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED === androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_FINE_LOCATION);
+            hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED === androidx.core.content.ContextCompat.checkSelfPermission(ctx, neededPermision);
+            CLog(CLogTypes.info, `coarseLocationPermissionGranted ---- ${neededPermision} permission granted?`, hasPermission);
         }
-        CLog(CLogTypes.info, 'coarseLocationPermissionGranted ---- ACCESS_COARSE_LOCATION permission granted?', hasPermission);
         return hasPermission;
     }
 
