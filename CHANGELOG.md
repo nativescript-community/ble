@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.1](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.0...v3.0.1) (2020-09-01)
+
+
+### Bug Fixes
+
+* **android:** correctly check for ermission ([af963e3](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/af963e3c1d9fac87b38bdcab5fff50821fd4248c))
+* **ios:** manufacturerData fixes ([cdc5cd8](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/cdc5cd8cbcbd356fe77b00d387e1e5af4665a33d))
+
+
+
+
+
 # 3.0.0 (2020-08-27)
 
 
