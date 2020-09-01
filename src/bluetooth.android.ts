@@ -37,7 +37,7 @@ export function getBluetoothInstance() {
 
 export { AdvertismentData, Peripheral, ReadResult, Service };
 
-const ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE = 222;
+const ACCESS_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;
 const GATT_SUCCESS = 0;
 let ANDROID_SDK = -1;
@@ -1142,7 +1142,7 @@ export class Bluetooth extends BluetoothCommon {
     public requestCoarseLocationPermission(callback?: () => void): Promise<boolean> {
         return new Promise((resolve, reject) => {
             let permissionCb = (args: AndroidActivityRequestPermissionsEventData) => {
-                if (args.requestCode === ACCESS_COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
+                if (args.requestCode === ACCESS_LOCATION_PERMISSION_REQUEST_CODE) {
                     andApp.off(AndroidApplication.activityRequestPermissionsEvent, permissionCb);
                     permissionCb = null;
                     for (let i = 0; i < args.permissions.length; i++) {
@@ -1170,7 +1170,7 @@ export class Bluetooth extends BluetoothCommon {
         return (andApp.context as android.content.Context).getSystemService(android.content.Context.LOCATION_SERVICE);
     }
     public isGPSEnabled() {
-        if (!this.hasCoarseLocationPermission()) {
+        if (!this.hasLocationPermission()) {
             return this.requestCoarseLocationPermission().then(() => this.isGPSEnabled());
         }
         const result = this.getAndroidLocationManager().isProviderEnabled(android.location.LocationManager.GPS_PROVIDER);
