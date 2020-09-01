@@ -2,7 +2,7 @@ import * as blenoTypings from 'bleno';
 
 let bleno: typeof blenoTypings;
 if (/^darwin/.test(process.platform)) {
-    bleno = require('bleno-mac');
+    bleno = require('bleno');
 } else {
     bleno = require('bleno');
 }
@@ -200,7 +200,7 @@ bleno.on('stateChange', function(state) {
         // if (bleno.startAdvertisingWithEIRData) {
         //     bleno.startAdvertisingWithEIRData(advertisement[0], advertisement[1]);
         // } else {
-            bleno.startAdvertising(name);
+        bleno.startAdvertising(name);
         // }
     } else {
         bleno.stopAdvertising();
