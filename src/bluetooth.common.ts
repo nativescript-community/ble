@@ -42,7 +42,7 @@ export const CLog = (type: CLogTypes = 0, ...args) => {
 };
 
 export function bluetoothEnabled(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
-    const originalMethod = descriptor.value as Function; // save a reference to the original method
+    const originalMethod = descriptor.value; // save a reference to the original method
 
     // NOTE: Do not use arrow syntax here. Use a function expression in
     // order to use the correct value of `this` in this method (see notes below)
@@ -63,7 +63,7 @@ export function bluetoothEnabled(target: Object, propertyKey: string, descriptor
 
 const pattern = /0000(.{4})-0000-1000-8000-00805f9b34fb/;
 export function prepareArgs(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
-    const originalMethod = descriptor.value as Function; // save a reference to the original method
+    const originalMethod = descriptor.value; // save a reference to the original method
 
     // NOTE: Do not use arrow syntax here. Use a function expression in
     // order to use the correct value of `this` in this method (see notes below)
