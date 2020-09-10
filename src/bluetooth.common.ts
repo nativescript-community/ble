@@ -1,4 +1,4 @@
-import Observable from 'nativescript-observable';
+import Observable from '@nativescript-community/observable';
 import { BaseError } from 'make-error';
 
 // declare var require;
