@@ -486,7 +486,7 @@ function initLeScanCallback() {
     }
 
     /**
-     * Do not mark this one as a NativeScript class.
+     * Do not mark this one as a native class. Not doing so will allow this class to be compiled into a JavaScript pure class.
      * For a strange reason, LeScanCallback will throw errors if it's compiled into a function.
      * That is why we want it to remain a class after compile procedure.
      * Also, class will work properly if implementor is given as an argument to super class since method 'onLeScan' is originally abstract.
