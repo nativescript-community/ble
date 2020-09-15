@@ -485,12 +485,46 @@ function initLeScanCallback() {
         }
     }
 
-    @NativeClass
+    /**
+     * Do not mark this one as a native class. Not doing so will allow this class to be compiled into a JavaScript pure class.
+     * For a strange reason, LeScanCallback will throw errors if it's compiled into a function.
+     * That is why we want it to remain a class after compile procedure.
+     * Also, class will work properly if implementor is given as an argument to super class since method 'onLeScan' is originally abstract.
+     */
     class LeScanCallbackImpl extends android.bluetooth.BluetoothAdapter.LeScanCallback {
         onPeripheralDiscovered: (data: Peripheral) => void;
 
         constructor(private owner: WeakRef<Bluetooth>) {
-            super();
+            super(
+            {
+                onLeScan: function(device: android.bluetooth.BluetoothDevice, rssi: number, data: number[])
+                {
+                    CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- device: ${device}, rssi: ${rssi}, scanRecord: ${data}`);
+
+                    let stateObject = this.owner.get().connections[device.getAddress()];
+                    if (!stateObject) {
+                        stateObject = this.owner.get().connections[device.getAddress()] = {
+                            state: 'disconnected',
+                        };
+                        const scanRecord = parseFromBytes(data);
+                        const advertismentData = new ScanAdvertisment(scanRecord);
+                        stateObject.advertismentData = advertismentData;
+                        const payload = {
+                            type: 'scanResult', // TODO or use different callback functions?
+                            UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
+                            name: device.getName(),
+                            localName: advertismentData.localName,
+                            RSSI: rssi,
+                            state: 'disconnected',
+                            advertismentData,
+                            manufacturerId: advertismentData.manufacturerId,
+                        };
+                        CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- payload: ${JSON.stringify(payload)}`);
+                        this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
+                        this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
+                    }
+                }
+            });
             /**
              * Callback reporting an LE device found during a device scan initiated by the startLeScan(BluetoothAdapter.LeScanCallback) function.
              * @param device [android.bluetooth.BluetoothDevice] - Identifies the remote device
@@ -498,33 +532,6 @@ function initLeScanCallback() {
              * @param scanRecord [byte[]] - The content of the advertisement record offered by the remote device.
              */
             return global.__native(this);
-        }
-
-        onLeScan(device: android.bluetooth.BluetoothDevice, rssi: number, data: number[]) {
-            CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- device: ${device}, rssi: ${rssi}, scanRecord: ${data}`);
-
-            let stateObject = this.owner.get().connections[device.getAddress()];
-            if (!stateObject) {
-                stateObject = this.owner.get().connections[device.getAddress()] = {
-                    state: 'disconnected',
-                };
-                const scanRecord = parseFromBytes(data);
-                const advertismentData = new ScanAdvertisment(scanRecord);
-                stateObject.advertismentData = advertismentData;
-                const payload = {
-                    type: 'scanResult', // TODO or use different callback functions?
-                    UUID: device.getAddress(), // TODO consider renaming to id (and iOS as well)
-                    name: device.getName(),
-                    localName: advertismentData.localName,
-                    RSSI: rssi,
-                    state: 'disconnected',
-                    advertismentData,
-                    manufacturerId: advertismentData.manufacturerId,
-                };
-                CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- payload: ${JSON.stringify(payload)}`);
-                this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
-                this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
-            }
         }
     }
     LeScanCallbackVar = LeScanCallbackImpl;
