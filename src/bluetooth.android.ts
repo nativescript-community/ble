@@ -51,7 +51,10 @@ function getAndroidSDK() {
 const JELLY_BEAN = 18;
 const LOLLIPOP = 21;
 const MARSHMALLOW = 23;
+const OREO = 26;
 const ANDROID10 = 29;
+
+const MAX_MTU = 247;
 
 export enum ScanMode {
     LOW_LATENCY, // = android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY,
@@ -1058,7 +1061,7 @@ export class Bluetooth extends BluetoothCommon {
     public connections: {
         [k: string]: {
             state: ConnectionState;
-            onConnected?: (e: { UUID: string; name: string; state: string; services?: Service[]; advertismentData: AdvertismentData }) => void;
+            onConnected?: (e: { UUID: string; name: string; state: string; services?: Service[]; advertismentData: AdvertismentData, mtu?: number }) => void;
             onDisconnected?: (e: { UUID: string; name: string }) => void;
             device?: android.bluetooth.BluetoothGatt;
             onNotifyCallbacks?: {
@@ -1608,13 +1611,11 @@ export class Bluetooth extends BluetoothCommon {
                     device: gatt, // TODO rename device to gatt?
                 });
             })
-                .then(() => {
-                    if (args.autoDiscoverAll !== false) {
-                        return this.discoverAll({ peripheralUUID: pUUID });
-                    }
-                    return undefined;
-                })
-                .then((result) => {
+                .then(() => !!args.autoDiscoverAll ? this.discoverAll({ peripheralUUID: pUUID }).then((result) => result?.services) : undefined)
+                .then((services) => (!!args.auto2MegPhy ? this.select2MegPhy({ peripheralUUID: pUUID }) : Promise.resolve()).then(() => services))
+                .then((services) => (!!args.autoMaxMTU ? this.requestMtu({ peripheralUUID: pUUID, value: MAX_MTU }) : Promise.resolve(undefined))
+                    .then((mtu?: number) => ({services, mtu})))
+                .then(({services, mtu}) => {
                     const stateObject = this.connections[pUUID];
                     if (!stateObject) {
                         return Promise.reject(
@@ -1630,7 +1631,8 @@ export class Bluetooth extends BluetoothCommon {
                         UUID: pUUID, // TODO consider renaming to id (and iOS as well)
                         name: bluetoothDevice && bluetoothDevice.getName(),
                         state: stateObject.state,
-                        services: result?.services,
+                        services,
+                        mtu,
                         localName: adv?.localName,
                         manufacturerId: adv?.manufacturerId,
                         advertismentData: adv,
@@ -2254,7 +2256,6 @@ export class Bluetooth extends BluetoothCommon {
                                     if (status === GATT_SUCCESS) {
                                         resolve(getGattDeviceServiceInfo(gatt));
                                         clearListeners();
-                                        // resolve();
                                     } else {
                                         onError(
                                             new BluetoothError(BluetoothCommon.msg_error_function_call, {
@@ -2406,6 +2407,63 @@ export class Bluetooth extends BluetoothCommon {
 
         // As a last resort, try and find ANY characteristic with this UUID, even if it doesn't have the correct properties
         return bluetoothGattService.getCharacteristic(characteristicUUID);
+    }
+
+    private select2MegPhy(args: { peripheralUUID: string }): Promise<void> {
+        if (getAndroidSDK() < OREO) {
+            return Promise.resolve();
+        }
+
+        const methodName = 'select2MegPhy';
+        CLog(CLogTypes.info, methodName, args);
+        if (!args.peripheralUUID) {
+            return Promise.reject({ msg: BluetoothCommon.msg_missing_parameter, type: BluetoothCommon.peripheralUUIDKey });
+        }
+        const pUUID = args.peripheralUUID;
+        const stateObject = this.connections[pUUID];
+        if (!stateObject) {
+            return Promise.reject(
+                new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
+                    method: methodName,
+                    arguments: args,
+                })
+            );
+        }
+
+        const gatt = stateObject.device;
+
+        CLog(CLogTypes.info, methodName, pUUID, stateObject);
+        return this.addToGatQueue(
+            () =>
+                new Promise((resolve, reject) => {
+                    CLog(CLogTypes.info, methodName, '---- peripheral:', pUUID);
+                    this.attachSubDelegate(
+                        {methodName, args, resolve, reject},
+                        (clearListeners) => ({
+                            onPhyUpdate: (gatt: android.bluetooth.BluetoothGatt) => {
+                                const device = gatt.getDevice();
+                                let UUID: string = null;
+                                if (device == null) {
+                                    // happens some time, why ... ?
+                                } else {
+                                    UUID = device.getAddress();
+                                }
+                                if (UUID === pUUID) {
+                                    resolve();
+                                    clearListeners();
+                                }
+                            },
+                        }),
+                        () => {
+                            gatt.setPreferredPhy(
+                                android.bluetooth.BluetoothDevice.PHY_LE_2M_MASK,
+                                android.bluetooth.BluetoothDevice.PHY_LE_2M_MASK,
+                                android.bluetooth.BluetoothDevice.PHY_OPTION_NO_PREFERRED
+                            );
+                        }
+                    );
+                })
+        );
     }
 
     private attachSubDelegate(

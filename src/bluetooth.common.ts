@@ -353,6 +353,16 @@ export interface ConnectOptions {
     onDisconnected?: (data: { UUID; name: string }) => void;
 
     autoDiscoverAll?: boolean;
+
+    /**
+     * Selects 2M PHY when available (Android only)
+     */
+    auto2MegPhy?: boolean;
+
+    /**
+     * Selects maximum BLE MTU (247) (Android only)
+     */
+    autoMaxMTU?: boolean;
 }
 
 export interface AdvertismentData {
@@ -397,6 +407,8 @@ export interface Peripheral {
 
     manufacturerId?: number;
     advertismentData?: AdvertismentData;
+
+    mtu?: number;
 }
 
 /**

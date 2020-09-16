@@ -98,6 +98,8 @@ import { iOSNativeHelper } from '@nativescript/core/utils/native-helper';
 export type SubPeripheralDelegate = Partial<CBPeripheralDelegate>;
 export type SubCentralManagerDelegate = Partial<CBCentralManagerDelegate>;
 
+const FIXED_IOS_MTU = 185;
+
 export interface CBPeripheralWithDelegate extends CBPeripheral {
     delegate: CBPeripheralDelegateImpl;
 }
@@ -906,6 +908,7 @@ export class Bluetooth extends BluetoothCommon {
                             localName: adv?.localName,
                             manufacturerId: adv?.manufacturerId,
                             advertismentData: adv,
+                            mtu: FIXED_IOS_MTU,
                         };
                         // delete this._advData[connectingUUID];
                         const cb = this._connectCallbacks[connectingUUID];
