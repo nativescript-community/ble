@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.3](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.2...v3.0.3) (2020-09-16)
+
+
+### Bug Fixes
+
+* Scan not working in API < 21 as reported in [#165](https://github.com/eddyverbruggen/@nativescript-community/ble/issues/165) ([070c06f](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/070c06fc9064c7d63132b605c16b17f033135bee))
+
+
+
+
+
 ## [3.0.2](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.1...v3.0.2) (2020-09-10)
 
 **Note:** Version bump only for package @nativescript-community/ble
