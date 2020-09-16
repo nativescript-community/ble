@@ -51,6 +51,7 @@ function getAndroidSDK() {
 const JELLY_BEAN = 18;
 const LOLLIPOP = 21;
 const MARSHMALLOW = 23;
+const ANDROID10 = 29;
 
 export enum ScanMode {
     LOW_LATENCY, // = android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY,
@@ -1138,7 +1139,7 @@ export class Bluetooth extends BluetoothCommon {
         if (!hasPermission) {
             const ctx = this._getContext();
             // CLog(CLogTypes.info, 'app context', ctx);
-            const neededPermision = getAndroidSDK() < 29 ? android.Manifest.permission.ACCESS_COARSE_LOCATION : android.Manifest.permission.ACCESS_FINE_LOCATION;
+            const neededPermision = getAndroidSDK() < ANDROID10 ? android.Manifest.permission.ACCESS_COARSE_LOCATION : android.Manifest.permission.ACCESS_FINE_LOCATION;
 
             hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED === androidx.core.content.ContextCompat.checkSelfPermission(ctx, neededPermision);
             CLog(CLogTypes.info, `coarseLocationPermissionGranted ---- ${neededPermision} permission granted?`, hasPermission);
@@ -1172,7 +1173,7 @@ export class Bluetooth extends BluetoothCommon {
 
             // grab the permission dialog result
             andApp.on(AndroidApplication.activityRequestPermissionsEvent, permissionCb);
-            const neededPermision = getAndroidSDK() < 29 ? android.Manifest.permission.ACCESS_COARSE_LOCATION : android.Manifest.permission.ACCESS_FINE_LOCATION;
+            const neededPermision = getAndroidSDK() < ANDROID10 ? android.Manifest.permission.ACCESS_COARSE_LOCATION : android.Manifest.permission.ACCESS_FINE_LOCATION;
             // invoke the permission dialog
             androidx.core.app.ActivityCompat.requestPermissions(this._getActivity(), [neededPermision], ACCESS_LOCATION_PERMISSION_REQUEST_CODE);
         });
