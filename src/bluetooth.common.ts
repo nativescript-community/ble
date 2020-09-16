@@ -498,12 +498,10 @@ export interface StartNotifyingOptions extends CRUDOptions {
 /**
  * Response object for the read function
  */
-export interface ReadResult {
+export interface ReadResult extends CRUDOptions {
     value: ArrayBuffer;
     ios?: any;
     android?: any;
-    characteristicUUID: string;
-    serviceUUID: string;
 }
 
 export interface StartAdvertisingOptions {

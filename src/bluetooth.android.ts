@@ -790,13 +790,13 @@ function initBluetoothGattCallback() {
          */
         onCharacteristicChanged(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic) {
             const device = gatt.getDevice();
-            let address: string = null;
+            let pUUID: string = null;
             if (device == null) {
                 // happens some time, why ... ?
             } else {
-                address = device.getAddress();
+              pUUID = device.getAddress();
             }
-            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicChanged ---- gatt: ${gatt}, characteristic: ${characteristic}, device: ${address}`);
+            CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicChanged ---- gatt: ${gatt}, characteristic: ${characteristic}, device: ${pUUID}`);
 
             this.subDelegates.forEach((d) => {
                 if (d.onCharacteristicChanged) {
@@ -804,7 +804,7 @@ function initBluetoothGattCallback() {
                 }
             });
 
-            const stateObject = this.owner.get().connections[address];
+            const stateObject = this.owner.get().connections[pUUID];
             if (stateObject) {
                 const cUUID = uuidToString(characteristic.getUuid());
                 const sUUID = uuidToString(characteristic.getService().getUuid());
@@ -814,6 +814,7 @@ function initBluetoothGattCallback() {
                     stateObject.onNotifyCallbacks[key]({
                         android: value,
                         value: byteArrayToBuffer(value),
+                        peripheralUUID: pUUID,
                         serviceUUID: sUUID,
                         characteristicUUID: cUUID,
                     });
@@ -1730,6 +1731,8 @@ export class Bluetooth extends BluetoothCommon {
                                         resolve({
                                             android: value,
                                             value: byteArrayToBuffer(value),
+                                            peripheralUUID: pUUID,
+                                            serviceUUID: sUUID,
                                             characteristicUUID: cUUID,
                                         });
                                         clearListeners();

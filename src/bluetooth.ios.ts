@@ -232,12 +232,14 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
         }
 
         if (characteristic.isNotifying) {
+            const pUUID = NSUUIDToString(peripheral.identifier);
             const cUUID = CBUUIDToString(characteristic.UUID);
             const sUUID = CBUUIDToString(characteristic.service.UUID);
             const key = sUUID + '/' + cUUID;
             if (this.onNotifyCallbacks[key]) {
                 this.onNotifyCallbacks[key]({
                     // type: 'notification',
+                    peripheralUUID: pUUID,
                     serviceUUID: sUUID,
                     characteristicUUID: cUUID,
                     ios: characteristic.value,
