@@ -1,4 +1,4 @@
-# NativeScript <img src="https://github.com/EddyVerbruggen/@nativescript-community/ble/raw/master/media/bluetooth.gif" height="20px" alt="Bluetooth"/> plugin
+# NativeScript <img src="https://github.com/nativescript-community/ble/raw/master/media/bluetooth.gif" height="20px" alt="Bluetooth"/> plugin
 
 [![NPM version][npm-image]][npm-url]
 [![Downloads][downloads-image]][npm-url]
