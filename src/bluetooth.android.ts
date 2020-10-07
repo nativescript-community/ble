@@ -495,10 +495,8 @@ function initLeScanCallback() {
         onPeripheralDiscovered: (data: Peripheral) => void;
 
         constructor(private owner: WeakRef<Bluetooth>) {
-            super(
-            {
-                onLeScan: function(device: android.bluetooth.BluetoothDevice, rssi: number, data: number[])
-                {
+            super({
+                onLeScan: function (device: android.bluetooth.BluetoothDevice, rssi: number, data: number[]) {
                     CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- device: ${device}, rssi: ${rssi}, scanRecord: ${data}`);
 
                     let stateObject = this.owner.get().connections[device.getAddress()];
@@ -523,7 +521,7 @@ function initLeScanCallback() {
                         this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
                         this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
                     }
-                }
+                },
             });
             /**
              * Callback reporting an LE device found during a device scan initiated by the startLeScan(BluetoothAdapter.LeScanCallback) function.
@@ -1610,6 +1608,7 @@ export class Bluetooth extends BluetoothCommon {
                     if (args.autoDiscoverAll !== false) {
                         return this.discoverAll({ peripheralUUID: pUUID });
                     }
+                    return null;
                 })
                 .then((result) => {
                     const stateObject = this.connections[pUUID];
