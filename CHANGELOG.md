@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.4](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.3...v3.0.4) (2020-10-07)
+
+
+### Bug Fixes
+
+* android fixed advertisment serviceUuids reading ([3268e11](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/3268e11e37b559ea11b82510715d50132480970a))
+* Bluetooth GIF path was wrong. ([8f553b4](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/8f553b439f327636dbb46b314f970071c6b4f851))
+
+
+
+
+
 ## [3.0.3](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.2...v3.0.3) (2020-09-16)
 
 
