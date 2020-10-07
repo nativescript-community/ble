@@ -253,7 +253,7 @@ function initLeScanCallback() {
             return this.txPowerLevel;
         }
         constructor(
-            private serviceUuids: native.Array<number>[],
+            private serviceUuids: string[],
             private manufacturerData: android.util.SparseArray<any[]>,
             private serviceData: { [k: string]: native.Array<number> },
             private advertiseFlags: number,
@@ -402,7 +402,7 @@ function initLeScanCallback() {
 
         let currentPos = 0;
         let advertiseFlag = -1;
-        let serviceUuids = [];
+        let serviceUuids: string[] = [];
         let localName: string = null;
         let txPowerLevel = Number.MIN_VALUE;
         const manufacturerData: android.util.SparseArray<any[]> = new android.util.SparseArray();
@@ -658,7 +658,7 @@ function initScanCallback() {
             const serviceUuids = this.scanRecord.getServiceUuids();
             if (serviceUuids) {
                 for (let i = 0; i < serviceUuids.size(); i++) {
-                    result.push(uuidToString(serviceUuids[i]));
+                    result.push(uuidToString(serviceUuids.get(i)));
                 }
             }
 
@@ -1610,7 +1610,6 @@ export class Bluetooth extends BluetoothCommon {
                     if (args.autoDiscoverAll !== false) {
                         return this.discoverAll({ peripheralUUID: pUUID });
                     }
-                    return undefined;
                 })
                 .then((result) => {
                     const stateObject = this.connections[pUUID];
