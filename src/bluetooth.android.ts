@@ -498,10 +498,13 @@ function initLeScanCallback() {
             super({
                 onLeScan: function (device: android.bluetooth.BluetoothDevice, rssi: number, data: number[]) {
                     CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- device: ${device}, rssi: ${rssi}, scanRecord: ${data}`);
-
-                    let stateObject = this.owner.get().connections[device.getAddress()];
+                    const owner = this.owner && this.owner.get();
+                    if (!owner) {
+                        return;
+                    }
+                    let stateObject = owner.connections[device.getAddress()];
                     if (!stateObject) {
-                        stateObject = this.owner.get().connections[device.getAddress()] = {
+                        stateObject = owner.connections[device.getAddress()] = {
                             state: 'disconnected',
                         };
                         const scanRecord = parseFromBytes(data);
@@ -519,7 +522,7 @@ function initLeScanCallback() {
                         };
                         CLog(CLogTypes.info, `TNS_LeScanCallback.onLeScan ---- payload: ${JSON.stringify(payload)}`);
                         this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
-                        this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
+                        owner.sendEvent(Bluetooth.device_discovered_event, payload);
                     }
                 },
             });
@@ -591,9 +594,13 @@ function initScanCallback() {
          */
         onScanResult(callbackType: number, result: android.bluetooth.le.ScanResult) {
             CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- callbackType: ${callbackType}, result: ${result}`);
-            let stateObject = this.owner.get().connections[result.getDevice().getAddress()];
+            const owner = this.owner && this.owner.get();
+            if (!owner) {
+                return;
+            }
+            let stateObject = owner.connections[result.getDevice().getAddress()];
             if (!stateObject) {
-                stateObject = this.owner.get().connections[result.getDevice().getAddress()] = {
+                stateObject = owner.connections[result.getDevice().getAddress()] = {
                     state: 'disconnected',
                 };
             }
@@ -612,7 +619,7 @@ function initScanCallback() {
             };
             CLog(CLogTypes.info, `TNS_ScanCallback.onScanResult ---- payload: ${JSON.stringify(payload)}`);
             this.onPeripheralDiscovered && this.onPeripheralDiscovered(payload);
-            this.owner.get().sendEvent(Bluetooth.device_discovered_event, payload);
+            owner.sendEvent(Bluetooth.device_discovered_event, payload);
         }
     }
 
@@ -734,7 +741,8 @@ function initBluetoothGattCallback() {
                     d.onConnectionStateChange(gatt, status, newState);
                 }
             });
-            if (newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED && status === GATT_SUCCESS) {
+            const owner = this.owner && this.owner.get();
+            if (owner && newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED && status === GATT_SUCCESS) {
                 const device = gatt.getDevice();
                 let address: string = null;
                 if (device == null) {
@@ -742,13 +750,13 @@ function initBluetoothGattCallback() {
                 } else {
                     address = device.getAddress();
                 }
-                const stateObject = this.owner.get().connections[address];
+                const stateObject = owner.connections[address];
                 if (!stateObject) {
-                    this.owner.get().gattDisconnect(gatt);
+                    owner.gattDisconnect(gatt);
                 }
             } else {
                 // perhaps the device was manually disconnected, or in use by another device
-                this.owner.get().gattDisconnect(gatt);
+                owner.gattDisconnect(gatt);
             }
         }
 
@@ -801,8 +809,11 @@ function initBluetoothGattCallback() {
                     d.onCharacteristicChanged(gatt, characteristic);
                 }
             });
-
-            const stateObject = this.owner.get().connections[address];
+            const owner = this.owner && this.owner.get();
+            if (!owner) {
+                return;
+            }
+            const stateObject = owner.connections[address];
             if (stateObject) {
                 const cUUID = uuidToString(characteristic.getUuid());
                 const sUUID = uuidToString(characteristic.getService().getUuid());
