@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.5](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.4...v3.0.5) (2020-11-02)
+
+
+### Bug Fixes
+
+* android fix for null owner ([44d0c03](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/44d0c03469cca85e38b7c3eb27d314a420e69c1d))
+
+
+
+
+
 ## [3.0.4](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.3...v3.0.4) (2020-10-07)
 
 
