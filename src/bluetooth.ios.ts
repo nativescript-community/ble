@@ -510,7 +510,7 @@ export class AdvertismentData {
         const serviceUuids = this.advData.objectForKey(CBAdvertisementDataServiceUUIDsKey);
         if (serviceUuids) {
             for (let i = 0; i < serviceUuids.count; i++) {
-                result.push(serviceUuids[i].toString());
+                result.push(CBUUIDToString(serviceUuids[i]));
             }
         }
         return result;
