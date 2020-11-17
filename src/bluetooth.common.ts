@@ -1,16 +1,18 @@
 import Observable from '@nativescript-community/observable';
+import { Trace } from '@nativescript/core';
 import { BaseError } from 'make-error';
 
-// declare var require;
-export class BluetoothUtil {
-    public static debug = false;
+export const BleTraceCategory = 'NativescriptBle';
+export enum CLogTypes {
+    log = Trace.messageType.log,
+    info = Trace.messageType.info,
+    warning = Trace.messageType.warn,
+    error = Trace.messageType.error,
 }
 
-export enum CLogTypes {
-    info,
-    warning,
-    error,
-}
+export const CLog = (type: CLogTypes, ...args) => {
+    Trace.write(args.join(' '), BleTraceCategory, type);
+};
 
 export class BluetoothError extends BaseError {
     arguments?: any; // call argumrents
@@ -27,19 +29,6 @@ export class BluetoothError extends BaseError {
     }
 }
 
-export const CLog = (type: CLogTypes = 0, ...args) => {
-    if (BluetoothUtil.debug) {
-        if (type === 0) {
-            // Info
-            console.log('[@nativescript-community/ble]', ...args);
-        } else if (type === 1) {
-            // Warning
-            console.warn('[@nativescript-community/ble]', ...args);
-        } else if (type === 2) {
-            console.error('[@nativescript-community/ble]', ...args);
-        }
-    }
-};
 
 export function bluetoothEnabled(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
     const originalMethod = descriptor.value as Function; // save a reference to the original method
@@ -50,7 +39,9 @@ export function bluetoothEnabled(target: Object, propertyKey: string, descriptor
         return this.isBluetoothEnabled()
             .then(function (isEnabled) {
                 if (!isEnabled) {
-                    CLog(CLogTypes.info, `${originalMethod.name} ---- Bluetooth is not enabled.`);
+                    if (Trace.isEnabled()) {
+                        CLog(CLogTypes.info, `${originalMethod.name} ---- Bluetooth is not enabled.`);
+                    }
                     return Promise.reject(new Error(BluetoothCommon.msg_not_enabled));
                 }
                 return null;
@@ -85,12 +76,6 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
 }
 
 export abstract class BluetoothCommon extends Observable {
-    public set debug(value: boolean) {
-        BluetoothUtil.debug = value;
-    }
-    public get debug(): boolean {
-        return BluetoothUtil.debug;
-    }
     /*
      * error messages
      */
