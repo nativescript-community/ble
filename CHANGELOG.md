@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.9](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.8...v3.0.9) (2020-11-17)
+
+
+### Bug Fixes
+
+* ios fix serviceUUIDs not reported correctly ([6a55b6d](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/6a55b6d6ad040c4f1681114bf14ace69c217ad7c))
+
+
+
+
+
 ## [3.0.8](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.7...v3.0.8) (2020-11-06)
 
 
