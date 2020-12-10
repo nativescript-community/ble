@@ -4,6 +4,7 @@
     "description": "Connect to and interact with Bluetooth LE peripherals",
     "scripts": {
         "setup": "ts-patch install",
+"prepare": "npm run setup",
         "tsc": "cp src/bluetooth.d.ts plugin && tsc -skipLibCheck -d",
         "build.plugin": " \\cp README.md plugin/ && rm -f .tsbuildinfo && npm run tsc",
         "clean": "rimraf ./plugin/**/*.d.ts ./plugin/**/*.js ./plugin/**/*.js.map plugin/node_modules plugin/package-lock.json",

@@ -1,10 +1,11 @@
 import * as dialogs from '@nativescript/core/ui/dialogs';
-import { topmost } from '@nativescript/core/ui/frame';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
-import { fromObject, Observable } from '@nativescript/core/data/observable';
-import { AdvertismentData, Bluetooth, getBluetoothInstance, Peripheral, Service } from '@nativescript-community/ble';
+import { Observable, fromObject } from '@nativescript/core/data/observable';
+import { AdvertismentData, Bluetooth, Peripheral, Service, getBluetoothInstance } from '@nativescript-community/ble';
 import { Prop } from './utils/obs-prop';
+import { Frame } from '@nativescript/core/ui/frame';
 
+//@ts-ignore
 const companyIdentifier = require('./companyIdentifiers.json');
 
 export class ServicesViewModel extends Observable {
@@ -19,7 +20,6 @@ export class ServicesViewModel extends Observable {
 
     constructor(navContext) {
         super();
-        this._bluetooth.debug = true;
         this.peripheral = navContext.peripheral;
         this.advertismentData = navContext.peripheral.advertismentData as AdvertismentData;
         console.log('peripheral', JSON.stringify(this.peripheral));
@@ -85,7 +85,7 @@ export class ServicesViewModel extends Observable {
             animated: true
         };
 
-        topmost().navigate(navigationEntry);
+        Frame.topmost().navigate(navigationEntry);
     }
 
     public onConnectTap(args) {

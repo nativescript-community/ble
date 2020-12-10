@@ -1,9 +1,9 @@
 import * as dialogs from '@nativescript/core/ui/dialogs';
 import { Observable } from '@nativescript/core/data/observable';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
-import { topmost } from '@nativescript/core/ui/frame';
 import { Prop } from './utils/obs-prop';
 import { Bluetooth, Peripheral, getBluetoothInstance } from '@nativescript-community/ble';
+import { Frame } from '@nativescript/core/ui/frame';
 
 export class DemoAppModel extends Observable {
     @Prop() public isLoading = false;
@@ -14,7 +14,6 @@ export class DemoAppModel extends Observable {
     constructor() {
         super();
         // enables the console.logs from the Bluetooth source code
-        this._bluetooth.debug = true;
 
         // using an event listener instead of the 'onDiscovered' callback of 'startScanning'
         this._bluetooth.on(Bluetooth.device_discovered_event, (eventData: any) => {
@@ -72,7 +71,7 @@ export class DemoAppModel extends Observable {
             },
             animated: true
         };
-        topmost().navigate(navigationEntry);
+        Frame.topmost().navigate(navigationEntry);
     }
 
     public onPeripheralTestTap(peri) {
@@ -87,7 +86,7 @@ export class DemoAppModel extends Observable {
             },
             animated: true
         };
-        topmost().navigate(navigationEntry);
+        Frame.topmost().navigate(navigationEntry);
     }
 
     // this one 'manually' checks for permissions

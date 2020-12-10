@@ -1,15 +1,11 @@
-import { AdvertismentData, getBluetoothInstance, Peripheral, Service } from '@nativescript-community/ble';
-import { GPS, Options as GeolocationOptions } from 'nativescript-gps';
-import { ApplicationEventData, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
+import { AdvertismentData, Peripheral, Service, getBluetoothInstance } from '@nativescript-community/ble';
 import { Observable } from '@nativescript/core/data/observable';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
 import * as dialogs from '@nativescript/core/ui/dialogs';
-import { Accuracy } from '@nativescript/core/ui/enums/enums';
-import { topmost } from '@nativescript/core/ui/frame';
+import { Frame } from '@nativescript/core/ui/frame';
 import { Prop } from './utils/obs-prop';
 
 
-const geolocation = new GPS();
 export class TestViewModel extends Observable {
     @Prop() public discoveredServices = new ObservableArray<Service>();
     @Prop() public isLoading = false;
@@ -22,11 +18,9 @@ export class TestViewModel extends Observable {
     _isIOSBackgroundMode = false;
     watchId;
     currentWatcher: Function;
-    _deferringUpdates  =false
 
     constructor(navContext) {
         super();
-        this._bluetooth.debug = false;
         this.peripheral = navContext.peripheral;
         this.advertismentData = navContext.peripheral.advertismentData as AdvertismentData;
         console.log('peripheral', JSON.stringify(this.peripheral));
@@ -35,8 +29,6 @@ export class TestViewModel extends Observable {
         console.log('uuids', this.advertismentData.serviceUUIDs);
         console.log('txPowerLevel', this.advertismentData.txPowerLevel);
 
-        applicationOn(suspendEvent, this.onAppPause, this);
-        applicationOn(resumeEvent, this.onAppResume, this);
         // console.log('localName', this.advertismentData.localName);
         // console.log('serviceUUIDs', this.advertismentData.serviceUUIDs);
         // console.log('txPowerLevel', this.advertismentData.txPowerLevel);
@@ -44,76 +36,6 @@ export class TestViewModel extends Observable {
         // console.log('manufacturerId', this.advertismentData.manufacturerId);
         // console.log('manufacturerData', this.advertismentData.manufacturerData);
         // console.log('serviceData', this.advertismentData.serviceData);
-    }
-    onAppResume(args: ApplicationEventData) {
-        if (args.ios) {
-            this._isIOSBackgroundMode = false;
-            // For iOS applications, args.ios is UIApplication.
-            console.log('UIApplication: resumeEvent', this.isWatching());
-            if (this.isWatching()) {
-                const watcher = this.currentWatcher;
-                this.stopWatch();
-                this.startWatch(watcher);
-            }
-        }
-    }
-    onAppPause(args: ApplicationEventData) {
-        if (args.ios) {
-            this._isIOSBackgroundMode = true;
-            // For iOS applications, args.ios is UIApplication.
-            console.log('UIApplication: suspendEvent', this.isWatching());
-            if (this.isWatching()) {
-                const watcher = this.currentWatcher;
-                this.stopWatch();
-                this.startWatch(watcher);
-            }
-        }
-    }
-    onDeferred() {
-        this._deferringUpdates = false;
-    }
-    onLocation(loc, manager?: any) {
-
-        if (manager && this._isIOSBackgroundMode && !this._deferringUpdates) {
-            this._deferringUpdates = true;
-            manager.allowDeferredLocationUpdatesUntilTraveledTimeout(0, 10);
-        }
-    }
-    startWatch(onLoc?: Function) {
-        this.currentWatcher = onLoc;
-        const options: GeolocationOptions = { desiredAccuracy: Accuracy.high, minimumUpdateTime: 1000, onDeferred:this.onDeferred.bind(this) };
-
-        // if (!isAndroid) {
-        // if (this._isIOSBackgroundMode) {
-        //     options.pausesLocationUpdatesAutomatically = false;
-        //     options.allowsBackgroundLocationUpdates = true;
-        //     options.activityType = CLActivityType.Fitness;
-        // } else {
-        options.pausesLocationUpdatesAutomatically = false;
-        options.allowsBackgroundLocationUpdates = true;
-        options.activityType = 3;
-        // }
-        // } else {
-        //     if (!gVars.isWatch) {
-        //         options.provider = 'gps';
-        //     }
-        // }
-        console.log('startWatch', options);
-
-        return geolocation.watchLocation(this.onLocation.bind(this), () => {}, options).then(id => (this.watchId = id));
-    }
-
-    stopWatch() {
-        console.log('stopWatch', this.watchId);
-        if (this.watchId) {
-            geolocation.clearWatch(this.watchId);
-            this.watchId = null;
-            this.currentWatcher = null;
-        }
-    }
-
-    isWatching() {
-        return !!this.watchId;
     }
     formatData(title: string, advKey: string) {
         return title + ': ' + JSON.stringify(this.advertismentData[advKey]);
@@ -160,7 +82,6 @@ export class TestViewModel extends Observable {
                 onConnected: peripheral => {
                     this.connected = true;
                     console.log('------- Peripheral connected: ' + JSON.stringify(peripheral));
-                    this.startWatch();
                     peripheral.services.forEach(value => {
                         console.log('---- ###### adding service: ' + value.UUID);
                         this.discoveredServices.push(value);
@@ -197,7 +118,7 @@ export class TestViewModel extends Observable {
             animated: true
         };
 
-        topmost().navigate(navigationEntry);
+        Frame.topmost().navigate(navigationEntry);
     }
 
     public onStartTap(args) {

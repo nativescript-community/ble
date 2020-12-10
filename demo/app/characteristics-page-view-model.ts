@@ -1,6 +1,6 @@
 import * as dialogs from '@nativescript/core/ui/dialogs';
 import { Observable } from '@nativescript/core/data/observable';
-import { Bluetooth, getBluetoothInstance, Peripheral, ReadResult, Service } from '@nativescript-community/ble';
+import { Bluetooth, Peripheral, ReadResult, Service, getBluetoothInstance } from '@nativescript-community/ble';
 import { Prop } from './utils/obs-prop';
 
 export class CharacteristicsViewModel extends Observable {
@@ -13,7 +13,6 @@ export class CharacteristicsViewModel extends Observable {
         super();
         this.service = navContext.service;
         this.peripheral = navContext.peripheral;
-        this._bluetooth.debug = true;
     }
 
     public onCharacteristicTap(args) {
