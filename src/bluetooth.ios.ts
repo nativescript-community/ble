@@ -758,23 +758,19 @@ export class Bluetooth extends BluetoothCommon {
 
     // needed for consecutive calls to isBluetoothEnabled. Until readyToAskForEnabled, everyone waits!
     readyToAskForEnabled = false;
-    public isBluetoothEnabled(): Promise<boolean> {
-        const methodName = 'isBluetoothEnabled';
-        return Promise.resolve()
-            .then(() => {
-                if (!this.readyToAskForEnabled) {
-                    // the centralManager return wrong state just after initialization
-                    // so create it and wait a bit
-                    // eslint-disable-next-line no-unused-expressions
-                    this.centralManager;
-                    if (Trace.isEnabled()) {
-                        CLog(CLogTypes.info, methodName, 'waiting a bit');
-                    }
-                    return new Promise((resolve) => setTimeout(resolve, 500)).then(() => (this.readyToAskForEnabled = true));
-                }
-                return null;
-            })
-            .then(() => this._isEnabled());
+    public async isBluetoothEnabled() {
+        if (!this.readyToAskForEnabled) {
+            // the centralManager return wrong state just after initialization
+            // so create it and wait a bit
+            // eslint-disable-next-line no-unused-expressions
+            this.centralManager;
+            if (Trace.isEnabled()) {
+                CLog(CLogTypes.info, 'isBluetoothEnabled', 'waiting a bit');
+            }
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            this.readyToAskForEnabled = true;
+        }
+        return this._isEnabled();
     }
     scanningReferTimer: {
         timer?: NodeJS.Timeout;
@@ -1582,7 +1578,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     private _isEnabled() {
-        return this.state === CBManagerState.PoweredOn;
+        return this._state === CBManagerState.PoweredOn;
     }
 
     private _findService(UUID: CBUUID, peripheral: CBPeripheral) {
