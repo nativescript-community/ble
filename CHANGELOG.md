@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.13](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.12...v3.0.13) (2020-12-14)
+
+
+### Bug Fixes
+
+* **android:** fix ble not working after disconnexion during write ([f038cb0](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/f038cb05d588d02f3bd72993317073d6eddf23e9))
+
+
+
+
+
 ## [3.0.12](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.11...v3.0.12) (2020-11-23)
 
 **Note:** Version bump only for package @nativescript-community/ble
