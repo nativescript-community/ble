@@ -858,7 +858,7 @@ function initBluetoothGattCallback() {
          */
         onCharacteristicWrite(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, status: number) {
             if (Trace.isEnabled()) {
-                CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicWrite ---- gatt: ${gatt}, characteristic: ${characteristic}`);
+                CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicWrite ---- gatt: ${gatt}, characteristic: ${characteristic}`, this.subDelegates.length);
             }
             this.subDelegates.forEach((d) => {
                 if (d.onCharacteristicWrite) {
