@@ -11,7 +11,7 @@ export enum CLogTypes {
 }
 
 export const CLog = (type: CLogTypes, ...args) => {
-    Trace.write(args.join(' '), BleTraceCategory, type);
+    Trace.write(args.map(a=>(a && typeof a === 'object'? JSON.stringify(a) :a)).join(' '), BleTraceCategory, type);
 };
 
 export class BluetoothError extends BaseError {
