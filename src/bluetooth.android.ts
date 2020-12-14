@@ -743,12 +743,14 @@ function initBluetoothGattCallback() {
          * @param newState [number] - Returns the new connection state. Can be one of STATE_DISCONNECTED or STATE_CONNECTED
          */
         onConnectionStateChange(gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) {
-            CLog(
-                CLogTypes.info,
-                `TNS_BluetoothGattCallback.onConnectionStateChange ---- gatt: ${gatt}, device:${
-                    gatt.getDevice() && gatt.getDevice().getAddress()
-                } status: ${status}, newState: ${newState}, subdelegates:${this.subDelegates.length}`
-            );
+            if (Trace.isEnabled()) {
+                CLog(
+                    CLogTypes.info,
+                    `TNS_BluetoothGattCallback.onConnectionStateChange ---- gatt: ${gatt}, device:${
+                        gatt.getDevice() && gatt.getDevice().getAddress()
+                    } status: ${status}, newState: ${newState}, subdelegates:${this.subDelegates.length}`
+                );
+            }
             this.subDelegates.forEach((d) => {
                 if (d.onConnectionStateChange) {
                     d.onConnectionStateChange(gatt, status, newState);
@@ -818,7 +820,7 @@ function initBluetoothGattCallback() {
                 address = device.getAddress();
             }
             if (Trace.isEnabled()) {
-                CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicChanged ---- gatt: ${gatt}, characteristic: ${characteristic}, device: ${address}`);
+                CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicChanged ---- gatt: ${gatt}, characteristic: ${characteristic}, device: ${address}`, this.subDelegates.length);
             }
 
             this.subDelegates.forEach((d) => {
@@ -1811,10 +1813,12 @@ export class Bluetooth extends BluetoothCommon {
                             }
                             const cUUID = uuidToString(characteristic.getUuid());
                             const sUUID = uuidToString(characteristic.getService().getUuid());
-                            CLog(
-                                CLogTypes.info,
-                                `${methodName} ---- got result peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} status:${status}`
-                            );
+                            if (Trace.isEnabled()) {
+                                CLog(
+                                    CLogTypes.info,
+                                    `${methodName} ---- got result peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} status:${status}`
+                                );
+                            }
                             if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
                                 if (status === GATT_SUCCESS) {
                                     const value = characteristic.getValue();
@@ -1840,10 +1844,12 @@ export class Bluetooth extends BluetoothCommon {
                     this.addDisconnectListener(onDisconnect);
                     try {
                         if (!wrapper.gatt.readCharacteristic(characteristic)) {
-                            CLog(
-                                CLogTypes.error,
-                                `${methodName} ---- error: readCharacteristic returned false peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`
-                            );
+                            if (Trace.isEnabled()) {
+                                CLog(
+                                    CLogTypes.error,
+                                    `${methodName} ---- error: readCharacteristic returned false peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`
+                                );
+                            }
                             onError(
                                 new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                     method: 'readCharacteristic',
@@ -2049,7 +2055,14 @@ export class Bluetooth extends BluetoothCommon {
                             }
                             const cUUID = uuidToString(characteristic.getUuid());
                             const sUUID = uuidToString(characteristic.getService().getUuid());
+
+                            if (Trace.isEnabled()) {
+                                CLog(CLogTypes.info, methodName, '---- writeCharacteristic onCharacteristicWrite:', UUID, cUUID, sUUID, status);
+                            }
                             if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
+                                if (Trace.isEnabled()) {
+                                    CLog(CLogTypes.info, methodName, '---- write got result:', status === GATT_SUCCESS);
+                                }
                                 if (status === GATT_SUCCESS) {
                                     resolve();
                                     clearListeners();
@@ -2060,7 +2073,7 @@ export class Bluetooth extends BluetoothCommon {
                         },
                     };
                     this.bluetoothGattCallback.addSubDelegate(subD);
-                    this.addDisconnectListener(reject);
+                    this.addDisconnectListener(onDisconnect);
 
                     try {
                         characteristic.setValue(val);
@@ -2168,10 +2181,12 @@ export class Bluetooth extends BluetoothCommon {
 
                             const cUUID = uuidToString(characteristic.getUuid());
                             const sUUID = uuidToString(characteristic.getService().getUuid());
-                            CLog(
-                                CLogTypes.info,
-                                `${methodName} ---- onCharacteristicWrite peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} UUID:${UUID} pUUID:${pUUID} cUUID:${cUUID} sUUID:${sUUID} status:${status}`
-                            );
+                            if (Trace.isEnabled()) {
+                                CLog(
+                                    CLogTypes.info,
+                                    `${methodName} ---- onCharacteristicWrite peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} UUID:${UUID} pUUID:${pUUID} cUUID:${cUUID} sUUID:${sUUID} status:${status}`
+                                );
+                            }
                             if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
                                 if (status === GATT_SUCCESS) {
                                     // sometimes the callback is received too fast and somehow it blocks the promise.
