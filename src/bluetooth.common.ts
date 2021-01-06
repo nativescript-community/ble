@@ -338,6 +338,16 @@ export interface ConnectOptions {
     onDisconnected?: (data: { UUID; name: string }) => void;
 
     autoDiscoverAll?: boolean;
+
+    /**
+     * Selects 2M PHY when available (Android only)
+     */
+    auto2MegPhy?: boolean;
+
+    /**
+     * Selects maximum BLE MTU (247) (Android only)
+     */
+    autoMaxMTU?: boolean;
 }
 
 export interface AdvertismentData {
@@ -382,6 +392,8 @@ export interface Peripheral {
 
     manufacturerId?: number;
     advertismentData?: AdvertismentData;
+
+    mtu?: number;
 }
 
 /**
@@ -483,12 +495,10 @@ export interface StartNotifyingOptions extends CRUDOptions {
 /**
  * Response object for the read function
  */
-export interface ReadResult {
+export interface ReadResult extends CRUDOptions {
     value: ArrayBuffer;
     ios?: any;
     android?: any;
-    characteristicUUID: string;
-    serviceUUID: string;
 }
 
 export interface StartAdvertisingOptions {
