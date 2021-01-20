@@ -712,7 +712,7 @@ export interface BluetoothGattCallbackWithSubCallback extends android.bluetooth.
     addSubDelegate(delegate: SubBluetoothGattCallback);
     removeSubDelegate(delegate: SubBluetoothGattCallback);
 }
-export type DisconnectListener = () => void;
+export type DisconnectListener = (address) => void;
 function initBluetoothGattCallback() {
     if (BluetoothGattCallback) {
         return;
@@ -1652,13 +1652,15 @@ export class Bluetooth extends BluetoothCommon {
                     reject(err);
                     clearListeners();
                 };
-                const onDisconnect = () => {
-                    onError(
-                        new BluetoothError(BluetoothCommon.msg_peripheral_disconnected, {
-                            method: methodName,
-                            arguments: args,
-                        })
-                    );
+                const onDisconnect = (address) => {
+                    if (address === pUUID) {
+                        onError(
+                            new BluetoothError(BluetoothCommon.msg_peripheral_disconnected, {
+                                method: methodName,
+                                arguments: args,
+                            })
+                        );
+                    }
                 };
                 const subD = {
                     onConnectionStateChange: (gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) => {
@@ -2314,13 +2316,15 @@ export class Bluetooth extends BluetoothCommon {
                         reject(err);
                         clearListeners();
                     };
-                    const onDisconnect = () => {
-                        onError(
-                            new BluetoothError(BluetoothCommon.msg_peripheral_disconnected, {
-                                method: methodName,
-                                arguments: args,
-                            })
-                        );
+                    const onDisconnect = (address) => {
+                        if (address === args.peripheralUUID) {
+                            onError(
+                                new BluetoothError(BluetoothCommon.msg_peripheral_disconnected, {
+                                    method: methodName,
+                                    arguments: args,
+                                })
+                            );
+                        }
                     };
                     this.addDisconnectListener(onDisconnect);
                     try {
@@ -2506,8 +2510,7 @@ export class Bluetooth extends BluetoothCommon {
             }
             if (this.disconnectListeners.length > 0) {
                 const error = new BluetoothError(BluetoothCommon.msg_peripheral_disconnected, {});
-                this.disconnectListeners.forEach((d) => d());
-                this.disconnectListeners = [];
+                this.disconnectListeners = this.disconnectListeners.filter((d) => d(address));
             }
 
             gatt.close();
@@ -2627,13 +2630,15 @@ export class Bluetooth extends BluetoothCommon {
             ctx.reject(err);
             clearListeners();
         };
-        const onDisconnect = () => {
-            onError(
-                new BluetoothError(BluetoothCommon.msg_peripheral_disconnected, {
-                    method: ctx.methodName,
-                    arguments: ctx.args,
-                })
-            );
+        const onDisconnect = (address) => {
+            if (address === ctx.args.peripheralUUID) {
+                onError(
+                    new BluetoothError(BluetoothCommon.msg_peripheral_disconnected, {
+                        method: ctx.methodName,
+                        arguments: ctx.args,
+                    })
+                );
+            }
         };
         const subD = createSubDelegate(clearListeners, onError);
         this.bluetoothGattCallback.addSubDelegate(subD);
