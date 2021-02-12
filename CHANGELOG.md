@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.14](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.13...v3.0.14) (2021-02-12)
+
+
+### Bug Fixes
+
+* **android:** Disconnect listeners now only accept disconnect events from matching devices. ([213e7e4](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/213e7e4013a2377c2cca197835aa1be048529861))
+
+
+### Features
+
+* **android:** Connections can now be made with 2M PHY and Max MTU. Also removes code duplication by introducing attachSubDelegate. ([e7dee52](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/e7dee522b8203e613b8d9dba2feabe081d9f0066))
+
+
+
+
+
 ## [3.0.13](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.12...v3.0.13) (2020-12-14)
 
 
