@@ -821,7 +821,7 @@ function initBluetoothGattCallback() {
             if (device == null) {
                 // happens some time, why ... ?
             } else {
-              pUUID = device.getAddress();
+                pUUID = device.getAddress();
             }
             if (Trace.isEnabled()) {
                 CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onCharacteristicChanged ---- gatt: ${gatt}, characteristic: ${characteristic}, device: ${pUUID}`);
@@ -949,23 +949,23 @@ function initBluetoothGattCallback() {
          * @param status - GATT_SUCCESS if the PHY has been changed successfully.
          */
         onPhyUpdate(gatt: android.bluetooth.BluetoothGatt, txPhy: number, rxPhy: number, status: number) {
-          if (Trace.isEnabled()) {
-              CLog(CLogTypes.info, "TNS_BluetoothGattCallback.onPhyUpdate ---- gatt: " + gatt + " txPhy: " + txPhy + " rxPhy: " + rxPhy + ", status: " + status);
-          }
-          var owner = this.owner.get();
-          if (owner) {
-              owner.notify({
-                  eventName: 'phy',
-                  object: owner,
-                  data: {txPhy, rxPhy},
-              });
-          }
-          this.subDelegates.forEach(function (d) {
-              if (d.onPhyUpdate) {
-                  d.onPhyUpdate(gatt, txPhy, rxPhy, status);
-              }
-          });
-      };
+            if (Trace.isEnabled()) {
+                CLog(CLogTypes.info, 'TNS_BluetoothGattCallback.onPhyUpdate ---- gatt: ' + gatt + ' txPhy: ' + txPhy + ' rxPhy: ' + rxPhy + ', status: ' + status);
+            }
+            const owner = this.owner.get();
+            if (owner) {
+                owner.notify({
+                    eventName: 'phy',
+                    object: owner,
+                    data: {txPhy, rxPhy},
+                });
+            }
+            this.subDelegates.forEach(function (d) {
+                if (d.onPhyUpdate) {
+                    d.onPhyUpdate(gatt, txPhy, rxPhy, status);
+                }
+            });
+        };
     }
     BluetoothGattCallback = BluetoothGattCallbackImpl;
 }
@@ -1125,7 +1125,7 @@ export class Bluetooth extends BluetoothCommon {
     public connections: {
         [k: string]: {
             state: ConnectionState;
-            onConnected?: (e: { UUID: string; name: string; state: string; services?: Service[]; advertismentData: AdvertismentData, mtu?: number }) => void;
+            onConnected?: (e: { UUID: string; name: string; state: string; services?: Service[]; advertismentData: AdvertismentData; mtu?: number }) => void;
             onDisconnected?: (e: { UUID: string; name: string }) => void;
             device?: android.bluetooth.BluetoothGatt;
             onNotifyCallbacks?: {
@@ -1605,7 +1605,7 @@ export class Bluetooth extends BluetoothCommon {
 
     @bluetoothEnabled
     @prepareArgs
-    public connect(args: ConnectOptions) {
+    public async connect(args: ConnectOptions) {
         // or macaddress..
         const methodName = 'connect';
         if (!args.UUID) {
@@ -1643,7 +1643,7 @@ export class Bluetooth extends BluetoothCommon {
                 onDisconnected: args.onDisconnected,
                 // device: gatt // TODO rename device to gatt?
             });
-            return new Promise<void>((resolve, reject) => {
+            await new Promise<void>((resolve, reject) => {
                 const clearListeners = () => {
                     this.bluetoothGattCallback.removeSubDelegate(subD);
                     this.removeDisconnectListener(onDisconnect);
@@ -1709,40 +1709,45 @@ export class Bluetooth extends BluetoothCommon {
                     // onDisconnected: args.onDisconnected,
                     device: gatt, // TODO rename device to gatt?
                 });
-            })
-                .then(() => !!args.autoDiscoverAll ? this.discoverAll({ peripheralUUID: pUUID }).then((result) => result?.services) : undefined)
-                .then((services) => (!!args.auto2MegPhy ? this.select2MegPhy({ peripheralUUID: pUUID }) : Promise.resolve()).then(() => services))
-                .then((services) => (!!args.autoMaxMTU ? this.requestMtu({ peripheralUUID: pUUID, value: MAX_MTU }) : Promise.resolve(undefined))
-                    .then((mtu?: number) => ({services, mtu})))
-                .then(({services, mtu}) => {
-                    const stateObject = this.connections[pUUID];
-                    if (!stateObject) {
-                        return Promise.reject(
-                            new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
-                                method: methodName,
-                                arguments: args,
-                            })
-                        ) as any;
-                    }
-                    stateObject.state = 'connected';
-                    const adv = stateObject.advertismentData;
-                    const dataToSend = {
-                        UUID: pUUID, // TODO consider renaming to id (and iOS as well)
-                        name: bluetoothDevice && bluetoothDevice.getName(),
-                        state: stateObject.state,
-                        services,
-                        mtu,
-                        localName: adv?.localName,
-                        manufacturerId: adv?.manufacturerId,
-                        advertismentData: adv,
-                    };
-                    if (stateObject.onConnected) {
-                        stateObject.onConnected(dataToSend);
-                        delete stateObject.onConnected;
-                    }
-                    this.sendEvent(Bluetooth.device_connected_event, dataToSend);
-                    return dataToSend;
-                });
+            });
+            let services, mtu;
+            if(args.autoDiscoverAll !== false) {
+                services = (await this.discoverAll({ peripheralUUID: pUUID }))?.services;
+            }
+            if (!!args.auto2MegPhy) {
+                await this.select2MegPhy({ peripheralUUID: pUUID }) ;
+            }
+            if (!!args.autoMaxMTU) {
+                mtu = await this.requestMtu({ peripheralUUID: pUUID, value: MAX_MTU }) ;
+            }
+            // get the stateObject again to see if we got disconnected
+            stateObject = this.connections[pUUID];
+            if (!stateObject) {
+                return Promise.reject(
+                    new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
+                        method: methodName,
+                        arguments: args,
+                    })
+                ) as any;
+            }
+            stateObject.state = 'connected';
+            const adv = stateObject.advertismentData;
+            const dataToSend = {
+                UUID: pUUID, // TODO consider renaming to id (and iOS as well)
+                name: bluetoothDevice && bluetoothDevice.getName(),
+                state: stateObject.state,
+                services,
+                mtu,
+                localName: adv?.localName,
+                manufacturerId: adv?.manufacturerId,
+                advertismentData: adv,
+            };
+            if (stateObject.onConnected) {
+                stateObject.onConnected(dataToSend);
+                delete stateObject.onConnected;
+            }
+            this.sendEvent(Bluetooth.device_connected_event, dataToSend);
+            return dataToSend;
         }
     }
 
@@ -2618,7 +2623,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     private attachSubDelegate(
-        ctx: {methodName: string, args: any, resolve, reject},
+        ctx: {methodName: string; args: any; resolve; reject},
         createSubDelegate: (clearListeners: () => void, onError: (err) => void) => SubBluetoothGattCallback,
         executeTask: (onError: (err) => void) => void,
     ): void {
