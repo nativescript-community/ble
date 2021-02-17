@@ -896,7 +896,7 @@ export class Bluetooth extends BluetoothCommon {
 
     @bluetoothEnabled
     @prepareArgs
-    public connect(args: ConnectOptions) {
+    public async connect(args: ConnectOptions) {
         const methodName = 'connect';
         try {
             if (!args.UUID) {
@@ -919,14 +919,12 @@ export class Bluetooth extends BluetoothCommon {
             }
 
             if (!peripheral) {
-                return Promise.reject(
-                    new BluetoothError(BluetoothCommon.msg_no_peripheral, {
-                        method: methodName,
-                        arguments: args,
-                    })
-                );
+                throw new BluetoothError(BluetoothCommon.msg_no_peripheral, {
+                    method: methodName,
+                    arguments: args,
+                });
             } else {
-                return new Promise<void>((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     const subD = {
                         centralManagerDidConnectPeripheral: (central: CBCentralManager, peripheral: CBPeripheral) => {
                             const UUID = NSUUIDToString(peripheral.identifier);
@@ -958,47 +956,44 @@ export class Bluetooth extends BluetoothCommon {
                         CLog(CLogTypes.info, methodName, '----about to connect:', connectingUUID, this._centralDelegate, this._centralManager);
                     }
                     this.centralManager.connectPeripheralOptions(peripheral, null);
-                })
-                    .then(() => {
-                        if (args.autoDiscoverAll !== false) {
-                            return this.discoverAll({ peripheralUUID: connectingUUID });
-                        }
-                        return undefined;
-                    })
-                    .then((result) => {
-                        const adv = this._advData[connectingUUID];
-                        const dataToSend = {
-                            UUID: connectingUUID,
-                            name: peripheral.name,
-                            state: this._getState(peripheral.state),
-                            services: result?.services,
-                            localName: adv?.localName,
-                            manufacturerId: adv?.manufacturerId,
-                            advertismentData: adv,
-                            mtu: FIXED_IOS_MTU,
-                        };
-                        // delete this._advData[connectingUUID];
-                        const cb = this._connectCallbacks[connectingUUID];
-                        if (cb) {
-                            cb(dataToSend);
-                            delete this._connectCallbacks[connectingUUID];
-                        }
-                        this.sendEvent(Bluetooth.device_connected_event, dataToSend);
-                        return dataToSend;
-                    });
+                });
+                let services, mtu = FIXED_IOS_MTU;
+                if (args.autoDiscoverAll !== false) {
+                    services = (await this.discoverAll({ peripheralUUID: connectingUUID }))?.services;
+                }
+                if (!!args.autoMaxMTU) {
+                    mtu = await this.requestMtu({ peripheralUUID: connectingUUID, value: FIXED_IOS_MTU }) ;
+                }
+                const adv = this._advData[connectingUUID];
+                const dataToSend = {
+                    UUID: connectingUUID,
+                    name: peripheral.name,
+                    state: this._getState(peripheral.state),
+                    services,
+                    localName: adv?.localName,
+                    manufacturerId: adv?.manufacturerId,
+                    advertismentData: adv,
+                    mtu,
+                };
+                // delete this._advData[connectingUUID];
+                const cb = this._connectCallbacks[connectingUUID];
+                if (cb) {
+                    cb(dataToSend);
+                    delete this._connectCallbacks[connectingUUID];
+                }
+                this.sendEvent(Bluetooth.device_connected_event, dataToSend);
+                return dataToSend;
             }
         } catch (ex) {
             if (Trace.isEnabled()) {
                 CLog(CLogTypes.error, methodName, '---- error:', ex);
             }
-            return Promise.reject(
-                new BluetoothError(ex.message, {
-                    stack: ex.stack,
-                    nativeException: ex.nativeException,
-                    method: methodName,
-                    arguments: args,
-                })
-            );
+            throw new BluetoothError(ex.message, {
+                stack: ex.stack,
+                nativeException: ex.nativeException,
+                method: methodName,
+                arguments: args,
+            });
         }
     }
 
@@ -1228,11 +1223,9 @@ export class Bluetooth extends BluetoothCommon {
         if (!peripheral) {
             return Promise.reject(new BluetoothError(BluetoothCommon.msg_no_peripheral, { method: methodName, arguments: args }));
         }
-        // return this._getWrapper(args, CBCharacteristicProperties.PropertyWrite).then(wrapper => {
         return Promise.resolve(
             Math.min(peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithoutResponse), peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithResponse))
         );
-        // });
     }
     @prepareArgs
     public write(args: WriteOptions) {
