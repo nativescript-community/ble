@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.15](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.14...v3.0.15) (2021-02-18)
+
+
+### Bug Fixes
+
+* **android:** autoDiscoverAll was broken in last version ([dda3876](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/dda38763680a926a131e2ee136be412cb08ae706))
+* **ios:** correctly query mtu on connection ([6b1a8f8](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/6b1a8f81dead28755e350cfba9cbddb74b63006a))
+
+
+
+
+
 ## [3.0.14](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.13...v3.0.14) (2021-02-12)
 
 
