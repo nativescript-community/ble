@@ -2560,7 +2560,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     private select2MegPhy(args: { peripheralUUID: string }): Promise<void> {
-        if (getAndroidSDK() < OREO) {
+        if (getAndroidSDK() < OREO || !this.adapter.isLe2MPhySupported()) {
             return Promise.resolve();
         }
 
