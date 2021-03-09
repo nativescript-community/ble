@@ -31,13 +31,13 @@ Want to dive in quickly? Check out [the demo app](https://github.com/EddyVerbrug
 
 #### Prerequisites
 - [isBluetoothEnabled](#isbluetoothenabled)
-- [hasCoarseLocationPermission](#hascoarselocationpermission)
+- [hasLocationPermission](#haslocationpermission)
 - [requestCoarseLocationPermission](#requestcoarselocationpermission)
-- [turnBluetoothOn](#turnBluetoothOn)
+- [enable (Android only)](#enable-android-only)
 
 #### Discovery
 - [startScanning](#startscanning)
-- [stopScanning](#stopcanning)
+- [stopScanning](#stopscanning)
 
 #### Connectivity
 - [connect](#connect)
@@ -48,6 +48,9 @@ Want to dive in quickly? Check out [the demo app](https://github.com/EddyVerbrug
 - [write](#write)
 - [startNotifying](#startnotifying)
 - [stopNotifying](#stopnotifying)
+
+#### Debugging
+- [setCharacteristicLogging](#setcharacteristiclogging)
 
 
 ### isBluetoothEnabled
@@ -64,21 +67,21 @@ bluetooth.isBluetoothEnabled().then(
   }
 );
 ```
-### hasCoarseLocationPermission
+### hasLocationPermission
 __Since plugin version 1.2.0 the `startScanning` function will handle this internally so it's no longer mandatory to add permission checks to your code.__
 
 On Android 6 you need to request permission to be able to interact with a Bluetooth peripheral (when the app is in the background) when targeting API level 23+. Even if the `uses-permission` tag for `ACCESS_COARSE_LOCATION` is present in `AndroidManifest.xml`.
 
 Note that for `BLUETOOTH` and `BLUETOOTH_ADMIN` you don't require runtime permission; adding those to `AndroidManifest.xml` suffices (which the plugin does for you).
 
-Note that `hasCoarseLocationPermission ` will return true when:
+Note that `hasLocationPermission ` will return true when:
 * You're running this on iOS, or
 * You're targeting an API level lower than 23, or
 * You're using a device running Android < 6, or
 * You've already granted permission.
 
 ```typescript
-bluetooth.hasCoarseLocationPermission().then(
+bluetooth.hasLocationPermission().then(
   function(granted) {
     // if this is 'false' you probably want to call 'requestCoarseLocationPermission' now
     console.log("Has Location Permission? " + granted);
