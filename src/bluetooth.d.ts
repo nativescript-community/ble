@@ -100,13 +100,15 @@ export class Bluetooth extends BluetoothCommon {
     /**
      * Required for Android 6+ to be able to scan for peripherals in the background.
      */
-    requestCoarseLocationPermission(): Promise<any>;
+    requestLocationPermission(): Promise<any>;
 
     startScanning(options: StartScanningOptions): Promise<void>;
 
     stopScanning(): Promise<any>;
 
     connect(options: ConnectOptions): Promise<any>;
+
+    isConnected(options: ConnectOptions): Promise<boolean>;
 
     disconnect(options: DisconnectOptions): Promise<any>;
 
@@ -132,6 +134,13 @@ export class Bluetooth extends BluetoothCommon {
     stop();
 
     public clearAdvertismentCache();
+
+
+    // ios only
+    centralManager: any; // CBCentralManager;
+
+    // android only
+    getAndroidLocationManager(): any; //android.location.LocationManager
 }
 export function getBluetoothInstance(): Bluetooth;
 

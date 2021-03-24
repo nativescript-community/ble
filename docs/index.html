@@ -81,7 +81,7 @@
 			<ul>
 				<li><a href="#isbluetoothenabled">isBluetoothEnabled</a></li>
 				<li><a href="#hascoarselocationpermission">hasCoarseLocationPermission</a></li>
-				<li><a href="#requestcoarselocationpermission">requestCoarseLocationPermission</a></li>
+				<li><a href="#requestLocationPermission">requestLocationPermission</a></li>
 				<li><a href="#turnBluetoothOn">turnBluetoothOn</a></li>
 			</ul>
 			<a href="#discovery" id="discovery" style="color: inherit; text-decoration: none;">
@@ -135,16 +135,16 @@ bluetooth.isBluetoothEnabled().then(
 			</ul>
 			<pre><code class="language-typescript">bluetooth.hasCoarseLocationPermission().then(
   <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">granted</span>) </span>{
-    <span class="hljs-comment">// if this is &#x27;false&#x27; you probably want to call &#x27;requestCoarseLocationPermission&#x27; now</span>
+    <span class="hljs-comment">// if this is &#x27;false&#x27; you probably want to call &#x27;requestLocationPermission&#x27; now</span>
     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;Has Location Permission? &quot;</span> + granted);
   }
 );</code></pre>
-			<a href="#requestcoarselocationpermission" id="requestcoarselocationpermission" style="color: inherit; text-decoration: none;">
-				<h3>requestCoarseLocationPermission</h3>
+			<a href="#requestLocationPermission" id="requestLocationPermission" style="color: inherit; text-decoration: none;">
+				<h3>requestLocationPermission</h3>
 			</a>
 			<p><strong>Since plugin version 1.2.0 the <code>startScanning</code> function will handle this internally so it&#39;s no longer mandatory to add permission checks to your code.</strong></p>
 			<pre><code class="language-typescript"><span class="hljs-comment">// if no permission was granted previously this will open a user consent screen</span>
-bluetooth.requestCoarseLocationPermission().then(
+bluetooth.requestLocationPermission().then(
   <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">granted</span>) </span>{
     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;Location permission requested, user granted? &quot;</span> + granted);
   }

@@ -32,7 +32,7 @@ Want to dive in quickly? Check out [the demo app](https://github.com/EddyVerbrug
 #### Prerequisites
 - [isBluetoothEnabled](#isbluetoothenabled)
 - [hasCoarseLocationPermission](#hascoarselocationpermission)
-- [requestCoarseLocationPermission](#requestcoarselocationpermission)
+- [requestLocationPermission](#requestLocationPermission)
 - [turnBluetoothOn](#turnBluetoothOn)
 
 #### Discovery
@@ -80,18 +80,18 @@ Note that `hasCoarseLocationPermission ` will return true when:
 ```typescript
 bluetooth.hasCoarseLocationPermission().then(
   function(granted) {
-    // if this is 'false' you probably want to call 'requestCoarseLocationPermission' now
+    // if this is 'false' you probably want to call 'requestLocationPermission' now
     console.log("Has Location Permission? " + granted);
   }
 );
 ```
 
-### requestCoarseLocationPermission
+### requestLocationPermission
 __Since plugin version 1.2.0 the `startScanning` function will handle this internally so it's no longer mandatory to add permission checks to your code.__
 
 ```typescript
 // if no permission was granted previously this will open a user consent screen
-bluetooth.requestCoarseLocationPermission().then(
+bluetooth.requestLocationPermission().then(
   function(granted) {
     console.log("Location permission requested, user granted? " + granted);
   }

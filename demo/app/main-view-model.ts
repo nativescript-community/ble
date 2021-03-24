@@ -142,7 +142,7 @@ export class DemoAppModel extends Observable {
     public doScanForBeacon() {
         this._bluetooth.hasLocationPermission().then(granted => {
             if (!granted) {
-                this._bluetooth.requestCoarseLocationPermission().then(
+                this._bluetooth.requestLocationPermission().then(
                     // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
                     granted2 => {
                         dialogs.alert({
