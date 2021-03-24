@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.16](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.15...v3.0.16) (2021-03-24)
+
+
+### Bug Fixes
+
+* typings fix ([0a3afc0](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/0a3afc071ac723a6c823298d323510396d3d3209))
+* **android:** 2m phy selection is now only attempted if isLe2MPhySupported is true. ([8124923](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/81249234c380d983f14c62924fb4f0ceb4a723b7))
+
+
+
+
+
 ## [3.0.15](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.14...v3.0.15) (2021-02-18)
 
 
