@@ -215,7 +215,7 @@ export function printValueToString(value: number[]) {
 }
 
 // JS UUID -> Java
-export function stringToUuid(uuidStr) {
+export function stringToUuid(uuidStr: string) {
     if (uuidStr.length === 4) {
         uuidStr = '0000' + uuidStr + '-0000-1000-8000-00805f9b34fb';
     }
@@ -524,6 +524,7 @@ function initLeScanCallback() {
                             RSSI: rssi,
                             state: 'disconnected',
                             advertismentData,
+                            nativeDevice: device,
                             manufacturerId: advertismentData.manufacturerId,
                         };
                         if (Trace.isEnabled()) {
@@ -1605,6 +1606,23 @@ export class Bluetooth extends BluetoothCommon {
 
     @bluetoothEnabled
     @prepareArgs
+    public async getDevice(args: DisconnectOptions) {
+        const methodName = 'getDevice';
+        if (!args.UUID) {
+            return Promise.reject(
+                new BluetoothError(BluetoothCommon.msg_missing_parameter, {
+                    method: methodName,
+                    type: BluetoothCommon.UUIDKey,
+                    arguments: args,
+                })
+            );
+        }
+        const pUUID = args.UUID;
+        return this.adapter.getRemoteDevice(pUUID);
+    }
+
+    @bluetoothEnabled
+    @prepareArgs
     public async connect(args: ConnectOptions) {
         // or macaddress..
         const methodName = 'connect';
@@ -1738,6 +1756,7 @@ export class Bluetooth extends BluetoothCommon {
                 state: stateObject.state,
                 services,
                 mtu,
+                nativeDevice: bluetoothDevice,
                 localName: adv?.localName,
                 manufacturerId: adv?.manufacturerId,
                 advertismentData: adv,

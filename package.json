@@ -19,7 +19,7 @@
         "plugin.prepare": "npm run tsc && cd demo && tns plugin remove @nativescript-community/ble && tns plugin add ../plugin",
         "clean.demo": "rimraf demo/hooks demo/node_modules demo/platforms",
         "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'",
-        "publish": "ts-patch install && npm run build && lerna publish --create-release=github",
+        "publish": "ts-patch install && npm run build && lerna publish --create-release=github --force-publish",
         "doc": "typedoc --out docs --tsconfig tsconfig.doc.json --includeDeclarations --excludeExternals --mode file --ignoreCompilerErrors --excludeNotExported --excludePrivate --theme minimal",
         "commitmsg": "commitlint -e $GIT_PARAMS"
     },

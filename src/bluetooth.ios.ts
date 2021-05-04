@@ -94,6 +94,7 @@ export function stringToUint8Array(value, encoding = 'iso-8859-1') {
 }
 
 import { iOSNativeHelper } from '@nativescript/core/utils/native-helper';
+import { DisconnectOptions } from './bluetooth';
 
 export type SubPeripheralDelegate = Partial<CBPeripheralDelegate>;
 export type SubCentralManagerDelegate = Partial<CBCentralManagerDelegate>;
@@ -482,6 +483,7 @@ export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralM
             localName: advertismentData.localName,
             RSSI,
             advertismentData,
+            nativeDevice: peripheral,
             state: this._owner.get()._getState(peripheral.state),
             manufacturerId: advertismentData.manufacturerId,
         };
@@ -896,6 +898,22 @@ export class Bluetooth extends BluetoothCommon {
 
     @bluetoothEnabled
     @prepareArgs
+    public async getDevice(args: DisconnectOptions) {
+        const methodName = 'getDevice';
+        if (!args.UUID) {
+            return Promise.reject(
+                new BluetoothError(BluetoothCommon.msg_missing_parameter, {
+                    method: methodName,
+                    type: BluetoothCommon.UUIDKey,
+                    arguments: args,
+                })
+            );
+        }
+        return this.findDiscoverPeripheral(args.UUID);
+    }
+
+    @bluetoothEnabled
+    @prepareArgs
     public async connect(args: ConnectOptions) {
         const methodName = 'connect';
         try {
@@ -970,6 +988,7 @@ export class Bluetooth extends BluetoothCommon {
                     name: peripheral.name,
                     state: this._getState(peripheral.state),
                     services,
+                    nativeDevice: peripheral,
                     localName: adv?.localName,
                     manufacturerId: adv?.manufacturerId,
                     advertismentData: adv,

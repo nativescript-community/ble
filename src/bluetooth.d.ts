@@ -141,6 +141,8 @@ export class Bluetooth extends BluetoothCommon {
 
     // android only
     getAndroidLocationManager(): any; //android.location.LocationManager
+
+    public getDevice(args: DisconnectOptions): any; // CBPeripheral or android.bluetooth.BluetoothDevice
 }
 export function getBluetoothInstance(): Bluetooth;
 

@@ -64,7 +64,6 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
             ['serviceUUID', 'characteristicUUID'].forEach(function (k) {
                 if (paramsToCheck[k]) {
                     const matcher = (paramsToCheck[k] as string).match(pattern);
-                    // console.log('test regex', paramsToCheck[k], matcher);
                     paramsToCheck[k] = (matcher && matcher.length > 0 ? matcher[1] : paramsToCheck[k]).toLowerCase();
                 }
             });
