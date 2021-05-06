@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.18](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.17...v3.0.18) (2021-05-06)
+
+
+### Bug Fixes
+
+* **ios:** fix for wrong first isEnabled state ([7076cc0](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/7076cc0f4e8c7526ac9067e8d947e0a90b28c07e))
+
+
+
+
+
 ## [3.0.17](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.16...v3.0.17) (2021-05-04)
 
 
