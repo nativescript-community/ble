@@ -660,9 +660,10 @@ export class Bluetooth extends BluetoothCommon {
         // doing nothing on ios
     }
 
-    _state: CBManagerState;
+    _state: CBManagerState = CBManagerState.Unsupported;
     set state(state: CBManagerState) {
         if (this._state !== state) {
+            console.log('on ble state change', state);
             this._state = state;
             this.sendEvent(BluetoothCommon.bluetooth_status_event, {
                 state: state === CBManagerState.Unsupported ? 'unsupported' : state === CBManagerState.PoweredOn ? 'on' : 'off',
@@ -679,20 +680,24 @@ export class Bluetooth extends BluetoothCommon {
         }
         return this._centralDelegate;
     }
-    get centralManager() {
+
+    ensureCentralManager(){
         if (!this._centralManager) {
             const options: NSMutableDictionary<any, any> = new (NSMutableDictionary as any)([this.showPowerAlertPopup], [CBCentralManagerOptionShowPowerAlertKey]);
             if (this.restoreIdentifier) {
                 options.setObjectForKey(this.restoreIdentifier, CBCentralManagerOptionRestoreIdentifierKey);
             }
             this._centralManager = CBCentralManager.alloc().initWithDelegateQueueOptions(this.centralDelegate, null, options);
-            setTimeout(() => {
-                this.state = this._centralManager.state;
-            }, 100);
+            // setTimeout(() => {
+            //     this.state = this._centralManager.state;
+            // }, 100);
             if (Trace.isEnabled()) {
                 CLog(CLogTypes.info, `this._centralManager: ${this._centralManager}`);
             }
         }
+    }
+    get centralManager() {
+        this.ensureCentralManager();
         return this._centralManager;
     }
 
@@ -706,8 +711,8 @@ export class Bluetooth extends BluetoothCommon {
             CLog(CLogTypes.info, 'onListenerAdded', eventName, count);
         }
         if (eventName === Bluetooth.bluetooth_status_event) {
-            // ensure centralManager is set
-            const result = this.centralManager;
+            // ensure centralManager is set to have status event
+            this.ensureCentralManager();
         }
     }
 
@@ -762,19 +767,16 @@ export class Bluetooth extends BluetoothCommon {
         this._connectedPeripherals[UUID] = peripheral;
     }
 
-    // needed for consecutive calls to isBluetoothEnabled. Until readyToAskForEnabled, everyone waits!
-    readyToAskForEnabled = false;
     public async isBluetoothEnabled() {
-        if (!this.readyToAskForEnabled) {
-            // the centralManager return wrong state just after initialization
-            // so create it and wait a bit
-            // eslint-disable-next-line no-unused-expressions
-            this.centralManager;
+        if (this._state === CBManagerState.Unsupported ) {
             if (Trace.isEnabled()) {
-                CLog(CLogTypes.info, 'isBluetoothEnabled', 'waiting a bit');
+                CLog(CLogTypes.info, 'isBluetoothEnabled', 'central manager not ready, waiting for it to start');
             }
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            this.readyToAskForEnabled = true;
+            return new Promise<boolean>((resolve) => {
+                this.once(BluetoothCommon.bluetooth_status_event, ()=> {
+                    resolve(this._isEnabled());
+                });
+            });
         }
         return this._isEnabled();
     }
