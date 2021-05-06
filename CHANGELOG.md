@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.19](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.18...v3.0.19) (2021-05-06)
+
+
+### Bug Fixes
+
+* updated deps ([563147a](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/563147aef0152fa32c7fc48ff67245cb08d4cf79))
+
+
+
+
+
 ## [3.0.18](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.17...v3.0.18) (2021-05-06)
 
 
