@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.20](https://github.com/nativescript-community/ble/compare/v3.0.19...v3.0.20) (2021-05-12)
+
+
+### Bug Fixes
+
+* rollback p-queue version to fix build ([ee5bdb0](https://github.com/nativescript-community/ble/commit/ee5bdb06369650577a26ea932354fe9d0d5bafd3))
+
+
+
+
+
 ## [3.0.19](https://github.com/nativescript-community/ble/compare/v3.0.18...v3.0.19) (2021-05-06)
 
 
