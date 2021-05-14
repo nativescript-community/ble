@@ -56,18 +56,14 @@ function nativeEncoding(encoding: string) {
 
 function valueToNSData(value: any, encoding = 'iso-8859-1') {
     if (value instanceof NSData) {
-        // console.log('valueToNSData converting from NSData');
         return value;
     } else if (value instanceof ArrayBuffer) {
         // for ArrayBuffer to NSData
-        // console.log('valueToNSData converting from ArrayBuffer');
         return NSData.dataWithData(value as any);
     } else if (value.buffer) {
         // typed array
-        // console.log('valueToNSData converting from Typed array', Object.prototype.toString.call(value), value[0], value[1], value[2], value[3]);
         return NSData.dataWithData(value.buffer);
     } else if (Array.isArray(value)) {
-        // console.log('valueToNSData converting from Array');
         return NSData.dataWithData(new Uint8Array(value).buffer as any);
     }
     const type = typeof value;
@@ -663,7 +659,9 @@ export class Bluetooth extends BluetoothCommon {
     _state: CBManagerState = CBManagerState.Unsupported;
     set state(state: CBManagerState) {
         if (this._state !== state) {
-            console.log('on ble state change', state);
+            if (Trace.isEnabled()) {
+                CLog(CLogTypes.info, 'BLE state change', state);
+            }
             this._state = state;
             this.sendEvent(BluetoothCommon.bluetooth_status_event, {
                 state: state === CBManagerState.Unsupported ? 'unsupported' : state === CBManagerState.PoweredOn ? 'on' : 'off',
@@ -682,17 +680,15 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     ensureCentralManager(){
+
         if (!this._centralManager) {
             const options: NSMutableDictionary<any, any> = new (NSMutableDictionary as any)([this.showPowerAlertPopup], [CBCentralManagerOptionShowPowerAlertKey]);
             if (this.restoreIdentifier) {
                 options.setObjectForKey(this.restoreIdentifier, CBCentralManagerOptionRestoreIdentifierKey);
             }
             this._centralManager = CBCentralManager.alloc().initWithDelegateQueueOptions(this.centralDelegate, null, options);
-            // setTimeout(() => {
-            //     this.state = this._centralManager.state;
-            // }, 100);
             if (Trace.isEnabled()) {
-                CLog(CLogTypes.info, `this._centralManager: ${this._centralManager}`);
+                CLog(CLogTypes.info, `creating CBCentralManager: ${this._centralManager}`);
             }
         }
     }
@@ -703,7 +699,9 @@ export class Bluetooth extends BluetoothCommon {
 
     constructor(private restoreIdentifier: string = 'ns_bluetooth', private showPowerAlertPopup = false) {
         super();
-        console.log(`*** iOS Bluetooth Constructor *** ${restoreIdentifier}`);
+        if (Trace.isEnabled()) {
+            CLog(CLogTypes.info, 'Creating Bluetooth instance', restoreIdentifier);
+        }
     }
 
     onListenerAdded(eventName: string, count: number) {
