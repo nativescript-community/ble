@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.21](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.20...v3.0.21) (2021-05-18)
+
+
+### Bug Fixes
+
+* typings fix ([32ec0a8](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/32ec0a817440d53809acd4cc268bef7f4771f42a))
+* **ios:** console log fixes ([b6c0a04](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/b6c0a04702dcb224c9e1dbed4eaa338fe601308b))
+
+
+
+
+
 ## [3.0.20](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.19...v3.0.20) (2021-05-12)
 
 
