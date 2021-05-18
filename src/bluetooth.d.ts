@@ -25,10 +25,15 @@ import {
 export {
     AdvertismentData,
     CallbackType,
+    Characteristic,
     ConnectOptions,
     DisconnectOptions,
+    DiscoverCharacteristicsOptions,
+    DiscoverOptions,
+    DiscoverServicesOptions,
     MatchMode,
     MatchNum,
+    MtuOptions,
     Peripheral,
     ReadOptions,
     ReadResult,
@@ -38,9 +43,6 @@ export {
     StartScanningOptions,
     StopNotifyingOptions,
     WriteOptions,
-    DiscoverServicesOptions,
-    DiscoverCharacteristicsOptions,
-    DiscoverOptions,
 };
 
 export class Bluetooth extends BluetoothCommon {
