@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.22](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.21...v3.0.22) (2021-05-27)
+
+
+### Features
+
+* timeout for read / write ([ff3bbc8](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/ff3bbc82b91fe49b7547d5aaaa6ca2373e35499b))
+
+
+
+
+
 ## [3.0.21](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.20...v3.0.21) (2021-05-18)
 
 
