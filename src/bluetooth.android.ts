@@ -1837,7 +1837,16 @@ export class Bluetooth extends BluetoothCommon {
                             })
                         );
                     }
-
+                    let timeoutTimer;
+                    if (args.timeout > 0) {
+                        timeoutTimer = setTimeout(() => {
+                            // we need to try catch because the simple fact of creating a new Error actually throws.
+                            // so we will get an uncaughtException
+                            try {
+                                reject(new Error('timeout'));
+                            } catch {}
+                        }, args.timeout);
+                    }
                     const pUUID = args.peripheralUUID;
                     this.attachSubDelegate(
                         {methodName, args, resolve, reject},
@@ -1859,6 +1868,7 @@ export class Bluetooth extends BluetoothCommon {
                                     );
                                 }
                                 if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
+                                    timeoutTimer && clearTimeout(timeoutTimer);
                                     if (status === GATT_SUCCESS) {
                                         const value = characteristic.getValue();
                                         resolve({
@@ -1889,6 +1899,8 @@ export class Bluetooth extends BluetoothCommon {
                                         `${methodName} ---- error: readCharacteristic returned false peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`
                                     );
                                 }
+                                timeoutTimer && clearTimeout(timeoutTimer);
+
                                 onError(
                                     new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                         method: 'readCharacteristic',
@@ -2029,6 +2041,16 @@ export class Bluetooth extends BluetoothCommon {
                     }
 
                     const pUUID = args.peripheralUUID;
+                    let timeoutTimer;
+                    if (args.timeout > 0) {
+                        timeoutTimer = setTimeout(() => {
+                            // we need to try catch because the simple fact of creating a new Error actually throws.
+                            // so we will get an uncaughtException
+                            try {
+                                reject(new Error('timeout'));
+                            } catch {}
+                        }, args.timeout);
+                    }
                     this.attachSubDelegate(
                         {methodName, args, resolve, reject},
                         (clearListeners, onError) => ({
@@ -2043,6 +2065,7 @@ export class Bluetooth extends BluetoothCommon {
                                 const cUUID = uuidToString(characteristic.getUuid());
                                 const sUUID = uuidToString(characteristic.getService().getUuid());
                                 if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
+                                    timeoutTimer && clearTimeout(timeoutTimer);
                                     if (status === GATT_SUCCESS) {
                                         resolve();
                                         clearListeners();
@@ -2062,6 +2085,7 @@ export class Bluetooth extends BluetoothCommon {
                                 if (Trace.isEnabled()) {
                                     CLog(CLogTypes.error, methodName, '---- error: writeCharacteristic returned false');
                                 }
+                                timeoutTimer && clearTimeout(timeoutTimer);
                                 onError(
                                     new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                         method: 'writeCharacteristic',
@@ -2690,7 +2714,7 @@ export class Bluetooth extends BluetoothCommon {
         // Returns a list of characteristics included in this service.
         const characteristics = bluetoothGattService.getCharacteristics();
         for (let i = 0; i < characteristics.size(); i++) {
-            const c = characteristics.get(i);
+            const c = characteristics.get(i) as globalAndroid.bluetooth.BluetoothGattCharacteristic;
             if ((c.getProperties() & charType) !== 0 && characteristicUUID.equals(c.getUuid())) {
                 return c;
             }

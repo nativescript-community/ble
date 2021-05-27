@@ -461,11 +461,14 @@ export interface CRUDOptions {
 }
 
 // tslint:disable-next-line:no-empty-interface
-export interface ReadOptions extends CRUDOptions {}
+export interface ReadOptions extends CRUDOptions {
+    timeout?: number;
+}
 
 export interface WriteOptions extends CRUDOptions {
     value: any;
     encoding?: string;
+    timeout?: number;
 }
 
 export interface MtuOptions {

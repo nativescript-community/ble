@@ -1169,15 +1169,20 @@ export class Bluetooth extends BluetoothCommon {
 
                     const pUUID = args.peripheralUUID;
                     const p = wrapper.peripheral;
+                    let timeoutTimer;
+                    if (args.timeout > 0) {
+                        timeoutTimer = setTimeout(() => {
+                            // we need to try catch because the simple fact of creating a new Error actually throws.
+                            // so we will get an uncaughtException
+                            try {
+                                reject(new Error('timeout'));
+                            } catch {}
+                        }, args.timeout);
+                    }
                     const subD = {
                         peripheralDidUpdateValueForCharacteristicError: (peripheral: CBPeripheral, characteristic: CBCharacteristic, error?: NSError) => {
                             if (!characteristic) {
-                                return reject(
-                                    new BluetoothError(BluetoothCommon.msg_error_function_call, {
-                                        method: 'peripheralDidUpdateValueForCharacteristicError',
-                                        arguments: args,
-                                    })
-                                );
+                                return;
                             }
 
                             const UUID = NSUUIDToString(peripheral.identifier);
@@ -1185,6 +1190,7 @@ export class Bluetooth extends BluetoothCommon {
                             const sUUID = CBUUIDToString(characteristic.service.UUID);
 
                             if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
+                                timeoutTimer && clearTimeout(timeoutTimer);
                                 if (Trace.isEnabled()) {
                                     CLog(CLogTypes.info, methodName, '---- peripheralDidUpdateValueForCharacteristicError', error);
                                 }
@@ -1214,6 +1220,7 @@ export class Bluetooth extends BluetoothCommon {
                         if (Trace.isEnabled()) {
                             CLog(CLogTypes.error, methodName, '---- error:', ex);
                         }
+                        timeoutTimer && clearTimeout(timeoutTimer);
                         reject(
                             new BluetoothError(ex.message, {
                                 stack: ex.stack,
@@ -1276,8 +1283,21 @@ export class Bluetooth extends BluetoothCommon {
                     }
                     const pUUID = args.peripheralUUID;
                     const p = wrapper.peripheral;
+                    let timeoutTimer;
+                    if (args.timeout > 0) {
+                        timeoutTimer = setTimeout(() => {
+                            // we need to try catch because the simple fact of creating a new Error actually throws.
+                            // so we will get an uncaughtException
+                            try {
+                                reject(new Error('timeout'));
+                            } catch {}
+                        }, args.timeout);
+                    }
                     const subD = {
                         peripheralDidWriteValueForCharacteristicError: (peripheral: CBPeripheral, characteristic: CBCharacteristic, error?: NSError) => {
+                            if(!characteristic) {
+                                return;
+                            }
                             if (Trace.isEnabled()) {
                                 CLog(CLogTypes.info, methodName, '---- peripheralDidWriteValueForCharacteristicError', error);
                             }
@@ -1285,6 +1305,7 @@ export class Bluetooth extends BluetoothCommon {
                             const cUUID = CBUUIDToString(characteristic.UUID);
                             const sUUID = CBUUIDToString(characteristic.service.UUID);
                             if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
+                                timeoutTimer && clearTimeout(timeoutTimer);
                                 if (error) {
                                     reject(
                                         new BluetoothError(error.localizedDescription, {
@@ -1306,6 +1327,7 @@ export class Bluetooth extends BluetoothCommon {
                         if (Trace.isEnabled()) {
                             CLog(CLogTypes.error, methodName, '---- error:', ex);
                         }
+                        timeoutTimer && clearTimeout(timeoutTimer);
                         p.delegate.removeSubDelegate(subD);
                         return reject(
                             new BluetoothError(ex.message, {
