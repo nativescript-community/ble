@@ -28,7 +28,7 @@
             "@nativescript-community/ble/*": ["src/*"],
             "*": ["node_modules/*"]
         },
-        "plugins": [{ "transform": "./node_modules/@nativescript/webpack/transformers/ns-transform-native-classes.js", "type": "raw" }]
+        "plugins": [{ "transform": "./node_modules/@nativescript/webpack/dist/transformers/NativeClass/index.js", "type": "raw" }]
     },
     "include": ["src/**/*", "./references.d.ts"],
     "exclude": ["node_modules", "platforms", "src/angular/**/*"],

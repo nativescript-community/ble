@@ -107,7 +107,7 @@ export interface CBPeripheralWithDelegate extends CBPeripheral {
  * There are no required methods in this protocol.
  */
 @NativeClass
-export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDelegate {
+class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDelegate {
     public static ObjCProtocols = [CBPeripheralDelegate];
 
     public onNotifyCallbacks: {
@@ -349,7 +349,7 @@ export class CBPeripheralDelegateImpl extends NSObject implements CBPeripheralDe
  * The only required method of the protocol indicates the availability of the central manager, and is called when the central manager’s state is updated.
  */
 @NativeClass
-export class CBCentralManagerDelegateImpl extends NSObject implements CBCentralManagerDelegate {
+class CBCentralManagerDelegateImpl extends NSObject implements CBCentralManagerDelegate {
     static ObjCProtocols = [CBCentralManagerDelegate];
 
     private _owner: WeakRef<Bluetooth>;
