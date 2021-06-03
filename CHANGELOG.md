@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.25](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.24...v3.0.25) (2021-06-03)
+
+
+### Bug Fixes
+
+* **ios:** try to fix build errors on iOS (caused by exported native class) ([63f8fb3](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/63f8fb3b8cc7dea4528e0903fb7781e7c29474b9))
+
+
+
+
+
 ## [3.0.24](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.23...v3.0.24) (2021-05-27)
 
 **Note:** Version bump only for package @nativescript-community/ble
