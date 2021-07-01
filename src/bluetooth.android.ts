@@ -2266,6 +2266,23 @@ export class Bluetooth extends BluetoothCommon {
                     }
 
                     const pUUID = args.peripheralUUID;
+                    const cUUID = uuidToString(characteristic.getUuid());
+                    const sUUID = uuidToString(characteristic.getService().getUuid());
+
+                    const stateObject = this.connections[pUUID];
+                    stateObject.onNotifyCallbacks = stateObject.onNotifyCallbacks || {};
+                    const key = sUUID + '/' + cUUID;
+                    const onNotify = args.onNotify;
+                    stateObject.onNotifyCallbacks[key] = function (result) {
+                        // CLog(
+                        //     CLogTypes.warning,
+                        //     `onNotifyCallback ---- UUID: ${UUID}, pUUID: ${pUUID}, cUUID: ${cUUID}, args.characteristicUUID: ${
+                        //         args.characteristicUUID
+                        //     }, sUUID: ${sUUID}, args.serviceUUID: ${args.serviceUUID}, result: ${result}`
+                        // );
+                        onNotify(result);
+                    };
+
                     this.attachSubDelegate(
                         {methodName, args, resolve, reject},
                         (clearListeners, onError) => ({
@@ -2278,26 +2295,12 @@ export class Bluetooth extends BluetoothCommon {
                                     UUID = device.getAddress();
                                 }
 
-                                const cUUID = uuidToString(characteristic.getUuid());
-                                const sUUID = uuidToString(characteristic.getService().getUuid());
                                 if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
                                     if (status === GATT_SUCCESS) {
-                                        const stateObject = this.connections[pUUID];
-                                        stateObject.onNotifyCallbacks = stateObject.onNotifyCallbacks || {};
-                                        const key = sUUID + '/' + cUUID;
-                                        const onNotify = args.onNotify;
-                                        stateObject.onNotifyCallbacks[key] = function (result) {
-                                            // CLog(
-                                            //     CLogTypes.warning,
-                                            //     `onNotifyCallback ---- UUID: ${UUID}, pUUID: ${pUUID}, cUUID: ${cUUID}, args.characteristicUUID: ${
-                                            //         args.characteristicUUID
-                                            //     }, sUUID: ${sUUID}, args.serviceUUID: ${args.serviceUUID}, result: ${result}`
-                                            // );
-                                            onNotify(result);
-                                        };
                                         resolve();
                                         clearListeners();
                                     } else {
+                                        delete stateObject.onNotifyCallbacks[key]
                                         onError(
                                             new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                                 arguments: args,
@@ -2306,6 +2309,8 @@ export class Bluetooth extends BluetoothCommon {
                                             })
                                         );
                                     }
+                                } else {
+                                    delete stateObject.onNotifyCallbacks[key]
                                 }
                             },
                         }),
