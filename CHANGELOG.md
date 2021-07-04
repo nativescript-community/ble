@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.26](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.25...v3.0.26) (2021-07-04)
+
+
+### Bug Fixes
+
+* **android:** register notifyCallback earlier and optimistically ([b79f475](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/b79f475723ed2ef9a1a3775d950408a07628e847))
+
+
+### Features
+
+* **android:** new clearCache option for discoverServices ([2a1066d](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/2a1066d45ae04604a04e556c68a6cec8eba264d8))
+
+
+
+
+
 ## [3.0.25](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.24...v3.0.25) (2021-06-03)
 
 
