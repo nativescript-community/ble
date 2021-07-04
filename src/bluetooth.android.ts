@@ -2300,7 +2300,7 @@ export class Bluetooth extends BluetoothCommon {
                                         resolve();
                                         clearListeners();
                                     } else {
-                                        delete stateObject.onNotifyCallbacks[key]
+                                        delete stateObject.onNotifyCallbacks[key];
                                         onError(
                                             new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                                 arguments: args,
@@ -2310,7 +2310,7 @@ export class Bluetooth extends BluetoothCommon {
                                         );
                                     }
                                 } else {
-                                    delete stateObject.onNotifyCallbacks[key]
+                                    delete stateObject.onNotifyCallbacks[key];
                                 }
                             },
                         }),
@@ -2409,6 +2409,21 @@ export class Bluetooth extends BluetoothCommon {
         );
     }
 
+    private refreshDeviceCache( gatt: android.bluetooth.BluetoothGatt){
+        try {
+            const localMethod = gatt.getClass().getMethod('refresh', new java.lang.Class[0]);
+            if (localMethod != null) {
+                return localMethod.invoke(gatt, new Object[0]);
+            }
+        }
+        catch (ex) {
+            if (Trace.isEnabled()) {
+                CLog(CLogTypes.error, 'refreshDeviceCache', '---- error:', ex);
+            }
+        }
+        return false;
+    }
+
     @prepareArgs
     public discoverServices(args: DiscoverServicesOptions): Promise<{ services: Service[] }> {
         const methodName = 'discoverServices';
@@ -2430,6 +2445,9 @@ export class Bluetooth extends BluetoothCommon {
         }
 
         const gatt = stateObject.device;
+        if (args.clearCache === true) {
+            this.refreshDeviceCache(gatt);
+        }
 
         if (Trace.isEnabled()) {
             CLog(CLogTypes.info, methodName, pUUID, stateObject);

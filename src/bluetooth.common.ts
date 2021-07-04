@@ -481,6 +481,7 @@ export interface DiscoverOptions {
 }
 export interface DiscoverServicesOptions extends DiscoverOptions {
     serviceUUIDs?: string[];
+    clearCache?: boolean; // Android only
 }
 export interface DiscoverCharacteristicsOptions extends DiscoverOptions {
     serviceUUID: string;
