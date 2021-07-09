@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.29](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.28...v3.0.29) (2021-07-09)
+
+
+### Bug Fixes
+
+* **android:** default transport revert to TRANSPORT_LE ([0087a8d](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/0087a8de135a904951203325862ea48a83011af2))
+
+
+
+
+
 ## [3.0.28](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.27...v3.0.28) (2021-07-09)
 
 
