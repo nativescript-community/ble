@@ -347,6 +347,10 @@ export interface ConnectOptions {
      * Selects maximum BLE MTU (247) (Android only)
      */
     autoMaxMTU?: boolean;
+    /**
+     * transport selection (Android only)
+     */
+    transport?: number;
 }
 
 export interface AdvertismentData {

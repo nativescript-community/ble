@@ -1718,7 +1718,7 @@ export class Bluetooth extends BluetoothCommon {
                         ad.getApplicationContext(), // context
                         false, // autoconnect
                         this.bluetoothGattCallback,
-                        android.bluetooth.BluetoothDevice.TRANSPORT_LE // 2
+                        args.transport !== undefined ? args.transport : android.bluetooth.BluetoothDevice.TRANSPORT_AUTO
                     );
                 }
                 Object.assign(this.connections[pUUID], {
