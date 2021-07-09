@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.27](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.26...v3.0.27) (2021-07-09)
+
+
+### Bug Fixes
+
+* **android:** refreshDeviceCache fix ([7ece4ff](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/7ece4ff4bb6f7ee505b0c0421e08957f8a2564b3))
+
+
+
+
+
 ## [3.0.26](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.25...v3.0.26) (2021-07-04)
 
 
