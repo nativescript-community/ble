@@ -2411,9 +2411,9 @@ export class Bluetooth extends BluetoothCommon {
 
     private refreshDeviceCache( gatt: android.bluetooth.BluetoothGatt){
         try {
-            const localMethod = gatt.getClass().getMethod('refresh', new java.lang.Class[0]);
+            const localMethod = gatt.getClass().getMethod('refresh', Array.create( java.lang.Class, 0));
             if (localMethod != null) {
-                return localMethod.invoke(gatt, new Object[0]);
+                return localMethod.invoke(gatt, Array.create( java.lang.Object, 0));
             }
         }
         catch (ex) {
