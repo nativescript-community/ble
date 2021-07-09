@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.28](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.27...v3.0.28) (2021-07-09)
+
+
+### Bug Fixes
+
+* **android:** connect transport set to TRANSPORT_AUTO. Allow to pass custom one ([2285aa1](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/2285aa162471137d9f44fdbef9f1c0fdeb729c11))
+
+
+
+
+
 ## [3.0.27](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.26...v3.0.27) (2021-07-09)
 
 
