@@ -700,13 +700,17 @@ export class Bluetooth extends BluetoothCommon {
 
     private restoreIdentifier: string;
 
-    constructor(restoreIdentifierOrOptions: string | Partial<BluetoothOptions> = 'ns_bluetooth', private showPowerAlertPopup = false) {
+    constructor(restoreIdentifierOrOptions: string | Partial<BluetoothOptions> | null = 'ns_bluetooth', private showPowerAlertPopup = false) {
         super();
-        if (typeof restoreIdentifierOrOptions === 'string') {
-          this.restoreIdentifier = restoreIdentifierOrOptions;
-        } else if (!!restoreIdentifierOrOptions) {
-          this.restoreIdentifier = restoreIdentifierOrOptions.restoreIdentifier || 'ns_bluetooth';
+        if (typeof restoreIdentifierOrOptions === 'object') {
+          if (restoreIdentifierOrOptions.restoreIdentifier === undefined) {
+            this.restoreIdentifier = 'ns_bluetooth';
+          } else {
+            this.restoreIdentifier = restoreIdentifierOrOptions.restoreIdentifier;
+          }
           this.showPowerAlertPopup = !!restoreIdentifierOrOptions.showPowerAlertPopup;
+        } else {
+          this.restoreIdentifier = restoreIdentifierOrOptions;
         }
 
         if (Trace.isEnabled()) {
