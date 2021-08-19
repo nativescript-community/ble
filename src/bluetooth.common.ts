@@ -74,6 +74,12 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
     return descriptor;
 }
 
+export interface BluetoothOptions {
+  restoreIdentifier: string;
+  showPowerAlertPopup: boolean;
+  disableAndroidQueue: boolean;
+}
+
 export abstract class BluetoothCommon extends Observable {
     /*
      * error messages
