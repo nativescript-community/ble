@@ -2270,19 +2270,8 @@ export class Bluetooth extends BluetoothCommon {
                     const cUUID = uuidToString(characteristic.getUuid());
                     const sUUID = uuidToString(characteristic.getService().getUuid());
 
-                    const stateObject = this.connections[pUUID];
-                    stateObject.onNotifyCallbacks = stateObject.onNotifyCallbacks || {};
                     const key = sUUID + '/' + cUUID;
                     const onNotify = args.onNotify;
-                    stateObject.onNotifyCallbacks[key] = function (result) {
-                        // CLog(
-                        //     CLogTypes.warning,
-                        //     `onNotifyCallback ---- UUID: ${UUID}, pUUID: ${pUUID}, cUUID: ${cUUID}, args.characteristicUUID: ${
-                        //         args.characteristicUUID
-                        //     }, sUUID: ${sUUID}, args.serviceUUID: ${args.serviceUUID}, result: ${result}`
-                        // );
-                        onNotify(result);
-                    };
 
                     this.attachSubDelegate(
                         {methodName, args, resolve, reject},
@@ -2297,11 +2286,16 @@ export class Bluetooth extends BluetoothCommon {
                                 }
 
                                 if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
-                                    if (status === GATT_SUCCESS) {
+                                    if (status === GATT_SUCCESS && descriptor.getValue() !== android.bluetooth.BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE) {
+                                        // only assign notify callback when receiving a successful response
+                                        const stateObject = this.connections[pUUID];
+                                        stateObject.onNotifyCallbacks = stateObject.onNotifyCallbacks || {};
+                                        stateObject.onNotifyCallbacks[key] = function (result) {
+                                          onNotify(result);
+                                        };
                                         resolve();
                                         clearListeners();
                                     } else {
-                                        delete stateObject.onNotifyCallbacks[key];
                                         onError(
                                             new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                                 arguments: args,
@@ -2310,8 +2304,6 @@ export class Bluetooth extends BluetoothCommon {
                                             })
                                         );
                                     }
-                                } else {
-                                    delete stateObject.onNotifyCallbacks[key];
                                 }
                             },
                         }),
@@ -2339,74 +2331,110 @@ export class Bluetooth extends BluetoothCommon {
         return this.addToQueue(
             args,
             (wrapper) =>
-                new Promise<void>((resolve, reject) => {
-                    const gatt = wrapper.gatt;
-                    const gattService = wrapper.bluetoothGattService;
-                    const characteristicUUID = stringToUuid(args.characteristicUUID);
+            new Promise<void>((resolve, reject) => {
+              const gatt = wrapper.gatt;
+              const bluetoothGattService = wrapper.bluetoothGattService;
+              const characteristicUUID = stringToUuid(args.characteristicUUID);
 
-                    const characteristic = this._findNotifyCharacteristic(gattService, characteristicUUID);
-                    if (Trace.isEnabled()) {
-                        CLog(CLogTypes.info, `${methodName} ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
-                    }
+              const characteristic = this._findNotifyCharacteristic(bluetoothGattService, characteristicUUID);
+              if (Trace.isEnabled()) {
+                  CLog(CLogTypes.info, `${methodName} ---- peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID}`);
+              }
+              if (!characteristic) {
+                  return reject(
+                      new BluetoothError(BluetoothCommon.msg_no_characteristic, {
+                          method: methodName,
+                          arguments: args,
+                      })
+                  );
+              }
 
-                    if (!characteristic) {
-                        return reject(
-                            new BluetoothError(BluetoothCommon.msg_no_characteristic, {
-                                method: methodName,
-                                arguments: args,
-                            })
-                        );
-                    }
+              if (!gatt.setCharacteristicNotification(characteristic, false)) {
+                  return reject(
+                      new BluetoothError(BluetoothCommon.msg_error_function_call, {
+                          method: 'setCharacteristicNotification',
+                          arguments: args,
+                      })
+                  );
+              }
 
-                    const stateObject = this.connections[args.peripheralUUID];
-                    if (stateObject && stateObject.onNotifyCallbacks) {
-                        const key = args.serviceUUID + '/' + args.characteristicUUID;
-                        delete stateObject.onNotifyCallbacks[key];
-                    }
-                    const clearListeners = () => {
-                        this.removeDisconnectListener(onDisconnect);
-                    };
-                    const onError = (err) => {
-                        reject(err);
-                        clearListeners();
-                    };
-                    const onDisconnect = (address) => {
-                        if (address === args.peripheralUUID) {
-                            onError(
-                                new BluetoothError(BluetoothCommon.msg_peripheral_disconnected, {
-                                    method: methodName,
-                                    arguments: args,
-                                })
-                            );
-                        }
-                    };
-                    this.addDisconnectListener(onDisconnect);
-                    try {
-                        if (gatt.setCharacteristicNotification(characteristic, false)) {
-                            resolve();
-                            clearListeners();
-                        } else {
-                            onError(
-                                new BluetoothError(BluetoothCommon.msg_error_function_call, {
-                                    method: 'setCharacteristicNotification',
-                                    arguments: args,
-                                })
-                            );
-                        }
-                    } catch (ex) {
-                        if (Trace.isEnabled()) {
-                            CLog(CLogTypes.error, methodName, ex);
-                        }
-                        onError(
-                            new BluetoothError(ex.message, {
-                                stack: ex.stackTrace || ex.stack,
-                                nativeException: ex.nativeException,
-                                arguments: args,
-                                method: methodName,
-                            })
-                        );
-                    }
-                })
+              const clientCharacteristicConfigId = stringToUuid('2902');
+              let bluetoothGattDescriptor = characteristic.getDescriptor(clientCharacteristicConfigId) as android.bluetooth.BluetoothGattDescriptor;
+              if (!bluetoothGattDescriptor) {
+                  bluetoothGattDescriptor = new android.bluetooth.BluetoothGattDescriptor(clientCharacteristicConfigId, android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE);
+                  bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                  characteristic.addDescriptor(bluetoothGattDescriptor);
+                  if (Trace.isEnabled()) {
+                      CLog(CLogTypes.info, methodName, '---- descriptor:', bluetoothGattDescriptor);
+                  }
+                  // Any creation error will trigger the global catch. Ok.
+              }
+
+              // prefer notify over indicate
+              if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY) !== 0) {
+                  bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+              } else if ((characteristic.getProperties() & android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE) !== 0) {
+                  bluetoothGattDescriptor.setValue(android.bluetooth.BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+              } else {
+                  return reject(
+                      new BluetoothError(BluetoothCommon.msg_characteristic_cant_notify, {
+                          method: methodName,
+                          arguments: args,
+                      })
+                  );
+              }
+
+              const pUUID = args.peripheralUUID;
+              const cUUID = uuidToString(characteristic.getUuid());
+              const sUUID = uuidToString(characteristic.getService().getUuid());
+
+              const key = sUUID + '/' + cUUID;
+              this.attachSubDelegate(
+                  {methodName, args, resolve, reject},
+                  (clearListeners, onError) => ({
+                      onDescriptorWrite: (gatt: android.bluetooth.BluetoothGatt, descriptor: android.bluetooth.BluetoothGattDescriptor, status: number) => {
+                          const device = gatt.getDevice();
+                          let UUID: string = null;
+                          if (device == null) {
+                              // happens some time, why ... ?
+                          } else {
+                              UUID = device.getAddress();
+                          }
+
+                          if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
+                              if (status === GATT_SUCCESS && descriptor.getValue() === android.bluetooth.BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE) {
+                                  // Only delete callback on successful disable
+                                  const stateObject = this.connections[args.peripheralUUID];
+                                  if (stateObject && stateObject.onNotifyCallbacks) {
+                                      const key = args.serviceUUID + '/' + args.characteristicUUID;
+                                      delete stateObject.onNotifyCallbacks[key];
+                                  }
+                                  resolve();
+                                  clearListeners();
+                              } else {
+                                onError(
+                                    new BluetoothError(BluetoothCommon.msg_error_function_call, {
+                                        arguments: args,
+                                        method: 'writeDescriptor',
+                                        status,
+                                    })
+                                );
+                            }
+                          }
+                      },
+                  }),
+                  (onError) => {
+                      if (!gatt.writeDescriptor(bluetoothGattDescriptor)) {
+                          onError(
+                              new BluetoothError(BluetoothCommon.msg_error_function_call, {
+                                  method: 'writeDescriptor',
+                                  arguments: args,
+                              })
+                          );
+                      }
+                  },
+              );
+          })
         );
     }
 
