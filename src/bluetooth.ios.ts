@@ -770,6 +770,7 @@ export class Bluetooth extends BluetoothCommon {
             if (Trace.isEnabled()) {
                 CLog(CLogTypes.info, 'isBluetoothEnabled', 'central manager not ready, waiting for it to start');
             }
+            this.ensureCentralManager();
             return new Promise<boolean>((resolve) => {
                 this.once(BluetoothCommon.bluetooth_status_event, ()=> {
                     resolve(this._isEnabled());
