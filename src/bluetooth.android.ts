@@ -24,6 +24,7 @@ import {
     WriteOptions,
     bluetoothEnabled,
     prepareArgs,
+    BluetoothOptions,
 } from './bluetooth.common';
 import PQueue from 'p-queue';
 import { Trace } from '@nativescript/core';
@@ -1100,7 +1101,7 @@ export class Bluetooth extends BluetoothCommon {
     private LeScanCallback: LeScanCallback;
 
     // with gatt all operations must be queued. Parallel operations will fail
-    gattQueue: PQueue;
+    gattQueue: PQueue | undefined;
 
     static readonly android = {
         ScanMode,
@@ -1135,7 +1136,7 @@ export class Bluetooth extends BluetoothCommon {
             advertismentData?: AdvertismentData;
         };
     } = {};
-    constructor() {
+    constructor(restoreIdentifierOrOptions?: string | Partial<BluetoothOptions>) {
         super();
         if (Trace.isEnabled()) {
             CLog(CLogTypes.info, '*** Android Bluetooth Constructor ***');
@@ -1149,11 +1150,17 @@ export class Bluetooth extends BluetoothCommon {
             initLeScanCallback();
             this.LeScanCallback = new LeScanCallbackVar(new WeakRef(this));
         }
-        this.gattQueue = new PQueue({ concurrency: 1 });
+        if (typeof restoreIdentifierOrOptions === 'object' && !!restoreIdentifierOrOptions.disableAndroidQueue) {
+          this.gattQueue = undefined;
+        } else {
+          this.gattQueue = new PQueue({ concurrency: 1 });
+        }
     }
 
     clear() {
-        this.gattQueue.clear();
+        if (this.gattQueue) {
+          this.gattQueue.clear();
+        }
     }
     broadcastRegistered = false;
     registerBroadcast() {
@@ -1661,7 +1668,7 @@ export class Bluetooth extends BluetoothCommon {
                 onDisconnected: args.onDisconnected,
                 // device: gatt // TODO rename device to gatt?
             });
-            await new Promise<void>((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 const clearListeners = () => {
                     this.bluetoothGattCallback.removeSubDelegate(subD);
                     this.removeDisconnectListener(onDisconnect);
@@ -1727,46 +1734,45 @@ export class Bluetooth extends BluetoothCommon {
                     // onDisconnected: args.onDisconnected,
                     device: gatt, // TODO rename device to gatt?
                 });
+            }).then(() => {
+                // This disconnects the Promise chain so these tasks can run independent of the successful connection response.
+                Promise.resolve()
+                    .then(() => !!args.autoDiscoverAll ? this.discoverAll({ peripheralUUID: pUUID }).then((result) => result?.services) : undefined)
+                    .then((services) => (!!args.auto2MegPhy ? this.select2MegPhy({ peripheralUUID: pUUID }) : Promise.resolve()).then(() => services))
+                    .then((services) => (!!args.autoMaxMTU ? this.requestMtu({ peripheralUUID: pUUID, value: MAX_MTU }) : Promise.resolve(undefined))
+                        .then((mtu?: number) => ({services, mtu})))
+                    .then(({services, mtu}) => {
+                        const stateObject = this.connections[pUUID];
+                        if (!stateObject) {
+                            return Promise.reject(
+                                new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
+                                    method: methodName,
+                                    arguments: args,
+                                })
+                            ) as any;
+                        }
+                        stateObject.state = 'connected';
+                        const adv = stateObject.advertismentData;
+                        const dataToSend = {
+                            UUID: pUUID, // TODO consider renaming to id (and iOS as well)
+                            name: bluetoothDevice && bluetoothDevice.getName(),
+                            state: stateObject.state,
+                            services,
+                            mtu,
+                            localName: adv?.localName,
+                            manufacturerId: adv?.manufacturerId,
+                            advertismentData: adv,
+                        };
+                        if (stateObject.onConnected) {
+                            stateObject.onConnected(dataToSend);
+                            delete stateObject.onConnected;
+                        }
+                        this.sendEvent(Bluetooth.device_connected_event, dataToSend);
+                        return dataToSend;
+                    });
+
+                return Promise.resolve();
             });
-            let services, mtu;
-            if(args.autoDiscoverAll !== false) {
-                services = (await this.discoverAll({ peripheralUUID: pUUID }))?.services;
-            }
-            if (!!args.auto2MegPhy) {
-                await this.select2MegPhy({ peripheralUUID: pUUID }) ;
-            }
-            if (!!args.autoMaxMTU) {
-                mtu = await this.requestMtu({ peripheralUUID: pUUID, value: MAX_MTU }) ;
-            }
-            // get the stateObject again to see if we got disconnected
-            stateObject = this.connections[pUUID];
-            if (!stateObject) {
-                return Promise.reject(
-                    new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
-                        method: methodName,
-                        arguments: args,
-                    })
-                ) as any;
-            }
-            stateObject.state = 'connected';
-            const adv = stateObject.advertismentData;
-            const dataToSend = {
-                UUID: pUUID, // TODO consider renaming to id (and iOS as well)
-                name: bluetoothDevice && bluetoothDevice.getName(),
-                state: stateObject.state,
-                services,
-                mtu,
-                nativeDevice: bluetoothDevice,
-                localName: adv?.localName,
-                manufacturerId: adv?.manufacturerId,
-                advertismentData: adv,
-            };
-            if (stateObject.onConnected) {
-                stateObject.onConnected(dataToSend);
-                delete stateObject.onConnected;
-            }
-            this.sendEvent(Bluetooth.device_connected_event, dataToSend);
-            return dataToSend;
         }
     }
 
@@ -1800,12 +1806,15 @@ export class Bluetooth extends BluetoothCommon {
         });
     }
 
-    private addToGatQueue(p: () => Promise<any>) {
-        return this.gattQueue.add(p);
+    private addToGattQueue(p: () => Promise<any>) {
+        if (this.gattQueue) {
+          return this.gattQueue.add(p);
+        }
+        return p();
     }
 
     private addToQueue(args: WrapperOptions, runner: (wrapper: WrapperResult) => any) {
-        return this.addToGatQueue(() => this._getWrapper(args).then((wrapper) => runner(wrapper)));
+        return this.addToGattQueue(() => this._getWrapper(args).then((wrapper) => runner(wrapper)));
     }
 
     @prepareArgs
@@ -1951,7 +1960,7 @@ export class Bluetooth extends BluetoothCommon {
         if (Trace.isEnabled()) {
             CLog(CLogTypes.info, methodName, args);
         }
-        return this.addToGatQueue(
+        return this.addToGattQueue(
             () =>
                 new Promise((resolve, reject) => {
                     if (Trace.isEnabled()) {
@@ -2452,7 +2461,7 @@ export class Bluetooth extends BluetoothCommon {
         if (Trace.isEnabled()) {
             CLog(CLogTypes.info, methodName, pUUID, stateObject);
         }
-        return this.addToGatQueue(
+        return this.addToGattQueue(
             () =>
                 new Promise((resolve, reject) => {
                     if (Trace.isEnabled()) {
@@ -2653,7 +2662,7 @@ export class Bluetooth extends BluetoothCommon {
         if (Trace.isEnabled()) {
             CLog(CLogTypes.info, methodName, pUUID, stateObject);
         }
-        return this.addToGatQueue(
+        return this.addToGattQueue(
             () =>
                 new Promise<void>((resolve, reject) => {
                     if (Trace.isEnabled()) {

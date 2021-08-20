@@ -1,6 +1,7 @@
 import {
     AdvertismentData,
     BluetoothCommon,
+    BluetoothOptions,
     CallbackType,
     Characteristic,
     ConnectOptions,
@@ -56,7 +57,7 @@ export class Bluetooth extends BluetoothCommon {
     /**
      * restoreIdentifier is optional and only used on iOS
      */
-    constructor(restoreIndentifier?: string);
+    constructor(restoreIndentifierOrOptions?: string | Partial<BluetoothOptions>);
 
     /**
      * everything needed to clear on app close
