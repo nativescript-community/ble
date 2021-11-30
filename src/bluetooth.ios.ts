@@ -17,6 +17,7 @@ import {
     WriteOptions,
     bluetoothEnabled,
     prepareArgs,
+    BluetoothOptions,
 } from './bluetooth.common';
 import { Trace } from '@nativescript/core';
 
@@ -697,10 +698,23 @@ export class Bluetooth extends BluetoothCommon {
         return this._centralManager;
     }
 
-    constructor(private restoreIdentifier: string = 'ns_bluetooth', private showPowerAlertPopup = false) {
+    private restoreIdentifier: string;
+
+    constructor(restoreIdentifierOrOptions: string | Partial<BluetoothOptions> | null = 'ns_bluetooth', private showPowerAlertPopup = false) {
         super();
+        if (typeof restoreIdentifierOrOptions === 'object') {
+          if (restoreIdentifierOrOptions.restoreIdentifier === undefined) {
+            this.restoreIdentifier = 'ns_bluetooth';
+          } else {
+            this.restoreIdentifier = restoreIdentifierOrOptions.restoreIdentifier;
+          }
+          this.showPowerAlertPopup = !!restoreIdentifierOrOptions.showPowerAlertPopup;
+        } else {
+          this.restoreIdentifier = restoreIdentifierOrOptions;
+        }
+
         if (Trace.isEnabled()) {
-            CLog(CLogTypes.info, 'Creating Bluetooth instance', restoreIdentifier);
+            CLog(CLogTypes.info, 'Creating Bluetooth instance', this.restoreIdentifier);
         }
     }
 
@@ -770,6 +784,7 @@ export class Bluetooth extends BluetoothCommon {
             if (Trace.isEnabled()) {
                 CLog(CLogTypes.info, 'isBluetoothEnabled', 'central manager not ready, waiting for it to start');
             }
+            this.ensureCentralManager();
             return new Promise<boolean>((resolve) => {
                 this.once(BluetoothCommon.bluetooth_status_event, ()=> {
                     resolve(this._isEnabled());
@@ -942,7 +957,7 @@ export class Bluetooth extends BluetoothCommon {
                     arguments: args,
                 });
             } else {
-                await new Promise<void>((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     const subD = {
                         centralManagerDidConnectPeripheral: (central: CBCentralManager, peripheral: CBPeripheral) => {
                             const UUID = NSUUIDToString(peripheral.identifier);
@@ -974,34 +989,39 @@ export class Bluetooth extends BluetoothCommon {
                         CLog(CLogTypes.info, methodName, '----about to connect:', connectingUUID, this._centralDelegate, this._centralManager);
                     }
                     this.centralManager.connectPeripheralOptions(peripheral, null);
+                }).then(() =>  {
+                    // This disconnects the Promise chain so these tasks can run independent of the successful connection response.
+                    Promise.resolve()
+                        .then(() => {
+                            if (args.autoDiscoverAll !== false) {
+                                return this.discoverAll({ peripheralUUID: connectingUUID });
+                            }
+                            return undefined;
+                        })
+                        .then((result) => {
+                            const adv = this._advData[connectingUUID];
+                            const dataToSend = {
+                                UUID: connectingUUID,
+                                name: peripheral.name,
+                                state: this._getState(peripheral.state),
+                                services: result?.services,
+                                localName: adv?.localName,
+                                manufacturerId: adv?.manufacturerId,
+                                advertismentData: adv,
+                                mtu: FIXED_IOS_MTU,
+                            };
+                            // delete this._advData[connectingUUID];
+                            const cb = this._connectCallbacks[connectingUUID];
+                            if (cb) {
+                                cb(dataToSend);
+                                delete this._connectCallbacks[connectingUUID];
+                            }
+                            this.sendEvent(Bluetooth.device_connected_event, dataToSend);
+                            return dataToSend;
+                        });
+
+                    return Promise.resolve();
                 });
-                let services, mtu = FIXED_IOS_MTU;
-                if (args.autoDiscoverAll !== false) {
-                    services = (await this.discoverAll({ peripheralUUID: connectingUUID }))?.services;
-                }
-                if (!!args.autoMaxMTU) {
-                    mtu = await this.requestMtu({ peripheralUUID: connectingUUID, value: FIXED_IOS_MTU }) ;
-                }
-                const adv = this._advData[connectingUUID];
-                const dataToSend = {
-                    UUID: connectingUUID,
-                    name: peripheral.name,
-                    state: this._getState(peripheral.state),
-                    services,
-                    nativeDevice: peripheral,
-                    localName: adv?.localName,
-                    manufacturerId: adv?.manufacturerId,
-                    advertismentData: adv,
-                    mtu,
-                };
-                // delete this._advData[connectingUUID];
-                const cb = this._connectCallbacks[connectingUUID];
-                if (cb) {
-                    cb(dataToSend);
-                    delete this._connectCallbacks[connectingUUID];
-                }
-                this.sendEvent(Bluetooth.device_connected_event, dataToSend);
-                return dataToSend;
             }
         } catch (ex) {
             if (Trace.isEnabled()) {
@@ -1042,7 +1062,8 @@ export class Bluetooth extends BluetoothCommon {
             } else {
                 // no need to send an error when already disconnected, but it's wise to check it
                 if (peripheral.state !== CBPeripheralState.Disconnected) {
-                    return new Promise<void>((resolve, reject) => {
+                    // This disconnects the Promise chain so these tasks can run independent of the successful connection response.
+                    (new Promise<void>((resolve, reject) => {
                         const subD = {
                             centralManagerDidDisconnectPeripheralError: (central: CBCentralManager, peripheral: CBPeripheral, error?: NSError) => {
                                 const UUID = NSUUIDToString(peripheral.identifier);
@@ -1066,6 +1087,10 @@ export class Bluetooth extends BluetoothCommon {
                             CLog(CLogTypes.info, methodName, '---- Disconnecting peripheral with UUID', pUUID);
                         }
                         this.centralManager.cancelPeripheralConnection(peripheral);
+                    })).catch((ex) => {
+                        if (Trace.isEnabled()) {
+                            CLog(CLogTypes.error, methodName, '---- error:', ex);
+                        }
                     });
                 }
                 return Promise.resolve();
