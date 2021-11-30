@@ -1402,7 +1402,7 @@ export class Bluetooth extends BluetoothCommon {
                 })
             );
         }
-        return Promise.resolve(true);
+        return Promise.resolve(stateObject.state === 'connected');
     }
 
     public openBluetoothSettings() {
