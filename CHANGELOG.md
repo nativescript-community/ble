@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.30](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.29...v3.0.30) (2021-11-30)
+
+
+### Bug Fixes
+
+* **android:** isConnected wrong state after disconnection ([a038f1b](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/a038f1bee75b4927b022b063c356f6437cd70c7c))
+* **android:** Notification streams are now properly disabled when stop requested. ([b4afb5a](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/b4afb5a849b64cb4b13398a181b2bee8bceab8ca))
+* **ios:** Ensure the Central Manager is created prior to waiting for the bluetooth_status_event. ([999616f](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/999616fbaaf3d9dd920df5e44b1e97be73a74e75))
+
+
+### Features
+
+* **android:** corrects Promise handling and introduces the ability to disable the plugin queue. ([1028c15](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/1028c15c707cb0409eac64e15ccc2b84cb0c4f42))
+* **ios:** explicitly allow restoreIdentifer = null to disable restoring. ([9beb319](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/9beb3197410d491aad22e9bac76fe2a925a2369a))
+
+
+
+
+
 ## [3.0.29](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.28...v3.0.29) (2021-07-09)
 
 
