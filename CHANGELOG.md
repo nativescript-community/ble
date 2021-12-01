@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.31](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.30...v3.0.31) (2021-12-01)
+
+
+### Bug Fixes
+
+* **android:** correctly update device state on disconnect ([8c67892](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/8c6789202251956c5246fb7b27a7a7bb2f45bcde))
+
+
+
+
+
 ## [3.0.30](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.29...v3.0.30) (2021-11-30)
 
 
