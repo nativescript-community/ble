@@ -1,6 +1,6 @@
 {
     "name": "@nativescript-community/ble",
-    "version": "3.0.31",
+    "version": "3.0.32",
     "description": "Connect to and interact with Bluetooth LE peripherals.",
     "main": "./bluetooth",
     "typings": "./bluetooth.d.ts",

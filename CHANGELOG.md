@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.32](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.31...v3.0.32) (2021-12-09)
+
+
+### Bug Fixes
+
+* revert 1028c15c707cb0409eac64e15ccc2b84cb0c4f42 as it broken users workflow ([513953d](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/513953dc005e7ade7a0295822670243652c71f0c))
+
+
+
+
+
 ## [3.0.31](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.30...v3.0.31) (2021-12-01)
 
 

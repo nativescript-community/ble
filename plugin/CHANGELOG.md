@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.32](https://github.com/nativescript-community/ble/compare/v3.0.31...v3.0.32) (2021-12-09)
+
+**Note:** Version bump only for package @nativescript-community/ble
+
+
+
+
+
 ## [3.0.31](https://github.com/nativescript-community/ble/compare/v3.0.30...v3.0.31) (2021-12-01)
 
 **Note:** Version bump only for package @nativescript-community/ble
