@@ -1668,7 +1668,7 @@ export class Bluetooth extends BluetoothCommon {
                 onDisconnected: args.onDisconnected,
                 // device: gatt // TODO rename device to gatt?
             });
-            return new Promise<void>((resolve, reject) => {
+            await new Promise<void>((resolve, reject) => {
                 const clearListeners = () => {
                     this.bluetoothGattCallback.removeSubDelegate(subD);
                     this.removeDisconnectListener(onDisconnect);
@@ -1734,45 +1734,46 @@ export class Bluetooth extends BluetoothCommon {
                     // onDisconnected: args.onDisconnected,
                     device: gatt, // TODO rename device to gatt?
                 });
-            }).then(() => {
-                // This disconnects the Promise chain so these tasks can run independent of the successful connection response.
-                Promise.resolve()
-                    .then(() => !!args.autoDiscoverAll ? this.discoverAll({ peripheralUUID: pUUID }).then((result) => result?.services) : undefined)
-                    .then((services) => (!!args.auto2MegPhy ? this.select2MegPhy({ peripheralUUID: pUUID }) : Promise.resolve()).then(() => services))
-                    .then((services) => (!!args.autoMaxMTU ? this.requestMtu({ peripheralUUID: pUUID, value: MAX_MTU }) : Promise.resolve(undefined))
-                        .then((mtu?: number) => ({services, mtu})))
-                    .then(({services, mtu}) => {
-                        const stateObject = this.connections[pUUID];
-                        if (!stateObject) {
-                            return Promise.reject(
-                                new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
-                                    method: methodName,
-                                    arguments: args,
-                                })
-                            ) as any;
-                        }
-                        stateObject.state = 'connected';
-                        const adv = stateObject.advertismentData;
-                        const dataToSend = {
-                            UUID: pUUID, // TODO consider renaming to id (and iOS as well)
-                            name: bluetoothDevice && bluetoothDevice.getName(),
-                            state: stateObject.state,
-                            services,
-                            mtu,
-                            localName: adv?.localName,
-                            manufacturerId: adv?.manufacturerId,
-                            advertismentData: adv,
-                        };
-                        if (stateObject.onConnected) {
-                            stateObject.onConnected(dataToSend);
-                            delete stateObject.onConnected;
-                        }
-                        this.sendEvent(Bluetooth.device_connected_event, dataToSend);
-                        return dataToSend;
-                    });
-
-                return Promise.resolve();
             });
+            let services, mtu;
+            if(args.autoDiscoverAll !== false) {
+                services = (await this.discoverAll({ peripheralUUID: pUUID }))?.services;
+            }
+            if (!!args.auto2MegPhy) {
+                await this.select2MegPhy({ peripheralUUID: pUUID }) ;
+            }
+            if (!!args.autoMaxMTU) {
+                mtu = await this.requestMtu({ peripheralUUID: pUUID, value: MAX_MTU }) ;
+            }
+            // get the stateObject again to see if we got disconnected
+            stateObject = this.connections[pUUID];
+            if (!stateObject) {
+                return Promise.reject(
+                    new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
+                        method: methodName,
+                        arguments: args,
+                    })
+                ) as any;
+            }
+            stateObject.state = 'connected';
+            const adv = stateObject.advertismentData;
+            const dataToSend = {
+                UUID: pUUID, // TODO consider renaming to id (and iOS as well)
+                name: bluetoothDevice && bluetoothDevice.getName(),
+                state: stateObject.state,
+                services,
+                mtu,
+                nativeDevice: bluetoothDevice,
+                localName: adv?.localName,
+                manufacturerId: adv?.manufacturerId,
+                advertismentData: adv,
+            };
+            if (stateObject.onConnected) {
+                stateObject.onConnected(dataToSend);
+                delete stateObject.onConnected;
+            }
+            this.sendEvent(Bluetooth.device_connected_event, dataToSend);
+            return dataToSend;
         }
     }
 
