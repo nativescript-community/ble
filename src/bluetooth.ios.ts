@@ -1,6 +1,7 @@
 import {
     BluetoothCommon,
     BluetoothError,
+    BluetoothOptions,
     CLog,
     CLogTypes,
     ConnectOptions,
@@ -17,7 +18,6 @@ import {
     WriteOptions,
     bluetoothEnabled,
     prepareArgs,
-    BluetoothOptions,
 } from './bluetooth.common';
 import { Trace } from '@nativescript/core';
 
@@ -703,14 +703,14 @@ export class Bluetooth extends BluetoothCommon {
     constructor(restoreIdentifierOrOptions: string | Partial<BluetoothOptions> | null = 'ns_bluetooth', private showPowerAlertPopup = false) {
         super();
         if (typeof restoreIdentifierOrOptions === 'object') {
-          if (restoreIdentifierOrOptions.restoreIdentifier === undefined) {
-            this.restoreIdentifier = 'ns_bluetooth';
-          } else {
-            this.restoreIdentifier = restoreIdentifierOrOptions.restoreIdentifier;
-          }
-          this.showPowerAlertPopup = !!restoreIdentifierOrOptions.showPowerAlertPopup;
+            if (restoreIdentifierOrOptions.restoreIdentifier === undefined) {
+                this.restoreIdentifier = 'ns_bluetooth';
+            } else {
+                this.restoreIdentifier = restoreIdentifierOrOptions.restoreIdentifier;
+            }
+            this.showPowerAlertPopup = !!restoreIdentifierOrOptions.showPowerAlertPopup;
         } else {
-          this.restoreIdentifier = restoreIdentifierOrOptions;
+            this.restoreIdentifier = restoreIdentifierOrOptions;
         }
 
         if (Trace.isEnabled()) {
