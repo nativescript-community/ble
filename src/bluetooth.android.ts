@@ -1781,13 +1781,11 @@ export class Bluetooth extends BluetoothCommon {
     public async disconnect(args: DisconnectOptions) {
         const methodName = 'disconnect';
         if (!args.UUID) {
-            return Promise.reject(
-                new BluetoothError(BluetoothCommon.msg_missing_parameter, {
-                    method: methodName,
-                    type: BluetoothCommon.UUIDKey,
-                    arguments: args,
-                })
-            );
+            throw new BluetoothError(BluetoothCommon.msg_missing_parameter, {
+                method: methodName,
+                type: BluetoothCommon.UUIDKey,
+                arguments: args,
+            });
         }
         const pUUID = args.UUID;
         const connection = this.connections[pUUID];
@@ -1795,12 +1793,10 @@ export class Bluetooth extends BluetoothCommon {
             CLog(CLogTypes.info, methodName, '---- connection:', pUUID);
         }
         if (!connection) {
-            return Promise.reject(
-                new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
-                    method: methodName,
-                    arguments: args,
-                })
-            );
+            throw new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
+                method: methodName,
+                arguments: args,
+            });
         }
         connection.device.disconnect();
     }
