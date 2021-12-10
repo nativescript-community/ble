@@ -1778,7 +1778,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     @prepareArgs
-    public disconnect(args: DisconnectOptions) {
+    public async disconnect(args: DisconnectOptions) {
         const methodName = 'disconnect';
         if (!args.UUID) {
             return Promise.reject(
@@ -1802,9 +1802,7 @@ export class Bluetooth extends BluetoothCommon {
                 })
             );
         }
-        return Promise.resolve().then(() => {
-            connection.device.disconnect();
-        });
+        connection.device.disconnect();
     }
 
     private addToGattQueue(p: () => Promise<any>) {
