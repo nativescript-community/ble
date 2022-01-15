@@ -996,7 +996,6 @@ function getGattDeviceServiceInfo(gatt: android.bluetooth.BluetoothGatt, args?: 
     for (let i = 0; i < services.size(); i++) {
         const service: android.bluetooth.BluetoothGattService = services.get(i);
         const serviceUUID = uuidToString(service.getUuid());
-        console.log('getGattDeviceServiceInfo', service.getUuid().toString(),serviceUUID, serviceUUIDs);
         if (serviceUUIDs && serviceUUIDs.indexOf(serviceUUID) === -1) {
             continue;
         }
