@@ -61,10 +61,18 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
     descriptor.value = function (...args: any[]) {
         const paramsToCheck = args[0];
         if (paramsToCheck.hasOwnProperty) {
-            ['serviceUUID', 'characteristicUUID'].forEach(function (k) {
-                if (paramsToCheck[k]) {
-                    const matcher = (paramsToCheck[k] as string).match(pattern);
-                    paramsToCheck[k] = (matcher && matcher.length > 0 ? matcher[1] : paramsToCheck[k]).toLowerCase();
+            ['serviceUUIDs', 'serviceUUID', 'characteristicUUID'].forEach(function (k) {
+                const value = paramsToCheck[k];
+                if (value) {
+                    if (Array.isArray(value)) {
+                        paramsToCheck[k] = paramsToCheck[k].map(v=>{
+                            const matcher = (v as string).match(pattern);
+                            return  (matcher && matcher.length > 0 ? matcher[1] : v).toLowerCase();
+                        });
+                    } else {
+                        const matcher = (paramsToCheck[k] as string).match(pattern);
+                        paramsToCheck[k] = (matcher && matcher.length > 0 ? matcher[1] : paramsToCheck[k]).toLowerCase();
+                    }
                 }
             });
         }
@@ -342,7 +350,15 @@ export interface ConnectOptions {
      */
     onDisconnected?: (data: { UUID; name: string }) => void;
 
+    /**
+     * Discover all services on connection
+     */
     autoDiscoverAll?: boolean;
+
+    /**
+     * Discover specified services on connection
+     */
+    serviceUUIDs?: string[];
 
     /**
      * Selects 2M PHY when available (Android only)

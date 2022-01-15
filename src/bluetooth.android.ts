@@ -129,26 +129,29 @@ export enum Phy {
     LE_CODED, // = android.bluetooth.BluetoothDevice.PHY_LE_CODED,
     LE_ALL_SUPPORTED, // = android.bluetooth.le.ScanSettings.PHY_LE_ALL_SUPPORTED
 }
-function androidPhy(mode: Phy) {
-    switch (mode) {
-        case Phy.LE_1M:
-            return android.bluetooth.BluetoothDevice.PHY_LE_1M;
-        case Phy.LE_CODED:
-            return android.bluetooth.BluetoothDevice.PHY_LE_CODED;
-        default:
-            // PHY_LE_ALL_SUPPORTED
-            return android.bluetooth.le.ScanSettings.PHY_LE_ALL_SUPPORTED;
-    }
-}
+// function androidPhy(mode: Phy) {
+//     switch (mode) {
+//         case Phy.LE_1M:
+//             return android.bluetooth.BluetoothDevice.PHY_LE_1M;
+//         case Phy.LE_CODED:
+//             return android.bluetooth.BluetoothDevice.PHY_LE_CODED;
+//         default:
+//             // PHY_LE_ALL_SUPPORTED
+//             return android.bluetooth.le.ScanSettings.PHY_LE_ALL_SUPPORTED;
+//     }
+// }
 
-export function uuidToString(uuid) {
-    // uuid is returned lowercase
+const uuidRegexp = new RegExp('0000(.{4})-0000-1000-8000-00805f9b34fb');
+export function uuidToString(uuid: android.os.ParcelUuid | string | java.util.UUID) {
     const uuidStr = uuid.toString();
-    const pattern = java.util.regex.Pattern.compile('0000(.{4})-0000-1000-8000-00805f9b34fb', 2);
-    const matcher = pattern.matcher(uuidStr);
-    return matcher.matches() ? matcher.group(1) : uuidStr;
+    if (uuidStr.length !== 4) {
+        const match = uuidRegexp.exec(uuidStr);
+        if (match){
+            return match[1];
+        }
+    }
+    return uuidStr;
 }
-
 // val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
 export function arrayToNativeByteArray(val) {
     const length = val.length;
@@ -984,87 +987,99 @@ declare interface WrapperResult {
     bluetoothGattService: android.bluetooth.BluetoothGattService;
 }
 
-function getGattDeviceServiceInfo(gatt: android.bluetooth.BluetoothGatt) {
+function getGattDeviceServiceInfo(gatt: android.bluetooth.BluetoothGatt, args?: DiscoverServicesOptions & {all?: boolean}) {
     const services = gatt.getServices();
     const servicesJs = [];
     const BluetoothGattCharacteristic = android.bluetooth.BluetoothGattCharacteristic;
+    const serviceUUIDs = args.serviceUUIDs;
+    const all = args.all;
     for (let i = 0; i < services.size(); i++) {
-        const service = services.get(i);
-        const characteristics = service.getCharacteristics();
-        const characteristicsJs = [];
-        for (let j = 0; j < characteristics.size(); j++) {
-            const characteristic = characteristics.get(j);
-            const props = characteristic.getProperties();
-            const descriptors = characteristic.getDescriptors();
-            const descriptorsJs = [];
-            for (let k = 0; k < descriptors.size(); k++) {
-                const descriptor = descriptors.get(k);
-                const descriptorJs = {
-                    UUID: uuidToString(descriptor.getUuid()),
-                    value: descriptor.getValue(), // always empty btw
+        const service: android.bluetooth.BluetoothGattService = services.get(i);
+        const serviceUUID = uuidToString(service.getUuid());
+        console.log('getGattDeviceServiceInfo', service.getUuid().toString(),serviceUUID, serviceUUIDs);
+        if (serviceUUIDs && serviceUUIDs.indexOf(serviceUUID) === -1) {
+            continue;
+        }
+        let characteristicsJs;
+        if (all === true) {
+            const characteristics = service.getCharacteristics();
+            characteristicsJs = [];
+            for (let j = 0; j < characteristics.size(); j++) {
+                const characteristic: android.bluetooth.BluetoothGattCharacteristic = characteristics.get(j);
+                const characteristicUUID = uuidToString(characteristic.getUuid());
+                const props = characteristic.getProperties();
+                const descriptors = characteristic.getDescriptors();
+                const descriptorsJs = [];
+                for (let k = 0; k < descriptors.size(); k++) {
+                    const descriptor: android.bluetooth.BluetoothGattDescriptor = descriptors.get(k);
+                    const descriptorJs = {
+                        UUID: uuidToString(descriptor.getUuid()),
+                        value: descriptor.getValue(), // always empty btw
+                        permissions: null,
+                    };
+                    const descPerms = descriptor.getPermissions();
+                    if (descPerms > 0) {
+                        descriptorJs.permissions = {
+                            read: (descPerms & BluetoothGattCharacteristic.PERMISSION_READ) !== 0,
+                            readEncrypted: (descPerms & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED) !== 0,
+                            readEncryptedMitm: (descPerms & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
+                            write: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE) !== 0,
+                            writeEncrypted: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED) !== 0,
+                            writeEncryptedMitm: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
+                            writeSigned: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED) !== 0,
+                            writeSignedMitm: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED_MITM) !== 0,
+                        };
+                    }
+
+                    if (Trace.isEnabled()) {
+                        CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing descriptor: ${descriptor}`);
+                    }
+                    descriptorsJs.push(descriptorJs);
+                }
+
+                const characteristicJs = {
+                    serviceUUID,
+                    UUID: characteristicUUID,
+                    name: characteristicUUID, // there's no sep field on Android
+                    properties: {
+                        read: (props & BluetoothGattCharacteristic.PROPERTY_READ) !== 0,
+                        write: (props & BluetoothGattCharacteristic.PROPERTY_WRITE) !== 0,
+                        writeWithoutResponse: (props & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) !== 0,
+                        notify: (props & BluetoothGattCharacteristic.PROPERTY_NOTIFY) !== 0,
+                        indicate: (props & BluetoothGattCharacteristic.PROPERTY_INDICATE) !== 0,
+                        broadcast: (props & BluetoothGattCharacteristic.PROPERTY_BROADCAST) !== 0,
+                        authenticatedSignedWrites: (props & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) !== 0,
+                        extendedProperties: (props & BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS) !== 0,
+                    },
+                    descriptors: descriptorsJs,
                     permissions: null,
                 };
-                const descPerms = descriptor.getPermissions();
-                if (descPerms > 0) {
-                    descriptorJs.permissions = {
-                        read: (descPerms & BluetoothGattCharacteristic.PERMISSION_READ) !== 0,
-                        readEncrypted: (descPerms & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED) !== 0,
-                        readEncryptedMitm: (descPerms & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
-                        write: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE) !== 0,
-                        writeEncrypted: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED) !== 0,
-                        writeEncryptedMitm: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
-                        writeSigned: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED) !== 0,
-                        writeSignedMitm: (descPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED_MITM) !== 0,
+
+                // permissions are usually not provided, so let's not return them in that case
+                const charPerms = characteristic.getPermissions();
+                if (charPerms > 0) {
+                    characteristicJs.permissions = {
+                        read: (charPerms & BluetoothGattCharacteristic.PERMISSION_READ) !== 0,
+                        readEncrypted: (charPerms & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED) !== 0,
+                        readEncryptedMitm: (charPerms & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
+                        write: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE) !== 0,
+                        writeEncrypted: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED) !== 0,
+                        writeEncryptedMitm: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
+                        writeSigned: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED) !== 0,
+                        writeSignedMitm: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED_MITM) !== 0,
                     };
                 }
 
                 if (Trace.isEnabled()) {
-                    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing descriptor: ${descriptor}`);
+                    CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing characteristic: ${JSON.stringify(characteristicJs)} for service:${serviceUUID}`);
                 }
-                descriptorsJs.push(descriptorJs);
+                characteristicsJs.push(characteristicJs);
             }
-
-            const characteristicJs = {
-                serviceUUID: uuidToString(service.getUuid()),
-                UUID: uuidToString(characteristic.getUuid()),
-                name: uuidToString(characteristic.getUuid()), // there's no sep field on Android
-                properties: {
-                    read: (props & BluetoothGattCharacteristic.PROPERTY_READ) !== 0,
-                    write: (props & BluetoothGattCharacteristic.PROPERTY_WRITE) !== 0,
-                    writeWithoutResponse: (props & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) !== 0,
-                    notify: (props & BluetoothGattCharacteristic.PROPERTY_NOTIFY) !== 0,
-                    indicate: (props & BluetoothGattCharacteristic.PROPERTY_INDICATE) !== 0,
-                    broadcast: (props & BluetoothGattCharacteristic.PROPERTY_BROADCAST) !== 0,
-                    authenticatedSignedWrites: (props & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) !== 0,
-                    extendedProperties: (props & BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS) !== 0,
-                },
-                descriptors: descriptorsJs,
-                permissions: null,
-            };
-
-            // permissions are usually not provided, so let's not return them in that case
-            const charPerms = characteristic.getPermissions();
-            if (charPerms > 0) {
-                characteristicJs.permissions = {
-                    read: (charPerms & BluetoothGattCharacteristic.PERMISSION_READ) !== 0,
-                    readEncrypted: (charPerms & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED) !== 0,
-                    readEncryptedMitm: (charPerms & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM) !== 0,
-                    write: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE) !== 0,
-                    writeEncrypted: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED) !== 0,
-                    writeEncryptedMitm: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM) !== 0,
-                    writeSigned: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED) !== 0,
-                    writeSignedMitm: (charPerms & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED_MITM) !== 0,
-                };
-            }
-
-            if (Trace.isEnabled()) {
-                CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onServicesDiscovered ---- pushing characteristic: ${JSON.stringify(characteristicJs)}`);
-            }
-            characteristicsJs.push(characteristicJs);
         }
 
+
         servicesJs.push({
-            UUID: uuidToString(service.getUuid()),
+            UUID: serviceUUID,
             characteristics: characteristicsJs,
         });
     }
@@ -1732,8 +1747,10 @@ export class Bluetooth extends BluetoothCommon {
                 });
             });
             let services, mtu;
-            if(args.autoDiscoverAll !== false) {
+            if(args.autoDiscoverAll === true) {
                 services = (await this.discoverAll({ peripheralUUID: pUUID }))?.services;
+            } else  if(args.serviceUUIDs) {
+                services = (await this.discoverServices({ peripheralUUID: pUUID, serviceUUIDs:args.serviceUUIDs }))?.services;
             }
             if (!!args.auto2MegPhy) {
                 await this.select2MegPhy({ peripheralUUID: pUUID }) ;
@@ -1864,7 +1881,7 @@ export class Bluetooth extends BluetoothCommon {
                                 if (Trace.isEnabled()) {
                                     CLog(
                                         CLogTypes.info,
-                                        `${methodName} ---- got result peripheralUUID:${args.peripheralUUID} serviceUUID:${args.serviceUUID} characteristicUUID:${args.characteristicUUID} status:${status}`
+                                        `${methodName} ---- got result peripheralUUID:${pUUID} serviceUUID:${sUUID} characteristicUUID:${cUUID} status:${status}`
                                     );
                                 }
                                 if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
@@ -2453,7 +2470,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     @prepareArgs
-    public discoverServices(args: DiscoverServicesOptions): Promise<{ services: Service[] }> {
+    public discoverServices(args: DiscoverServicesOptions & {all?: boolean}): Promise<{ services: Service[] }> {
         const methodName = 'discoverServices';
         if (Trace.isEnabled()) {
             CLog(CLogTypes.info, methodName, args);
@@ -2480,6 +2497,7 @@ export class Bluetooth extends BluetoothCommon {
         if (Trace.isEnabled()) {
             CLog(CLogTypes.info, methodName, pUUID, stateObject);
         }
+        const serviceUUIDs  = args.serviceUUIDs;
         return this.addToGattQueue(
             () =>
                 new Promise((resolve, reject) => {
@@ -2499,7 +2517,7 @@ export class Bluetooth extends BluetoothCommon {
                                 }
                                 if (UUID === pUUID) {
                                     if (status === GATT_SUCCESS) {
-                                        resolve(getGattDeviceServiceInfo(gatt));
+                                        resolve(getGattDeviceServiceInfo(gatt, args));
                                         clearListeners();
                                     } else {
                                         onError(
@@ -2579,7 +2597,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     public discoverAll(args: DiscoverOptions) {
-        return this.discoverServices(args);
+        return this.discoverServices({...args, all:true});
     }
 
     private disconnectListeners: DisconnectListener[] = [];
