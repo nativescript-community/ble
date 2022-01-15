@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.34...v3.1.0) (2022-01-15)
+
+
+### Bug Fixes
+
+* isConnected should not throw if device is not connected but return false ([49fe431](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/49fe431e60becea5df69c64e33d0c0f27bc2f362))
+
+
+### Features
+
+* **android:** native-api-usage ([41911d0](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/41911d0dc9f8852837c26f807911b577849ee48c))
+* alternative to `discoverAll`: `serviceUUIDs`. Will discover only those services and no chars(faster) ([c39dd3b](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/c39dd3be31e25620be08cce2c9a930fbca6b8529))
+
+
+
+
+
 ## [3.0.34](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.33...v3.0.34) (2022-01-15)
 
 
