@@ -1098,45 +1098,37 @@ export class Bluetooth extends BluetoothCommon {
 
     @bluetoothEnabled
     @prepareArgs
-    public isConnected(args) {
+    public async isConnected(args) {
         const methodName = 'isConnected';
         try {
             if (!args.UUID) {
-                return Promise.reject(
-                    new BluetoothError(BluetoothCommon.msg_missing_parameter, {
-                        method: methodName,
-                        type: BluetoothCommon.UUIDKey,
-                        arguments: args,
-                    })
-                );
+                throw new BluetoothError(BluetoothCommon.msg_missing_parameter, {
+                    method: methodName,
+                    type: BluetoothCommon.UUIDKey,
+                    arguments: args,
+                });
+
             }
             const peripheral = this.findPeripheral(args.UUID);
             if (peripheral === null) {
-                return Promise.reject(
-                    new BluetoothError(BluetoothCommon.msg_no_peripheral, {
-                        method: methodName,
-                        arguments: args,
-                    })
-                );
+                return false;
             } else {
                 if (Trace.isEnabled()) {
                     CLog(CLogTypes.info, methodName, '---- checking connection with peripheral UUID:', args.UUID);
                 }
-                return Promise.resolve(peripheral.state === CBPeripheralState.Connected);
+                return peripheral.state === CBPeripheralState.Connected;
             }
         } catch (ex) {
             if (Trace.isEnabled()) {
                 CLog(CLogTypes.error, methodName, '---- error:', ex);
             }
 
-            return Promise.reject(
-                new BluetoothError(ex.message, {
-                    stack: ex.stack,
-                    nativeException: ex.nativeException,
-                    method: methodName,
-                    arguments: args,
-                })
-            );
+            throw new BluetoothError(ex.message, {
+                stack: ex.stack,
+                nativeException: ex.nativeException,
+                method: methodName,
+                arguments: args,
+            });
         }
     }
 

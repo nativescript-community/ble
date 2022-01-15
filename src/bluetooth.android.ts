@@ -1394,23 +1394,18 @@ export class Bluetooth extends BluetoothCommon {
 
     @bluetoothEnabled
     @prepareArgs
-    public isConnected(args) {
+    public async isConnected(args) {
         const methodName = 'isConnected';
         // TODO: no try catch for now as we rely on our own connections state object.
         // try {
         if (!args.UUID) {
-            return Promise.reject(new BluetoothError(BluetoothCommon.msg_missing_parameter, { type: BluetoothCommon.UUIDKey, method: methodName }));
+            throw new BluetoothError(BluetoothCommon.msg_missing_parameter, { type: BluetoothCommon.UUIDKey, method: methodName });
         }
         const stateObject = this.connections[args.UUID];
         if (!stateObject) {
-            return Promise.reject(
-                new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
-                    method: methodName,
-                    arguments: args,
-                })
-            );
+            return false;
         }
-        return Promise.resolve(stateObject.state === 'connected');
+        return stateObject.state === 'connected';
     }
 
     public openBluetoothSettings() {
