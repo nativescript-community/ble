@@ -3,6 +3,7 @@ import { ad } from '@nativescript/core/utils/utils';
 import { AndroidActivityRequestPermissionsEventData, AndroidActivityResultEventData, AndroidApplication, android as andApp } from '@nativescript/core/application';
 import {
     AdvertismentData,
+    BleTraceCategory,
     BluetoothCommon,
     BluetoothError,
     BluetoothOptions,
@@ -36,7 +37,7 @@ export function getBluetoothInstance() {
     return _bluetoothInstance;
 }
 
-export { AdvertismentData, Peripheral, ReadResult, Service };
+export { BleTraceCategory };
 
 const ACCESS_LOCATION_PERMISSION_REQUEST_CODE = 222;
 const ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE = 223;

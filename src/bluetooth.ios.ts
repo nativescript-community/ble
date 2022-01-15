@@ -1,4 +1,5 @@
 import {
+    BleTraceCategory,
     BluetoothCommon,
     BluetoothError,
     BluetoothOptions,
@@ -20,6 +21,8 @@ import {
     prepareArgs,
 } from './bluetooth.common';
 import { Trace } from '@nativescript/core';
+
+export { BleTraceCategory };
 
 function nativeEncoding(encoding: string) {
     switch (encoding) {
