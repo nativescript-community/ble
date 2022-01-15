@@ -16,3 +16,4 @@ plugin/**/*.d.ts
 /plugin/platforms/android/ble.aar
 package-lock.json
 pnpm-lock.yaml
+*.aar
