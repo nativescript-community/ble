@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.1](https://github.com/nativescript-community/ble/compare/v3.1.0...v3.1.1) (2022-01-15)
+
+
+### Bug Fixes
+
+* **android:** missing native-api-usage ([d417bbb](https://github.com/nativescript-community/ble/commit/d417bbb8b3b875de99f5fda92e78b4bd1e9d91d7))
+
+
+
+
+
 # [3.1.0](https://github.com/nativescript-community/ble/compare/v3.0.34...v3.1.0) (2022-01-15)
 
 
