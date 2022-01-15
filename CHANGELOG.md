@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.34](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.33...v3.0.34) (2022-01-15)
+
+
+### Bug Fixes
+
+* export `BleTraceCategory` ([cb5c7d7](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/cb5c7d7570f64f67b8293d76e6f80445dc8ae559))
+
+
+
+
+
 ## [3.0.33](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.0.32...v3.0.33) (2021-12-10)
 
 
