@@ -502,6 +502,10 @@ export interface MtuOptions {
     peripheralUUID: string;
 }
 
+export interface ReadRSSIOptions {
+    peripheralUUID: string;
+}
+
 export interface DiscoverOptions {
     peripheralUUID: string;
 }

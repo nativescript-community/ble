@@ -11,6 +11,7 @@ import {
     MtuOptions,
     Peripheral,
     ReadOptions,
+    ReadRSSIOptions,
     ReadResult,
     Service,
     StartNotifyingOptions,
@@ -1254,6 +1255,59 @@ export class Bluetooth extends BluetoothCommon {
         }
         return Promise.resolve(
             Math.min(peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithoutResponse), peripheral.maximumWriteValueLengthForType(CBCharacteristicWriteType.WithResponse))
+        );
+    }
+    @prepareArgs
+    public readRssi(args: ReadRSSIOptions) {
+        const methodName = 'readRssi';
+        return this._getWrapper(args, CBCharacteristicProperties.PropertyWrite).then(
+            (wrapper) =>
+                new Promise<number>((resolve, reject) => {
+                    if (Trace.isEnabled()) {
+                        CLog(CLogTypes.info, methodName, `---- peripheralUUID:${args.peripheralUUID}`);
+                    }
+                    const pUUID = args.peripheralUUID;
+                    const p = wrapper.peripheral;
+                    const subD = {
+                        peripheralDidReadRSSIError: (peripheral: CBPeripheral, rssi: number, error?: NSError) => {
+
+                            if (Trace.isEnabled()) {
+                                CLog(CLogTypes.info, methodName, '---- peripheralDidWriteValueForCharacteristicError', error);
+                            }
+                            const UUID = NSUUIDToString(peripheral.identifier);
+                            if (UUID === pUUID) {
+                                if (error) {
+                                    reject(
+                                        new BluetoothError(error.localizedDescription, {
+                                            method: methodName,
+                                            status: error.code,
+                                        })
+                                    );
+                                } else {
+                                    resolve(rssi);
+                                }
+                                p.delegate.removeSubDelegate(subD);
+                            }
+                        },
+                    };
+                    p.delegate.addSubDelegate(subD);
+                    try {
+                        p.readRSSI();
+                    } catch (ex) {
+                        if (Trace.isEnabled()) {
+                            CLog(CLogTypes.error, methodName, '---- error:', ex);
+                        }
+                        p.delegate.removeSubDelegate(subD);
+                        return reject(
+                            new BluetoothError(ex.message, {
+                                stack: ex.stack,
+                                nativeException: ex.nativeException,
+                                method: methodName,
+                                arguments: args,
+                            })
+                        );
+                    }
+                })
         );
     }
     @prepareArgs

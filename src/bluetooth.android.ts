@@ -18,6 +18,7 @@ import {
     MtuOptions,
     Peripheral,
     ReadOptions,
+    ReadRSSIOptions,
     ReadResult,
     Service,
     StartNotifyingOptions,
@@ -921,6 +922,11 @@ function initBluetoothGattCallback() {
             if (Trace.isEnabled()) {
                 CLog(CLogTypes.info, `TNS_BluetoothGattCallback.onReadRemoteRssi ---- gatt: ${gatt} rssi: ${rssi}, status: ${status}`);
             }
+            this.subDelegates.forEach((d) => {
+                if (d.onMtuChanged) {
+                    d.onReadRemoteRssi(gatt, rssi, status);
+                }
+            });
         }
 
         /**
@@ -2001,6 +2007,79 @@ export class Bluetooth extends BluetoothCommon {
                         }),
                         (onError) => {
                             if (!gatt.requestMtu(args.value)) {
+                                onError(
+                                    new BluetoothError(BluetoothCommon.msg_error_function_call, {
+                                        method: methodName,
+                                        arguments: args,
+                                    })
+                                );
+                            }
+                        },
+                    );
+                })
+        );
+    }
+
+    private async getGattDevice(args: {peripheralUUID: string}, parentMethodName: string) {
+        if (!args.peripheralUUID) {
+            throw new BluetoothError(BluetoothCommon.msg_missing_parameter, {
+                method: parentMethodName,
+                type: BluetoothCommon.peripheralUUIDKey,
+                arguments: args,
+            });
+        }
+        const pUUID = args.peripheralUUID;
+        const stateObject = this.connections[pUUID];
+        if (!stateObject) {
+            throw new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
+                method: parentMethodName,
+                arguments: args,
+            });
+        }
+        return stateObject.device;
+    }
+
+    @prepareArgs
+    public async readRssi(args: ReadRSSIOptions) {
+        const methodName = 'readRssi';
+        const gatt = await this.getGattDevice(args, methodName);
+        if (Trace.isEnabled()) {
+            CLog(CLogTypes.info, methodName, args);
+        }
+        const pUUID = args.peripheralUUID;
+        return this.addToGattQueue(
+            () =>
+                new Promise((resolve, reject) => {
+                    if (Trace.isEnabled()) {
+                        CLog(CLogTypes.info, methodName, '---- peripheral:', pUUID);
+                    }
+                    this.attachSubDelegate(
+                        {methodName, args, resolve, reject},
+                        (clearListeners, onError) => ({
+                            onReadRemoteRssi: (gatt: android.bluetooth.BluetoothGatt, rssi: number, status: number) => {
+                                const device = gatt.getDevice();
+                                let UUID: string = null;
+                                if (device == null) {
+                                    // happens some time, why ... ?
+                                } else {
+                                    UUID = device.getAddress();
+                                }
+                                if (UUID === pUUID) {
+                                    if (status === GATT_SUCCESS) {
+                                        resolve(rssi);
+                                        clearListeners();
+                                    } else {
+                                        onError(new BluetoothError(BluetoothCommon.msg_error_function_call, {
+                                            method: methodName,
+                                            arguments: args,
+                                            status,
+                                        }));
+                                    }
+                                }
+                            },
+                        }),
+                        (onError) => {
+                            if (!gatt.readRemoteRssi()) {
                                 onError(
                                     new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                         method: methodName,

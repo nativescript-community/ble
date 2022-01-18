@@ -15,6 +15,7 @@ import {
     MtuOptions,
     Peripheral,
     ReadOptions,
+    ReadRSSIOptions,
     ReadResult,
     ScanMode,
     Service,
@@ -130,6 +131,8 @@ export class Bluetooth extends BluetoothCommon {
     // on iOS, iOS automatically request mtu  ( iOS < 10 ? 158 : 185). So this method only returns the value read from the Peripheral
     // on android an mtu request is done. The returned value is the confirmed mtu value by the device (can be lower)
     requestMtu(options: MtuOptions): Promise<number>;
+
+    public readRssi(args: ReadRSSIOptions): Promise<number>;
 
     public discoverServices(args: DiscoverServicesOptions): Promise<{ services: Service[] }>;
     public discoverCharacteristics(args: DiscoverCharacteristicsOptions): Promise<{ characteristics: Characteristic[] }>;
