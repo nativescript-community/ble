@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.5](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.4...v3.1.5) (2022-01-20)
+
+
+### Bug Fixes
+
+* **ios:** trying to fix `serviceUUIDs` ([84cbf7f](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/84cbf7f43e89eed56d5a8f95af5308e8bfd538ba))
+
+
+
+
+
 ## [3.1.4](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.3...v3.1.4) (2022-01-20)
 
 
