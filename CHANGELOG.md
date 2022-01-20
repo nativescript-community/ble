@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.4](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.3...v3.1.4) (2022-01-20)
+
+
+### Bug Fixes
+
+* **ios:** `connect` `serviceUUIDs` fix ([b467e7d](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/b467e7dbb75d7c69ef81e380d314b8aa7f1afb89))
+
+
+
+
+
 ## [3.1.3](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.2...v3.1.3) (2022-01-20)
 
 **Note:** Version bump only for package @nativescript-community/ble
