@@ -998,7 +998,7 @@ export class Bluetooth extends BluetoothCommon {
                 if (args.autoDiscoverAll === true) {
                     services = (await this.discoverAll({ peripheralUUID: connectingUUID }))?.services;
                 } else  if(args.serviceUUIDs) {
-                    services = (await this.discoverServices({ peripheralUUID: connectingUUID, serviceUUIDs:args.serviceUUIDs }))?.services;
+                    services = (await this.discoverAll({ peripheralUUID: connectingUUID, serviceUUIDs:args.serviceUUIDs }))?.services;
                 }
                 if (!!args.autoMaxMTU) {
                     mtu = await this.requestMtu({ peripheralUUID: connectingUUID, value: FIXED_IOS_MTU }) ;

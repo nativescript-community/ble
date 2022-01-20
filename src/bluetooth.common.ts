@@ -160,7 +160,7 @@ export abstract class BluetoothCommon extends Observable {
 
     public abstract discoverServices(args: DiscoverServicesOptions);
     public abstract discoverCharacteristics(args: DiscoverCharacteristicsOptions);
-    public discoverAll(args: DiscoverOptions) {
+    public discoverAll(args: DiscoverServicesOptions) {
         return this.discoverServices(args).then((resultS) =>
             Promise.all(resultS.services.map((s) => this.discoverCharacteristics({ serviceUUID: s.UUID, ...args }).then((resultC) => (s.characteristics = resultC.characteristics)))).then(() => ({
                 services: resultS.services,
