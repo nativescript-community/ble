@@ -997,6 +997,8 @@ export class Bluetooth extends BluetoothCommon {
                 let services, mtu = FIXED_IOS_MTU;
                 if (args.autoDiscoverAll === true) {
                     services = (await this.discoverAll({ peripheralUUID: connectingUUID }))?.services;
+                } else  if(args.serviceUUIDs) {
+                    services = (await this.discoverServices({ peripheralUUID: connectingUUID, serviceUUIDs:args.serviceUUIDs }))?.services;
                 }
                 if (!!args.autoMaxMTU) {
                     mtu = await this.requestMtu({ peripheralUUID: connectingUUID, value: FIXED_IOS_MTU }) ;
@@ -1553,7 +1555,7 @@ export class Bluetooth extends BluetoothCommon {
             });
             return Promise.reject(error);
         }
-        return new Promise((resolve, reject) => {
+        return new Promise<any>((resolve, reject) => {
             const subD = {
                 peripheralDidDiscoverServices: (peripheral: CBPeripheral, error?: NSError) => {
                     const UUID = NSUUIDToString(peripheral.identifier);
