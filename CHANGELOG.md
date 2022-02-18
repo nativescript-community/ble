@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.6](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.5...v3.1.6) (2022-02-18)
+
+
+### Features
+
+* `avoidDuplicates` option on `startScanning` method ([25dba13](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/25dba1334735ded0f7b71d5b55c9b6f58ca25d9a))
+
+
+
+
+
 ## [3.1.5](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.4...v3.1.5) (2022-01-20)
 
 
