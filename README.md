@@ -119,6 +119,10 @@ A few of the optional params require a bit of explanation:
 #### seconds
 Scanning for peripherals drains the battery quickly, so you better not scan any longer than necessary. If a peripheral is in range and not engaged in another connection it usually pops up in under a second. If you don't pass in a number of seconds you will need to manually call `stopScanning`.
 
+#### avoidDuplicates
+Set this to true if you don't want duplicates with the same serviceUUID reported in "onDiscovered" callback.
+If true, only the first discovered peripheral with the same serviceUUID will be reported.
+
 #### skipPermissionCheck
 Set this to true if you don't want the plugin to check (and request) the required Bluetooth permissions.
 Particularly useful if you're running this function on a non-UI thread (ie. a Worker).

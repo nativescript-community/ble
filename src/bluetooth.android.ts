@@ -1506,6 +1506,23 @@ export class Bluetooth extends BluetoothCommon {
                     //     }
                     // }
 
+                    let onPeripheralDiscovered;
+
+                    if (args.onDiscovered) {
+                        if (args.avoidDuplicates) {
+                            const discoveredUUIDs = [];
+                            onPeripheralDiscovered = (data: Peripheral) => {
+                                const hasBeenDiscovered = discoveredUUIDs.includes(data.UUID);
+                                if (!hasBeenDiscovered) {
+                                    discoveredUUIDs.push(data.UUID);
+                                    args.onDiscovered(data);
+                                }
+                            };
+                        } else {
+                            onPeripheralDiscovered = args.onDiscovered;
+                        }
+                    }
+
                     const filters = args.filters || [];
 
                     if (this.scanningReferTimer) {
@@ -1519,7 +1536,7 @@ export class Bluetooth extends BluetoothCommon {
                                 uuids.push(stringToUuid(f.serviceUUID));
                             }
                         });
-                        this.LeScanCallback.onPeripheralDiscovered = args.onDiscovered;
+                        this.LeScanCallback.onPeripheralDiscovered = onPeripheralDiscovered;
                         const didStart = uuids.length === 0 ? this.adapter.startLeScan(this.LeScanCallback) : this.adapter.startLeScan(uuids, this.LeScanCallback);
                         if (Trace.isEnabled()) {
                             CLog(CLogTypes.info, methodName, '---- PreLollipop ---- didStart scanning:', didStart, JSON.stringify(uuids));
@@ -1577,7 +1594,7 @@ export class Bluetooth extends BluetoothCommon {
                             scanSettings.setCallbackType(androidCallbackType(callbackType));
                         }
 
-                        this.scanCallback.onPeripheralDiscovered = args.onDiscovered;
+                        this.scanCallback.onPeripheralDiscovered = onPeripheralDiscovered;
                         this.adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), this.scanCallback);
                         if (Trace.isEnabled()) {
                             CLog(CLogTypes.info, methodName, ' ---- PostLollipop ---- didStart scanning:', JSON.stringify(filters));

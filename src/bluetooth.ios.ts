@@ -823,8 +823,13 @@ export class Bluetooth extends BluetoothCommon {
                     CLog(CLogTypes.info, methodName, '---- services:', services);
                 }
 
+                const options: NSMutableDictionary<any, any> = new (NSMutableDictionary as any)();
+                if (!args.avoidDuplicates) {
+                    options.setObjectForKey(true, CBCentralManagerScanOptionAllowDuplicatesKey);
+                }
+
                 // TODO: check on the services as any casting
-                this.centralManager.scanForPeripheralsWithServicesOptions(services as any, null);
+                this.centralManager.scanForPeripheralsWithServicesOptions(services as any, options);
                 if (this.scanningReferTimer) {
                     clearTimeout(this.scanningReferTimer.timer);
                     this.scanningReferTimer.resolve();

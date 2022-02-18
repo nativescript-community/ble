@@ -221,6 +221,12 @@ export interface StartScanningOptions {
     seconds?: number;
 
     /**
+     * Avoid duplicates with the same serviceUUID in "onDiscovered" callback.
+     * If true, only the first discovered peripheral with the same serviceUUID will be reported.
+     */
+    avoidDuplicates?: boolean;
+
+    /**
      * This callback is invoked when a peripheral is found.
      */
     onDiscovered?: (data: Peripheral) => void;
