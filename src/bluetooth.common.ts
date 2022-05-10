@@ -375,10 +375,16 @@ export interface ConnectOptions {
      * Selects maximum BLE MTU (247) (Android only)
      */
     autoMaxMTU?: boolean;
+
     /**
      * transport selection (Android only)
      */
     transport?: number;
+
+    /**
+     * request connection priority (Android only): https://developer.android.com/reference/android/bluetooth/BluetoothGatt.html#requestConnectionPriority(int)
+     */
+    priority?: number;
 }
 
 export interface AdvertismentData {

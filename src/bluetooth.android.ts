@@ -1744,7 +1744,7 @@ export class Bluetooth extends BluetoothCommon {
                 };
                 this.bluetoothGattCallback.addSubDelegate(subD);
                 this.addDisconnectListener(onDisconnect);
-                let gatt;
+                let gatt: android.bluetooth.BluetoothGatt;
 
                 // if less than Android23(Marshmallow)
                 if (getAndroidSDK() < MARSHMALLOW) {
@@ -1761,11 +1761,15 @@ export class Bluetooth extends BluetoothCommon {
                         args.transport !== undefined ? args.transport : android.bluetooth.BluetoothDevice.TRANSPORT_LE
                     );
                 }
+
+                if (args.priority !== undefined) {
+                    gatt.requestConnectionPriority(args.priority);
+                }
                 Object.assign(this.connections[pUUID], {
                     // state: 'connecting',
                     // onConnected: args.onConnected,
                     // onDisconnected: args.onDisconnected,
-                    device: gatt, // TODO rename device to gatt?
+                    device: gatt
                 });
             });
             let services, mtu;
