@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.7](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.6...v3.1.7) (2022-05-10)
+
+
+### Features
+
+* **android:** android priority connect parameter ([16fdcc2](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/16fdcc283625816dbc9998e8f14cbd66c279320a))
+
+
+
+
+
 ## [3.1.6](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.5...v3.1.6) (2022-02-18)
 
 
