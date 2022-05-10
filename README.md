@@ -27,7 +27,7 @@ tns install typescript
 ```
 
 ## API
-Want to dive in quickly? Check out [the demo app](https://github.com/EddyVerbruggen/@nativescript-community/ble-demo)! Otherwise, mix and match these functions as you see fit:
+Want to dive in quickly? Check out [the demo app](https://github.com/nativescript-community/ble/tree/master/demo)! Otherwise, mix and match these functions as you see fit:
 
 #### Prerequisites
 - [isBluetoothEnabled](#isbluetoothenabled)
