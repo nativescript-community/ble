@@ -156,7 +156,6 @@ export function uuidToString(uuid: android.os.ParcelUuid | string | java.util.UU
     }
     return uuidStr;
 }
-// val must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F''
 export function arrayToNativeByteArray(val) {
     const length = val.length;
     const result = Array.create('byte', length);
