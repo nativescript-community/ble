@@ -154,4 +154,3 @@ export class Bluetooth extends BluetoothCommon {
 }
 export function getBluetoothInstance(): Bluetooth;
 
-export function stringToUint8Array(value: any, encoding?: string): Uint8Array;

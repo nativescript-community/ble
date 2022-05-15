@@ -89,10 +89,6 @@ function valueToString(value) {
     }
     return value;
 }
-export function stringToUint8Array(value, encoding = 'iso-8859-1') {
-    const nativeArray = NSString.stringWithString(value).dataUsingEncoding(nativeEncoding(encoding));
-    return new Uint8Array(interop.bufferFromData(nativeArray));
-}
 
 import { iOSNativeHelper } from '@nativescript/core/utils/native-helper';
 import { DisconnectOptions } from './bluetooth';
