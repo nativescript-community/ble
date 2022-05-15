@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.8](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.7...v3.1.8) (2022-05-15)
+
+
+### Bug Fixes
+
+* **android:** refactoring using @nativescript-community/arraybuffers ([ae5683b](https://github.com/eddyverbruggen/@nativescript-community/ble/commit/ae5683b136a5d3a8b0a9989ac50b3cde93f4a9bf))
+
+
+
+
+
 ## [3.1.7](https://github.com/eddyverbruggen/@nativescript-community/ble/compare/v3.1.6...v3.1.7) (2022-05-10)
 
 
