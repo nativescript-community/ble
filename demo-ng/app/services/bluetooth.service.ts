@@ -368,7 +368,7 @@ export class BluetoothService {
     }
 
     write(characteristic: ICharacteristic, value: any) {
-        // According to source code at https://github.com/EddyVerbruggen/@nativescript-community/ble,
+        // According to source code at https://github.com/nativescript-community/ble,
         // value must be a Uint8Array or Uint16Array or a string like '0x01' or '0x007F' or '0x01,0x02', or '0x007F,'0x006F'.
         // However, in practice it appears only strings are accepted, as get exception when using a Uint8Array.
 
