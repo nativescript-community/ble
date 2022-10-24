@@ -725,7 +725,10 @@ function initBluetoothGattCallback() {
                 }
             });
             const owner = this.owner && this.owner.get();
-            if (owner && newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED && status === GATT_SUCCESS) {
+            if (!owner) {
+                return;
+            }
+            if (newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED && status === GATT_SUCCESS) {
                 const device = gatt.getDevice();
                 let address: string = null;
                 if (device == null) {
