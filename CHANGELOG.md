@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.11](https://github.com/nativescript-community/ble/compare/v3.1.10...v3.1.11) (2022-11-27)
+
+
+### Bug Fixes
+
+* **android:** prevent errors ([fdf6355](https://github.com/nativescript-community/ble/commit/fdf6355d1e3cae77d063e3d424865817c5abfcf5))
+
+
+
+
+
 ## [3.1.10](https://github.com/nativescript-community/ble/compare/v3.1.9...v3.1.10) (2022-10-24)
 
 **Note:** Version bump only for package @nativescript-community/ble
