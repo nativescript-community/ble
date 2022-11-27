@@ -783,6 +783,7 @@ function initBluetoothGattCallback() {
          * @param characteristic [android.bluetooth.BluetoothGattCharacteristic] - Characteristic that has been updated as a result of a remote notification event.
          */
         onCharacteristicChanged(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic) {
+            
             const device = gatt.getDevice();
             let pUUID: string = null;
             if (device == null) {
@@ -799,8 +800,13 @@ function initBluetoothGattCallback() {
                     d.onCharacteristicChanged(gatt, characteristic);
                 }
             });
+            
+            const owner = this.owner.get();
+            if (!owner) {
+                return;
+            }
 
-            const stateObject = this.owner.get().connections[pUUID];
+            const stateObject = owner.connections[pUUID];
             if (stateObject) {
                 const cUUID = uuidToString(characteristic.getUuid());
                 const sUUID = uuidToString(characteristic.getService().getUuid());
