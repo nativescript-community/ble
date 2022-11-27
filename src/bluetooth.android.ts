@@ -222,11 +222,11 @@ function initLeScanCallback() {
         constructor(
             private serviceUuids: string[],
             private manufacturerData: android.util.SparseArray<any[]>,
-            private serviceData: { [k: string]: native.Array<number> },
+            private serviceData: { [k: string]: androidNative.Array<number> },
             private advertiseFlags: number,
             private txPowerLevel: number,
             private localName: string,
-            private bytes: native.Array<number>
+            private bytes: androidNative.Array<number>
         ) {}
     }
 
@@ -800,7 +800,7 @@ function initBluetoothGattCallback() {
                     d.onCharacteristicChanged(gatt, characteristic);
                 }
             });
-            
+
             const owner = this.owner.get();
             if (!owner) {
                 return;
