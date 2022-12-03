@@ -1,48 +1,37 @@
 {
-  "name": "demo-ng",
-  "version": "1.1.0",
-  "description": "Demo NativeScript-Angular app for the @nativescript-community/ble plugin",
-  "author": "Brad Powell",
-  "contributors": [
-    "Ryan Pendergast <ryan.pendergast@gmail.com>"
-  ],
-  "nativescript": {
-    "id": "org.nativescript.@nativescript-community/ble-demo-ng",
-    "tns-android": {
-      "version": "5.1.0"
+    "name": "demo-ng",
+    "version": "1.1.0",
+    "description": "Demo NativeScript-Angular app for the @nativescript-community/ble plugin",
+    "author": "Brad Powell",
+    "contributors": [
+        "Ryan Pendergast <ryan.pendergast@gmail.com>"
+    ],
+    "dependencies": {
+        "@angular/animations": "~14.1.0",
+        "@angular/common": "~14.1.0",
+        "@angular/compiler": "~14.1.0",
+        "@angular/core": "~14.1.0",
+        "@angular/forms": "~14.1.0",
+        "@angular/platform-browser": "~14.1.0",
+        "@angular/platform-browser-dynamic": "~14.1.0",
+        "@angular/router": "~14.1.0",
+        "@nativescript-community/ble": "file:../plugin",
+        "@nativescript/angular": "^14.0.0",
+        "@nativescript/core": "~8.4.1",
+        "@nativescript/theme": "^3.0.2",
+        "reflect-metadata": "~0.1.13",
+        "rxjs": "~7.5.0",
+        "zone.js": "~0.11.5"
     },
-    "tns-ios": {
-      "version": "5.1.0"
-    }
-  },
-  "dependencies": {
-    "@angular/animations": "~7.2.1",
-    "@angular/common": "~7.2.1",
-    "@angular/compiler": "~7.2.1",
-    "@angular/core": "~7.2.1",
-    "@angular/forms": "~7.2.1",
-    "@angular/http": "~7.2.1",
-    "@angular/platform-browser": "~7.2.1",
-    "@angular/platform-browser-dynamic": "~7.2.1",
-    "@angular/router": "~7.2.1",
-    "@nativescript-community/ble": "file:../plugin",
-    "nativescript-angular": "~7.1.2",
-    "nativescript-theme-core": "~1.0.4",
-    "reflect-metadata": "~0.1.13",
-    "rxjs": "~6.3.3",
-    "@nativescript/core": "~5.1.2",
-    "zone.js": "~0.8.28"
-  },
-  "devDependencies": {
-    "@angular/compiler-cli": "~7.2.1",
-    "@nativescript/schematics": "~0.5.0",
-    "@ngtools/webpack": "~7.2.2",
-    "codelyzer": "~4.5.0",
-    "nativescript": "~5.1.1",
-    "nativescript-dev-sass": "~1.6.0",
-    "nativescript-dev-typescript": "^0.7.9",
-    "nativescript-dev-webpack": "~0.19.0",
-    "tslint": "~5.12.1",
-    "tns-platform-declarations": "~5.1.2"
-  }
+    "devDependencies": {
+        "@angular-devkit/build-angular": "~14.1.0",
+        "@angular/compiler-cli": "~14.1.0",
+        "@nativescript/android": "^8.4.0",
+        "@nativescript/ios": "^8.4.0",
+        "@nativescript/types": "^8.4.0",
+        "@nativescript/webpack": "~5.0.6",
+        "@ngtools/webpack": "~14.1.0",
+        "typescript": "^4.6.2"
+    },
+    "main": "./src/main.ts"
 }
