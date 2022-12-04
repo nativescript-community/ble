@@ -1,6 +1,6 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
-import { RouterExtensions } from 'nativescript-angular/router';
+import { RouterExtensions } from '@nativescript/angular';
 
 import { BluetoothService } from '../../services/bluetooth.service';
 import { IPeripheral } from '../../services/bluetooth.service';

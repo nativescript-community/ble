@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { Page } from 'ui/page';
 
 import { BluetoothService } from '../../services/bluetooth.service';
 import { IPeripheral } from '../../services/bluetooth.service';
@@ -11,10 +10,9 @@ import { IPeripheral } from '../../services/bluetooth.service';
 export class ScanComponent {
 
     constructor(
-        private page: Page,
         public bluetoothService: BluetoothService) {
         console.log('Creating ScanComponent');
-        page.actionBarHidden = true;
+        // page.actionBarHidden = true;
     }
 
     doIsBluetoothEnabled() {

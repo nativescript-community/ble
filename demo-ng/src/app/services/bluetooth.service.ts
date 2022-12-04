@@ -5,7 +5,6 @@ import * as dialogs from '@nativescript/core/ui/dialogs';
 import { Bluetooth, Characteristic, Peripheral, ReadResult, Service } from '@nativescript-community/ble';
 
 const bluetooth = new Bluetooth();
-bluetooth.debug = true;
 
 export interface IPeripheral extends Peripheral {
     isConnected?: boolean;
@@ -58,7 +57,7 @@ export class Util {
 
 export class CharOpResult {
     // result from a Characteristic read/write/notify type of operation
-    constructor(public value?: any, public ios?: any, public android?: any, public timestamp?: Date) {}
+    constructor(public value?: any, public ios?: any, public android?: any, public timestamp?: Date) { }
     public setFields(value?: any, ios?: any, android?: any, timestamp?: Date) {
         this.value = value;
         this.ios = ios;
@@ -291,6 +290,8 @@ export class BluetoothService {
         console.log(`connectPeripheral(${peripheralUUID}) called`);
         bluetooth.connect({
             UUID: peripheralUUID,
+            // autoDiscoverAll: true,
+            serviceUUIDs: ['0000181a-0000-1000-8000-00805f9b34fb'],
             onConnected: data => {
                 const peripheral: IPeripheral = { ...data, RSSI: 0 };
                 console.log('peripheral connected: ' + this.stringify(peripheral));
