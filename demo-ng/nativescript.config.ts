@@ -1,7 +1,7 @@
 import { NativeScriptConfig } from '@nativescript/core';
 
 export default {
-    id: 'org.vault-worldwide.parent',
+    id: 'org.nativescript.@nativescript-community/ble-demo-ng',
     appPath: 'src',
     appResourcesPath: 'App_Resources',
     android: {
