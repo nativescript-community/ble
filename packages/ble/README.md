@@ -1,4 +1,4 @@
-<!-- ⚠️ This README has been generated from the file(s) "blueprint.md" ⚠️--><!-- ⚠️ This README has been generated from the file(s) "blueprint.md" ⚠️-->
+<!-- ⚠️ This README has been generated from the file(s) "blueprint.md" ⚠️-->
 <!--  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -31,9 +31,6 @@
 
 <br />
 
-
-
-[](#table-of-contents)
 
 
 [](#table-of-contents)
@@ -80,16 +77,10 @@
 
 [](#installation)
 
-
-[](#installation)
-
 ## Installation
 Run the following command from the root of your project:
 
 `ns plugin add @nativescript-community/ble`
-
-
-[](#api)
 
 
 [](#api)
@@ -400,9 +391,6 @@ bluetooth.stopNotifying({
 
 [](#demos-and-development)
 
-
-[](#demos-and-development)
-
 ## Demos and Development
 
 
@@ -436,9 +424,6 @@ npm run demo.[ng|react|svelte|vue].[ios|android]
 
 npm run demo.svelte.ios # Example
 ```
-
-
-[](#contributing)
 
 
 [](#contributing)
@@ -480,9 +465,6 @@ Simply run
 ```shell
 npm run publish
 ```
-
-
-[](#questions)
 
 
 [](#questions)
