@@ -51,7 +51,13 @@ export function bluetoothEnabled(target: Object, propertyKey: string, descriptor
     return descriptor;
 }
 
-const pattern = /0000(.{4})-0000-1000-8000-00805f9b34fb/;
+// BT assigned-numbers: https://www.bluetooth.com/specifications/assigned-numbers/
+const patternBtAssignedNumbers = /0000(.{4})-0000-1000-8000-00805f9b34fb/i;
+export function shortenUuidIfAssignedNumber(uuid: string) {
+    const matcher = uuid.toLowerCase().match(patternBtAssignedNumbers);
+    return (matcher && matcher.length > 0 ? matcher[1] : uuid);
+}
+
 export function prepareArgs(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
     const originalMethod = descriptor.value as Function; // save a reference to the original method
 
@@ -64,13 +70,9 @@ export function prepareArgs(target: Object, propertyKey: string, descriptor: Typ
                 const value = paramsToCheck[k];
                 if (value) {
                     if (Array.isArray(value)) {
-                        paramsToCheck[k] = paramsToCheck[k].map((v) => {
-                            const matcher = (v as string).match(pattern);
-                            return (matcher && matcher.length > 0 ? matcher[1] : v).toLowerCase();
-                        });
+                        paramsToCheck[k] = paramsToCheck[k].map(v => shortenUuidIfAssignedNumber(v));
                     } else {
-                        const matcher = (paramsToCheck[k] as string).match(pattern);
-                        paramsToCheck[k] = (matcher && matcher.length > 0 ? matcher[1] : paramsToCheck[k]).toLowerCase();
+                        paramsToCheck[k] = shortenUuidIfAssignedNumber(paramsToCheck[k] ?? '');
                     }
                 }
             });
@@ -530,7 +532,7 @@ export interface DiscoverCharacteristicsOptions extends DiscoverOptions {
 }
 
 // tslint:disable-next-line:no-empty-interface
-export interface StopNotifyingOptions extends CRUDOptions {}
+export interface StopNotifyingOptions extends CRUDOptions { }
 
 export interface StartNotifyingOptions extends CRUDOptions {
     onNotify: (data: ReadResult) => void;

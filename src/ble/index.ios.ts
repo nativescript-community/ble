@@ -19,7 +19,8 @@ import {
     StopNotifyingOptions,
     WriteOptions,
     bluetoothEnabled,
-    prepareArgs
+    prepareArgs,
+    shortenUuidIfAssignedNumber,
 } from './index.common';
 import { Trace } from '@nativescript/core';
 
@@ -1641,8 +1642,12 @@ export class Bluetooth extends BluetoothCommon {
             const subD = {
                 peripheralDidDiscoverCharacteristicsForServiceError: (peripheral: CBPeripheral, service: CBService, error?: NSError) => {
                     const UUID = NSUUIDToString(peripheral.identifier);
-                    const sUUID = CBUUIDToString(service.UUID);
-                    if (UUID === pUUID && sUUID === args.serviceUUID) {
+                    const sUuidLong = CBUUIDToString(service.UUID);
+                    const sUuidShort = shortenUuidIfAssignedNumber(sUuidLong);
+                    if (Trace.isEnabled()) {
+                        CLog(CLogTypes.info, `discoverCharacteristics [UUID]: ${UUID}, [pUUID]: ${pUUID}, [args.serviceUUID]: ${args.serviceUUID}, [sUuidLong]: ${sUuidLong}, [sUuidShort]: ${sUuidShort}`);
+                    }
+                    if (UUID === pUUID && (sUuidLong === args.serviceUUID || sUuidShort === args.serviceUUID)) {
                         if (error) {
                             reject(
                                 new BluetoothError(error.localizedDescription, {
