@@ -20,7 +20,7 @@ import {
     WriteOptions,
     bluetoothEnabled,
     prepareArgs,
-    shortenUuidIfAssignedNumber,
+    shortenUuidIfAssignedNumber
 } from './index.common';
 import { Trace } from '@nativescript/core';
 
@@ -1645,7 +1645,10 @@ export class Bluetooth extends BluetoothCommon {
                     const sUuidLong = CBUUIDToString(service.UUID);
                     const sUuidShort = shortenUuidIfAssignedNumber(sUuidLong);
                     if (Trace.isEnabled()) {
-                        CLog(CLogTypes.info, `discoverCharacteristics [UUID]: ${UUID}, [pUUID]: ${pUUID}, [args.serviceUUID]: ${args.serviceUUID}, [sUuidLong]: ${sUuidLong}, [sUuidShort]: ${sUuidShort}`);
+                        CLog(
+                            CLogTypes.info,
+                            `discoverCharacteristics [UUID]: ${UUID}, [pUUID]: ${pUUID}, [args.serviceUUID]: ${args.serviceUUID}, [sUuidLong]: ${sUuidLong}, [sUuidShort]: ${sUuidShort}`
+                        );
                     }
                     if (UUID === pUUID && (sUuidLong === args.serviceUUID || sUuidShort === args.serviceUUID)) {
                         if (error) {
