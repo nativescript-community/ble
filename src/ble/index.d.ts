@@ -22,7 +22,7 @@ import {
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
-    WriteOptions,
+    WriteOptions
 } from './index.common';
 
 export {
@@ -46,7 +46,7 @@ export {
     StartNotifyingOptions,
     StartScanningOptions,
     StopNotifyingOptions,
-    WriteOptions,
+    WriteOptions
 };
 
 export class Bluetooth extends BluetoothCommon {
@@ -143,7 +143,6 @@ export class Bluetooth extends BluetoothCommon {
 
     public clearAdvertismentCache();
 
-
     // ios only
     centralManager: any; // CBCentralManager;
 
@@ -153,4 +152,3 @@ export class Bluetooth extends BluetoothCommon {
     public getDevice(args: DisconnectOptions): any; // CBPeripheral or android.bluetooth.BluetoothDevice
 }
 export function getBluetoothInstance(): Bluetooth;
-
