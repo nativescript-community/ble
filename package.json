@@ -1,27 +1,25 @@
 {
-    "name": "@nativescript-community/ble",
     "version": "1.0.0",
     "description": "Connect to and interact with Bluetooth LE peripherals",
     "scripts": {
-        "setup": "ts-patch install",
-        "prepare": "npm run setup",
-        "tsc": "cp src/bluetooth.d.ts plugin && tsc -skipLibCheck -d",
-        "build.plugin": " \\cp README.md plugin/ && rm -f .tsbuildinfo && npm run tsc",
-        "clean": "rimraf ./plugin/**/*.d.ts ./plugin/**/*.js ./plugin/**/*.js.map plugin/node_modules plugin/package-lock.json",
-        "build": "npm run tsc",
-        "test.android": "npm i && npm run tsc && npm run tslint && cd demo && tns build android && tns test android --justlaunch",
-        "test.ios": "npm i && npm run tsc && npm run tslint && cd demo && tns build ios && tns test ios --justlaunch",
-        "tslint": "tslint \"src/**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\"",
-        "plugin.tscwatch": "npm run tsc -- -w",
-        "demo.ios": "npm i && npm run tsc && cd demo && tns run ios",
-        "demo.android": "npm i && npm run tsc && cd demo && tns run android",
-        "demo.reset": "cd demo && rimraf platforms",
-        "plugin.prepare": "npm run tsc && cd demo && tns plugin remove @nativescript-community/ble && tns plugin add ../plugin",
-        "clean.demo": "rimraf demo/hooks demo/node_modules demo/platforms",
-        "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'",
-        "publish": "ts-patch install && npm run build && lerna publish --create-release=github --force-publish",
-        "doc": "typedoc --out docs --tsconfig tsconfig.doc.json --includeDeclarations --excludeExternals --mode file --ignoreCompilerErrors --excludeNotExported --excludePrivate --theme minimal",
-        "commitmsg": "commitlint -e $GIT_PARAMS"
+        "build": "lerna run build",
+        "build.watch": "lerna run build.watch",
+        "build.all": "npm run build",
+        "build.all.win": "lerna run build.all.win",
+        "clean": "rimraf 'packages/**/*.d.ts' 'packages/**/*.js' 'packages/**/*.js.map' 'packages/**/*.metada' 'packages/**/angular/ng-package.json'",
+        "fullclean": "npm run clean && rimraf 'packages/**/node_modules' 'demo-*/hooks' 'demo-*/node_modules' 'package-lock.json' 'pnpm-lock.yaml' 'node_modules'",
+        "commitmsg": "commitlint -e $GIT_PARAMS",
+        "postinstall": "npm run setup",
+        "publish": "npm run clean && npm run build.all && npm run readme && lerna publish --no-private --create-release=github --force-publish",
+        "readme": "node ./tools/readme.js",
+        "setup": "npm run submodules && ts-patch install",
+        "start": "./node_modules/.bin/ntl -A -s 15 -o",
+        "submodules": "git submodule update --init",
+        "sync": "node ./tools/sync.js",
+        "sync.test": "node ./tools/sync.js",
+        "tsc": "cpy '**/*.d.ts' '../plugin' --parents --cwd=src && tsc -skipLibCheck -d",
+        "update": "node ./tools/update.js",
+        "doc": "node tools/builddoc.mjs"
     },
     "repository": {
         "type": "git",
@@ -52,32 +50,38 @@
         "url": "https://github.com/nativescript-community/ble/issues"
     },
     "homepage": "https://github.com/nativescript-community/ble",
-    "devDependencies": {
-        "@commitlint/cli": "^17.3.0",
-        "@commitlint/config-conventional": "^17.3.0",
-        "@nativescript/core": "8.3.6",
-        "@nativescript/types": "8.3.1",
-        "@nativescript/webpack": "5.0.11",
-        "@types/node": "^18.11.9",
-        "@typescript-eslint/eslint-plugin": "5.44.0",
-        "@typescript-eslint/parser": "5.44.0",
-        "eslint": "8.28.0",
-        "husky": "^8.0.2",
-        "lerna": "^6.0.3",
-        "rimraf": "^3.0.2",
-        "ts-patch": "^2.0.2",
-        "typedoc": "^0.23.21",
-        "typescript": "~4.8.4"
-    },
     "dependencies": {
         "@nativescript-community/arraybuffers": "^1.1.1",
         "@nativescript-community/observable": "^2.0.11",
+        "@nativescript-community/plugin-seed-tools": "file:tools",
         "make-error": "1.3.6",
-        "p-queue": "~7.2.0"
+        "p-queue": "~7.3.0"
     },
     "commitlint": {
         "extends": [
             "@commitlint/config-conventional"
         ]
+    },
+    "ntl": {
+        "descriptions": {
+            "build": "Build the plugin",
+            "build.all": "Build the plugin for all platforms",
+            "clean": "Clean the local environment.",
+            "watch": "Watch for changes in the plugin source and re-build."
+        }
+    },
+    "workspaces": [
+        "packages/*",
+        "demo-vue",
+        "demo-ng",
+        "demo-svelte",
+        "demo-react",
+        "demo-snippets"
+    ],
+    "engines": {
+        "npm": "please use yarn or pnpm",
+        "yarn": ">=1.19.1",
+        "pnpm": ">=7.0.0",
+        "node": "^14.20.0 || ^16.13.0 || >=18.10.0"
     }
 }

@@ -1,19 +1,56 @@
-.idea
-.vscode
-node_modules
-platforms
-hooks
-.DS_Store
-npm-debug.log.*
-demo*/app/**/*.js
+# NativeScript
+hooks/
+node_modules/
+/platforms/
 
+# NativeScript Template
+*.js.map
+!ngcc.config.js
+!webpack.config.js
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+.idea
+.cloud
+.gradle
+.project
+.yarn
+tmp/
+
+!.eslintrc.js
+!.prettierrc.js
+
+!e2e/*.js
+!detox.config.js
+devices.js
+
+*.framework
 **/*.js.map
 src/**/*.js
-plugin/**/*.js
-plugin/**/*.d.ts
+packages/**/*.js
+packages/**/*.d.ts
+bin
+build
+Pods
+!packages/platforms
+/packages/**/*.aar
+*.xcuserdatad
+/packages/README.md
+packages/**/*js.map
+packages/**/*js
+packages/**/angular/*.json
+packages/*.ngsummary.json
+packages/*.metadata.json
+packages/angular
+packages/typings
 
-!plugin/platforms
-/plugin/platforms/android/ble.aar
-package-lock.json
-pnpm-lock.yaml
-*.aar
+/blueprint.md

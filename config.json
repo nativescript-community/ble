@@ -1,0 +1,7 @@
+{
+    "readme": true,
+    "angular": false,
+    "demos": [
+        "angular"
+    ]
+}

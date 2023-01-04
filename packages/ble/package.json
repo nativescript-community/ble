@@ -1,0 +1,74 @@
+{
+    "name": "@nativescript-community/ble",
+    "version": "3.1.11",
+    "description": "Connect to and interact with Bluetooth LE peripherals.",
+    "main": "./index",
+    "typings": "./index.d.ts",
+    "sideEffects": false,
+    "nativescript": {
+        "platforms": {
+            "android": "3.0.0",
+            "ios": "3.0.0"
+        }
+    },
+    "scripts": {
+        "tsc": "cpy ../../src/ble/index.d.ts ./ && tsc -d",
+        "tsc-win": "cpy ..\\..\\src\\ble\\index.d.ts .\\ && tsc -d",
+        "build": "npm run tsc",
+        "setup.yarn": "yarn install",
+        "build.watch": "npm run tsc -- -w",
+        "build.win": "npm run tsc-win",
+        "build.all": "npm run build && npm run build.angular",
+        "build.all.win": "npm run build.win && npm run build.angular.win",
+        "build.angular": "ng-packagr -p ../../src/ble/angular/ng-package.json -c ../../src/ble/angular/tsconfig.json",
+        "build.angular.win": "ng-packagr -p ..\\..\\src\\ble\\angular\\package.json -c ..\\..\\src\\ble\\angular\\tsconfig.json",
+        "clean": "rimraf ./*.d.ts ./*.js ./*.js.map"
+    },
+    "keywords": [
+        "ecosystem:NativeScript",
+        "NativeScript",
+        "iOS",
+        "Android",
+        "BLE",
+        "Bluetooth",
+        "Bluetooth LE",
+        "Bluetooth Smart",
+        "Bluetooth Low Energy",
+        "Angular"
+    ],
+    "author": {
+        "name": "Eddy Verbruggen",
+        "email": "eddyverbruggen@gmail.com"
+    },
+    "contributors": [
+        {
+            "name": "Brad Martin",
+            "email": "bmartin@nstudio.io",
+            "url": "https://github.com/bradmartin"
+        },
+        {
+            "name": "Martin Guillon",
+            "email": "martin.guillon@akyasl.fr"
+        },
+        {
+            "name": "Ryan Pendergast",
+            "email": "ryan.pendergast@gmail.com",
+            "url": "https://rynop.com"
+        }
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/nativescript-community/ble/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/nativescript-community/ble"
+    },
+    "homepage": "https://nativescript-community.github.io/ble",
+    "dependencies": {
+        "@nativescript-community/arraybuffers": "^1.1.1",
+        "@nativescript-community/observable": "^2.0.11",
+        "make-error": "1.3.6",
+        "p-queue": "~7.3.0"
+    }
+}
