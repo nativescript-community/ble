@@ -1,11 +1,4 @@
-import * as blenoTypings from 'bleno';
-
-let bleno: typeof blenoTypings;
-if (/^darwin/.test(process.platform)) {
-    bleno = require('bleno');
-} else {
-    bleno = require('bleno');
-}
+import * as bleno from '@abandonware/bleno';
 
 // let BlenoPrimaryService = bleno.PrimaryService;
 
@@ -171,10 +164,10 @@ function numberToArray(_number) {
     return result;
 }
 
-bleno.on('advertisingStartError', function(error) {
+bleno.on('advertisingStartError', function (error) {
     console.log('on -> advertisingStartError: ' + (error ? 'error ' + error : 'success'));
 });
-bleno.on('advertisingStart', function(error) {
+bleno.on('advertisingStart', function (error) {
     console.log('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'));
 
     if (!error) {
@@ -186,7 +179,7 @@ bleno.on('advertisingStart', function(error) {
         ]);
     }
 });
-bleno.on('stateChange', function(state) {
+bleno.on('stateChange', function (state) {
     console.log('on -> stateChange: ' + state);
 
     if (state === 'poweredOn') {
@@ -200,7 +193,7 @@ bleno.on('stateChange', function(state) {
         // if (bleno.startAdvertisingWithEIRData) {
         //     bleno.startAdvertisingWithEIRData(advertisement[0], advertisement[1]);
         // } else {
-            bleno.startAdvertising(name);
+        bleno.startAdvertising(name);
         // }
     } else {
         bleno.stopAdvertising();
