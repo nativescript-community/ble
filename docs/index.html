@@ -1,0 +1,420 @@
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Connect to and interact with Bluetooth LE peripherals</title><meta name="description" content="Documentation for Connect to and interact with Bluetooth LE peripherals"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script async src="assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container">
+<div class="table-cell" id="tsd-search" data-base=".">
+<div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
+<div class="field">
+<div id="tsd-toolbar-links"><a href="https://docs.nativescript.org">Nativescript Doc</a></div></div>
+<ul class="results">
+<li class="state loading">Preparing search index...</li>
+<li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">Connect to and interact with Bluetooth LE peripherals</a></div>
+<div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="7" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="11" width="14" height="2" fill="var(--color-text)"></rect></svg></a></div></div></header>
+<div class="container container-main">
+<div class="col-8 col-content">
+<div class="tsd-page-title">
+<h2>Connect to and interact with Bluetooth LE peripherals</h2></div>
+<div class="tsd-panel tsd-typography"><!-- ⚠️ This README has been generated from the file(s) "blueprint.md" ⚠️--><!-- ⚠️ This README has been generated from the file(s) "blueprint.md" ⚠️-->
+<!--  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      DO NOT EDIT THIS READEME DIRECTLY! Edit "bluesprint.md" instead.
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+<h1 align="center">@nativescript-community/ble</h1>
+<p align="center">
+        <a href="https://npmcharts.com/compare/@nativescript-community/ble?minimal=true"><img alt="Downloads per month" src="https://img.shields.io/npm/dm/@nativescript-community/ble.svg" height="20"/></a>
+<a href="https://www.npmjs.com/package/@nativescript-community/ble"><img alt="NPM Version" src="https://img.shields.io/npm/v/@nativescript-community/ble.svg" height="20"/></a>
+    </p>
+
+<p align="center">
+  <b>Connect to and interact with Bluetooth LE peripherals.</b></br>
+  <sub><sub>
+</p>
+
+<br />
+
+
+
+<p><a href="#table-of-contents"></a></p>
+<p><a href="#table-of-contents"></a></p>
+
+<a href="#table-of-contents" id="table-of-contents" style="color: inherit; text-decoration: none;">
+  <h2>Table of Contents</h2>
+</a>
+<ul>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#api">API</a>
+  * <a href="#prerequisites">Prerequisites</a>
+  * <a href="#discovery">Discovery</a>
+  * <a href="#connectivity">Connectivity</a>
+  * <a href="#interaction">Interaction</a>
+  * <a href="#debugging">Debugging</a><ul>
+<li><a href="#isbluetoothenabled">isBluetoothEnabled</a></li>
+<li><a href="#haslocationpermission">hasLocationPermission</a></li>
+<li><a href="#requestlocationpermission">requestLocationPermission</a></li>
+<li><a href="#enable-android-only">enable (Android only)</a></li>
+<li><a href="#startscanning">startScanning</a><ul>
+<li><a href="#seconds">seconds</a></li>
+<li><a href="#avoidduplicates">avoidDuplicates</a></li>
+<li><a href="#skippermissioncheck">skipPermissionCheck</a></li>
+<li><a href="#filters">filters</a></li>
+<li><a href="#ondiscovered">onDiscovered</a></li>
+</ul>
+</li>
+<li><a href="#stopscanning">stopScanning</a></li>
+<li><a href="#connect">connect</a></li>
+<li><a href="#disconnect">disconnect</a></li>
+<li><a href="#read">read</a></li>
+<li><a href="#write">write</a></li>
+<li><a href="#writewithoutresponse">writeWithoutResponse</a></li>
+<li><a href="#startnotifying">startNotifying</a></li>
+<li><a href="#stopnotifying">stopNotifying</a></li>
+<li><a href="#examples">Examples:</a></li>
+</ul>
+</li>
+<li><a href="#demos-and-development">Demos and Development</a><ul>
+<li><a href="#repo-setup">Repo Setup</a></li>
+<li><a href="#build">Build</a></li>
+<li><a href="#demos">Demos</a></li>
+</ul>
+</li>
+<li><a href="#contributing">Contributing</a><ul>
+<li><a href="#update-repo-">Update repo </a></li>
+<li><a href="#update-readme-">Update readme </a></li>
+<li><a href="#update-doc-">Update doc </a></li>
+<li><a href="#publish">Publish</a></li>
+</ul>
+</li>
+<li><a href="#questions">Questions</a></li>
+</ul>
+<p><a href="#installation"></a></p>
+<p><a href="#installation"></a></p>
+
+<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+  <h2>Installation</h2>
+</a>
+<p>Run the following command from the root of your project:</p>
+<p><code>ns plugin add @nativescript-community/ble</code></p>
+<p><a href="#api"></a></p>
+<p><a href="#api"></a></p>
+
+<a href="#api" id="api" style="color: inherit; text-decoration: none;">
+  <h2>API</h2>
+</a>
+<p>Want to dive in quickly? Check out <a href="https://github.com/nativescript-community/ble/tree/master/demo">the demo app</a>! Otherwise, mix and match these functions as you see fit:</p>
+
+<a href="#prerequisites" id="prerequisites" style="color: inherit; text-decoration: none;">
+  <h4>Prerequisites</h4>
+</a>
+<ul>
+<li><a href="#isbluetoothenabled">isBluetoothEnabled</a></li>
+<li><a href="#requestLocationPermission">requestLocationPermission</a></li>
+<li><a href="#haslocationpermission">hasLocationPermission</a></li>
+<li><a href="#enable-android-only">enable (Android only)</a></li>
+</ul>
+
+<a href="#discovery" id="discovery" style="color: inherit; text-decoration: none;">
+  <h4>Discovery</h4>
+</a>
+<ul>
+<li><a href="#startscanning">startScanning</a></li>
+<li><a href="#stopscanning">stopScanning</a></li>
+</ul>
+
+<a href="#connectivity" id="connectivity" style="color: inherit; text-decoration: none;">
+  <h4>Connectivity</h4>
+</a>
+<ul>
+<li><a href="#connect">connect</a></li>
+<li><a href="#disconnect">disconnect</a></li>
+</ul>
+
+<a href="#interaction" id="interaction" style="color: inherit; text-decoration: none;">
+  <h4>Interaction</h4>
+</a>
+<ul>
+<li><a href="#read">read</a></li>
+<li><a href="#write">write</a></li>
+<li><a href="#startnotifying">startNotifying</a></li>
+<li><a href="#stopnotifying">stopNotifying</a></li>
+</ul>
+
+<a href="#debugging" id="debugging" style="color: inherit; text-decoration: none;">
+  <h4>Debugging</h4>
+</a>
+<ul>
+<li><a href="#setcharacteristiclogging">setCharacteristicLogging</a></li>
+</ul>
+
+<a href="#isbluetoothenabled" id="isbluetoothenabled" style="color: inherit; text-decoration: none;">
+  <h3>isBluetoothEnabled</h3>
+</a>
+<p>Reports if bluetooth is enabled.</p>
+<pre><code class="language-typescript"><span class="hl-0">// require the plugin</span><br/><span class="hl-1">import</span><span class="hl-2"> { </span><span class="hl-3">Bluetooth</span><span class="hl-2"> } </span><span class="hl-1">from</span><span class="hl-2"> </span><span class="hl-4">&#39;@nativescript-community/ble&#39;</span><span class="hl-2">;</span><br/><span class="hl-5">var</span><span class="hl-2"> </span><span class="hl-3">bluetooth</span><span class="hl-2"> = </span><span class="hl-5">new</span><span class="hl-2"> </span><span class="hl-6">Bluetooth</span><span class="hl-2">();</span><br/><br/><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">isBluetoothEnabled</span><span class="hl-2">().</span><span class="hl-6">then</span><span class="hl-2">(</span><br/><span class="hl-2">  </span><span class="hl-5">function</span><span class="hl-2">(</span><span class="hl-3">enabled</span><span class="hl-2">) {</span><br/><span class="hl-2">    </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;Enabled? &quot;</span><span class="hl-2"> + </span><span class="hl-3">enabled</span><span class="hl-2">);</span><br/><span class="hl-2">  }</span><br/><span class="hl-2">);</span>
+</code></pre>
+
+<a href="#haslocationpermission" id="haslocationpermission" style="color: inherit; text-decoration: none;">
+  <h3>hasLocationPermission</h3>
+</a>
+<p><strong>Since plugin version 1.2.0 the <code>startScanning</code> function will handle this internally so it&#39;s no longer mandatory to add permission checks to your code.</strong></p>
+<p>On Android 6 you need to request permission to be able to interact with a Bluetooth peripheral (when the app is in the background) when targeting API level 23+. Even if the <code>uses-permission</code> tag for <code>ACCESS_COARSE_LOCATION</code> is present in <code>AndroidManifest.xml</code>.</p>
+<p>Note that for <code>BLUETOOTH</code> and <code>BLUETOOTH_ADMIN</code> you don&#39;t require runtime permission; adding those to <code>AndroidManifest.xml</code> suffices (which the plugin does for you).</p>
+<p>Note that <code>hasLocationPermission </code> will return true when:</p>
+<ul>
+<li>You&#39;re running this on iOS, or</li>
+<li>You&#39;re targeting an API level lower than 23, or</li>
+<li>You&#39;re using a device running Android &lt; 6, or</li>
+<li>You&#39;ve already granted permission.</li>
+</ul>
+<pre><code class="language-typescript"><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">hasLocationPermission</span><span class="hl-2">().</span><span class="hl-6">then</span><span class="hl-2">(</span><br/><span class="hl-2">  </span><span class="hl-5">function</span><span class="hl-2">(</span><span class="hl-3">granted</span><span class="hl-2">) {</span><br/><span class="hl-2">    </span><span class="hl-0">// if this is &#39;false&#39; you probably want to call &#39;requestLocationPermission&#39; now</span><br/><span class="hl-2">    </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;Has Location Permission? &quot;</span><span class="hl-2"> + </span><span class="hl-3">granted</span><span class="hl-2">);</span><br/><span class="hl-2">  }</span><br/><span class="hl-2">);</span>
+</code></pre>
+
+<a href="#requestlocationpermission" id="requestlocationpermission" style="color: inherit; text-decoration: none;">
+  <h3>requestLocationPermission</h3>
+</a>
+<p><strong>Since plugin version 1.2.0 the <code>startScanning</code> function will handle this internally so it&#39;s no longer mandatory to add permission checks to your code.</strong></p>
+<pre><code class="language-typescript"><span class="hl-0">// if no permission was granted previously this will open a user consent screen</span><br/><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">requestLocationPermission</span><span class="hl-2">().</span><span class="hl-6">then</span><span class="hl-2">(</span><br/><span class="hl-2">  </span><span class="hl-5">function</span><span class="hl-2">(</span><span class="hl-3">granted</span><span class="hl-2">) {</span><br/><span class="hl-2">    </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;Location permission requested, user granted? &quot;</span><span class="hl-2"> + </span><span class="hl-3">granted</span><span class="hl-2">);</span><br/><span class="hl-2">  }</span><br/><span class="hl-2">);</span>
+</code></pre>
+
+<a href="#enable-android-only" id="enable-android-only" style="color: inherit; text-decoration: none;">
+  <h3>enable (Android only)</h3>
+</a>
+<p>The promise will be rejected on iOS</p>
+<pre><code class="language-typescript"><span class="hl-0">// This turns bluetooth on, will return false if the user denied the request.</span><br/><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">enable</span><span class="hl-2">().</span><span class="hl-6">then</span><span class="hl-2">(</span><br/><span class="hl-2">  </span><span class="hl-5">function</span><span class="hl-2">(</span><span class="hl-3">enabled</span><span class="hl-2">) {</span><br/><span class="hl-2">    </span><span class="hl-0">// use Bluetooth features if enabled is true </span><br/><span class="hl-2">  }</span><br/><span class="hl-2">);</span>
+</code></pre>
+
+<a href="#startscanning" id="startscanning" style="color: inherit; text-decoration: none;">
+  <h3>startScanning</h3>
+</a>
+<p>A few of the optional params require a bit of explanation:</p>
+
+<a href="#seconds" id="seconds" style="color: inherit; text-decoration: none;">
+  <h4>seconds</h4>
+</a>
+<p>Scanning for peripherals drains the battery quickly, so you better not scan any longer than necessary. If a peripheral is in range and not engaged in another connection it usually pops up in under a second. If you don&#39;t pass in a number of seconds you will need to manually call <code>stopScanning</code>.</p>
+
+<a href="#avoidduplicates" id="avoidduplicates" style="color: inherit; text-decoration: none;">
+  <h4>avoidDuplicates</h4>
+</a>
+<p>Set this to true if you don&#39;t want duplicates with the same serviceUUID reported in &quot;onDiscovered&quot; callback.
+If true, only the first discovered peripheral with the same serviceUUID will be reported.</p>
+
+<a href="#skippermissioncheck" id="skippermissioncheck" style="color: inherit; text-decoration: none;">
+  <h4>skipPermissionCheck</h4>
+</a>
+<p>Set this to true if you don&#39;t want the plugin to check (and request) the required Bluetooth permissions.
+Particularly useful if you&#39;re running this function on a non-UI thread (ie. a Worker).
+Relevant on Android only.</p>
+
+<a href="#filters" id="filters" style="color: inherit; text-decoration: none;">
+  <h4>filters</h4>
+</a>
+<p>It&#39;s inefficient to scan for all available Bluetooth peripherals and have them report all services they offer.
+Moreover on Android if we don&#39;t use filters we must have location permissions and have GPS enabled</p>
+<p>If you&#39;re only interested in finding a heartrate peripheral for instance, pass in service UUID <code>&#39;180d&#39;</code> like this: filters: [{serviceUUID:&#39;180d&#39;}]. If you add 2 or more (comma separated) services then only peripherals supporting ALL those services will match.</p>
+<p>Note that UUID&#39;s are ALWAYS strings; don&#39;t pass integers.</p>
+
+<a href="#ondiscovered" id="ondiscovered" style="color: inherit; text-decoration: none;">
+  <h4>onDiscovered</h4>
+</a>
+<p>While scanning the plugin will immediately report back uniquely discovered peripherals.</p>
+<p>This function will receive an object representing the peripheral which contains these properties (and types):</p>
+<ul>
+<li><code>UUID: string</code></li>
+<li><code>name: string</code></li>
+<li><code>RSSI: number</code> (relative signal strength, can be used for distance measurement)</li>
+<li><code>services?:</code> (optional - this is set once connected to the peripheral)</li>
+<li><code>manufacturerId?: number</code> (optional)</li>
+<li><code>advertismentData?:  {   localName?:string   manufacturerData?: ArrayBuffer;   serviceUUIDs?: string[];   txPowerLevel?:number,   flags?:number }</code> (optional)</li>
+</ul>
+<pre><code class="language-typescript"><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">startScanning</span><span class="hl-2">({</span><br/><span class="hl-2">  </span><span class="hl-3">filters:</span><span class="hl-2"> [{</span><span class="hl-3">serviceUUID:</span><span class="hl-4">&#39;180d&#39;</span><span class="hl-2">}],</span><br/><span class="hl-2">  </span><span class="hl-3">seconds:</span><span class="hl-2"> </span><span class="hl-7">4</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-6">onDiscovered</span><span class="hl-3">:</span><span class="hl-2"> </span><span class="hl-5">function</span><span class="hl-2"> (</span><span class="hl-3">peripheral</span><span class="hl-2">) {</span><br/><span class="hl-2">      </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;Periperhal found with UUID: &quot;</span><span class="hl-2"> + </span><span class="hl-3">peripheral</span><span class="hl-2">.</span><span class="hl-8">UUID</span><span class="hl-2">);</span><br/><span class="hl-2">  }</span><br/><span class="hl-2">}).</span><span class="hl-6">then</span><span class="hl-2">(</span><span class="hl-5">function</span><span class="hl-2">() {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;scanning complete&quot;</span><span class="hl-2">);</span><br/><span class="hl-2">}, </span><span class="hl-5">function</span><span class="hl-2"> (</span><span class="hl-3">err</span><span class="hl-2">) {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;error while scanning: &quot;</span><span class="hl-2"> + </span><span class="hl-3">err</span><span class="hl-2">);</span><br/><span class="hl-2">});</span>
+</code></pre>
+
+<a href="#stopscanning" id="stopscanning" style="color: inherit; text-decoration: none;">
+  <h3>stopScanning</h3>
+</a>
+<p>At any time during a scan, being one where you passed in a number or seconds or not, you can stop the scan by calling this function.</p>
+<p>You may for instance want to stop scanning when the peripheral you found in <code>startScanning</code>&#39;s <code>onDiscovered</code> callback matches your criteria.</p>
+<pre><code class="language-typescript"><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">stopScanning</span><span class="hl-2">().</span><span class="hl-6">then</span><span class="hl-2">(</span><span class="hl-5">function</span><span class="hl-2">() {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;scanning stopped&quot;</span><span class="hl-2">);</span><br/><span class="hl-2">});</span>
+</code></pre>
+
+<a href="#connect" id="connect" style="color: inherit; text-decoration: none;">
+  <h3>connect</h3>
+</a>
+<p>Pass in the UUID of the peripheral you want to connect to and once a connection has been established the <code>onConnected</code> callback function will be invoked. This callback will received the peripheral object as before, but it&#39;s now enriched with a <code>services</code> property. An example of the returned peripheral object could be:</p>
+<pre><code class="language-typescript"><span class="hl-2">  </span><span class="hl-9">peripheral</span><span class="hl-2">: {</span><br/><span class="hl-2">    </span><span class="hl-9">UUID</span><span class="hl-2">: </span><span class="hl-4">&#39;3424-542-4534-53454&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">    </span><span class="hl-9">name</span><span class="hl-2">: </span><span class="hl-4">&#39;Polar P7 Heartrate Monitor&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">    </span><span class="hl-9">RSSI</span><span class="hl-2">: </span><span class="hl-4">&#39;-57&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">    </span><span class="hl-9">services</span><span class="hl-2">: [{    </span><br/><span class="hl-2">      </span><span class="hl-3">UUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;180d&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">      </span><span class="hl-3">name:</span><span class="hl-2"> </span><span class="hl-4">&#39;Heartrate service&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">      </span><span class="hl-3">characteristics:</span><span class="hl-2"> [{</span><br/><span class="hl-2">        </span><span class="hl-3">UUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;34534-54353-234324-343&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">        </span><span class="hl-3">name:</span><span class="hl-2"> </span><span class="hl-4">&#39;Heartrate characteristic&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">        </span><span class="hl-3">properties:</span><span class="hl-2"> {</span><br/><span class="hl-2">          </span><span class="hl-3">read:</span><span class="hl-2"> </span><span class="hl-5">true</span><span class="hl-2">,</span><br/><span class="hl-2">          </span><span class="hl-3">write:</span><span class="hl-2"> </span><span class="hl-5">false</span><span class="hl-2">,</span><br/><span class="hl-2">          </span><span class="hl-3">writeWithoutResponse:</span><span class="hl-2"> </span><span class="hl-5">false</span><span class="hl-2">,</span><br/><span class="hl-2">          </span><span class="hl-3">notify:</span><span class="hl-2"> </span><span class="hl-5">true</span><br/><span class="hl-2">        }</span><br/><span class="hl-2">      }]</span><br/><span class="hl-2">    }]</span><br/><span class="hl-2">  }</span>
+</code></pre>
+<p>Here&#39;s the <code>connect</code> function in action with an implementation of <code>onConnected</code> that simply dumps the entire peripheral object to the console:</p>
+<pre><code class="language-typescript"><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">connect</span><span class="hl-2">({</span><br/><span class="hl-2">  </span><span class="hl-3">UUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;04343-23445-45243-423434&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-6">onConnected</span><span class="hl-3">:</span><span class="hl-2"> </span><span class="hl-5">function</span><span class="hl-2"> (</span><span class="hl-3">peripheral</span><span class="hl-2">) {</span><br/><span class="hl-2">      </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;Periperhal connected with UUID: &quot;</span><span class="hl-2"> + </span><span class="hl-3">peripheral</span><span class="hl-2">.</span><span class="hl-8">UUID</span><span class="hl-2">);</span><br/><br/><span class="hl-2">      </span><span class="hl-0">// the peripheral object now has a list of available services:</span><br/><span class="hl-2">      </span><span class="hl-3">peripheral</span><span class="hl-2">.</span><span class="hl-3">services</span><span class="hl-2">.</span><span class="hl-6">forEach</span><span class="hl-2">(</span><span class="hl-5">function</span><span class="hl-2">(</span><span class="hl-3">service</span><span class="hl-2">) {</span><br/><span class="hl-2">        </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;service found: &quot;</span><span class="hl-2"> + </span><span class="hl-8">JSON</span><span class="hl-2">.</span><span class="hl-6">stringify</span><span class="hl-2">(</span><span class="hl-3">service</span><span class="hl-2">));</span><br/><span class="hl-2">   });</span><br/><span class="hl-2">  },</span><br/><span class="hl-2">  </span><span class="hl-6">onDisconnected</span><span class="hl-3">:</span><span class="hl-2"> </span><span class="hl-5">function</span><span class="hl-2"> (</span><span class="hl-3">peripheral</span><span class="hl-2">) {</span><br/><span class="hl-2">      </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;Periperhal disconnected with UUID: &quot;</span><span class="hl-2"> + </span><span class="hl-3">peripheral</span><span class="hl-2">.</span><span class="hl-8">UUID</span><span class="hl-2">);</span><br/><span class="hl-2">  }</span><br/><span class="hl-2">});</span>
+</code></pre>
+<p>Also note that <code>onDisconnected</code> function: if you try to interact with the peripheral after this event you risk crashing your app.</p>
+
+<a href="#disconnect" id="disconnect" style="color: inherit; text-decoration: none;">
+  <h3>disconnect</h3>
+</a>
+<p>Once done interacting with the peripheral be a good citizen and disconnect. This will allow other applications establishing a connection.</p>
+<pre><code class="language-typescript"><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">disconnect</span><span class="hl-2">({</span><br/><span class="hl-2">  </span><span class="hl-3">UUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;34234-5453-4453-54545&#39;</span><br/><span class="hl-2">}).</span><span class="hl-6">then</span><span class="hl-2">(</span><span class="hl-5">function</span><span class="hl-2">() {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;disconnected successfully&quot;</span><span class="hl-2">);</span><br/><span class="hl-2">}, </span><span class="hl-5">function</span><span class="hl-2"> (</span><span class="hl-3">err</span><span class="hl-2">) {</span><br/><span class="hl-2">  </span><span class="hl-0">// in this case you&#39;re probably best off treating this as a disconnected peripheral though</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;disconnection error: &quot;</span><span class="hl-2"> + </span><span class="hl-3">err</span><span class="hl-2">);</span><br/><span class="hl-2">});</span>
+</code></pre>
+
+<a href="#read" id="read" style="color: inherit; text-decoration: none;">
+  <h3>read</h3>
+</a>
+<p>If a peripheral has a service that has a characteristic where <code>properties.read</code> is <code>true</code> then you can call the <code>read</code> function to retrieve the current state (value) of the characteristic.</p>
+<p>The promise will receive an object like this:</p>
+<pre><code class="language-typescript"><span class="hl-2">{</span><br/><span class="hl-2">  </span><span class="hl-9">value</span><span class="hl-2">: &lt;</span><span class="hl-10">ArrayBuffer</span><span class="hl-2">&gt;, </span><span class="hl-0">// an ArrayBuffer which you can use to decode (see example below)</span><br/><span class="hl-2">  </span><span class="hl-9">ios</span><span class="hl-2">: &lt;</span><span class="hl-7">72</span><span class="hl-2">&gt;, </span><span class="hl-0">// the platform-specific binary value of the characteristic: NSData (iOS), byte[] (Android)</span><br/><span class="hl-2">  </span><span class="hl-9">android</span><span class="hl-2">: &lt;</span><span class="hl-7">72</span><span class="hl-2">&gt;, </span><span class="hl-0">// the platform-specific binary value of the characteristic: NSData (iOS), byte[] (Android)</span><br/><span class="hl-2">  </span><span class="hl-9">characteristicUUID</span><span class="hl-2">: </span><span class="hl-4">&#39;434234-234234-234234-434&#39;</span><br/><span class="hl-2">}</span>
+</code></pre>
+<p>Armed with this knowledge, let&#39;s invoke the <code>read</code> function:</p>
+<pre><code class="language-typescript"><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">read</span><span class="hl-2">({</span><br/><span class="hl-2">  </span><span class="hl-3">peripheralUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;34234-5453-4453-54545&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-3">serviceUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;180d&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-3">characteristicUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;3434-45234-34324-2343&#39;</span><br/><span class="hl-2">}).</span><span class="hl-6">then</span><span class="hl-2">(</span><span class="hl-5">function</span><span class="hl-2">(</span><span class="hl-3">result</span><span class="hl-2">) {</span><br/><span class="hl-2">  </span><span class="hl-0">// fi. a heartrate monitor value (Uint8) can be retrieved like this:</span><br/><span class="hl-2">  </span><span class="hl-5">var</span><span class="hl-2"> </span><span class="hl-3">data</span><span class="hl-2"> = </span><span class="hl-5">new</span><span class="hl-2"> </span><span class="hl-6">Uint8Array</span><span class="hl-2">(</span><span class="hl-3">result</span><span class="hl-2">.</span><span class="hl-3">value</span><span class="hl-2">);</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;Your heartrate is: &quot;</span><span class="hl-2"> + </span><span class="hl-3">data</span><span class="hl-2">[</span><span class="hl-7">1</span><span class="hl-2">] + </span><span class="hl-4">&quot; bpm&quot;</span><span class="hl-2">);  </span><br/><span class="hl-2">}, </span><span class="hl-5">function</span><span class="hl-2"> (</span><span class="hl-3">err</span><span class="hl-2">) {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;read error: &quot;</span><span class="hl-2"> + </span><span class="hl-3">err</span><span class="hl-2">);</span><br/><span class="hl-2">});</span>
+</code></pre>
+
+<a href="#write" id="write" style="color: inherit; text-decoration: none;">
+  <h3>write</h3>
+</a>
+<p>If a peripheral has a service that has a characteristic where <code>properties.write</code> is <code>true</code> then you can call the <code>write</code> function to update the current state (value) of the characteristic.</p>
+<p>The value may be a string or any array type value. If you pass a string you should pass the encoding too</p>
+<pre><code class="language-typescript"><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">write</span><span class="hl-2">({</span><br/><span class="hl-2">  </span><span class="hl-3">peripheralUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;34134-5453-4453-54545&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-3">serviceUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;180e&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-3">characteristicUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;3424-45234-34324-2343&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-3">value:</span><span class="hl-2"> [</span><span class="hl-7">1</span><span class="hl-2">]</span><br/><span class="hl-2">}).</span><span class="hl-6">then</span><span class="hl-2">(</span><span class="hl-5">function</span><span class="hl-2">(</span><span class="hl-3">result</span><span class="hl-2">) {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;value written&quot;</span><span class="hl-2">);</span><br/><span class="hl-2">}, </span><span class="hl-5">function</span><span class="hl-2"> (</span><span class="hl-3">err</span><span class="hl-2">) {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;write error: &quot;</span><span class="hl-2"> + </span><span class="hl-3">err</span><span class="hl-2">);</span><br/><span class="hl-2">});</span>
+</code></pre>
+
+<a href="#writewithoutresponse" id="writewithoutresponse" style="color: inherit; text-decoration: none;">
+  <h3>writeWithoutResponse</h3>
+</a>
+<p>Same API as <code>write</code>, except that when the promise is invoked the value has not been written yet; it has only been requested to be written an no response will be received when it has.</p>
+
+<a href="#startnotifying" id="startnotifying" style="color: inherit; text-decoration: none;">
+  <h3>startNotifying</h3>
+</a>
+<p>If a peripheral has a service that has a characteristic where <code>properties.notify</code> is <code>true</code> then you can call the <code>startNotifying</code> function to retrieve the value changes of the characteristic.</p>
+<p>Usage is very much like <code>read</code>, but the result won&#39;t be sent to the promise, but to the <code>onNotify</code> callback function you pass in. This is because multiple notifications can be received and a promise can only resolve once. The value of the object sent to <code>onNotify</code> is the same as the one you get in the promise of <code>read</code>.</p>
+<pre><code class="language-typescript"><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">startNotifying</span><span class="hl-2">({</span><br/><span class="hl-2">  </span><span class="hl-3">peripheralUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;34234-5453-4453-54545&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-3">serviceUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;180d&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-3">characteristicUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;3434-45234-34324-2343&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-6">onNotify</span><span class="hl-3">:</span><span class="hl-2"> </span><span class="hl-5">function</span><span class="hl-2"> (</span><span class="hl-3">result</span><span class="hl-2">) {</span><br/><span class="hl-2">    </span><span class="hl-0">// see the read example for how to decode ArrayBuffers</span><br/><span class="hl-2">    </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;read: &quot;</span><span class="hl-2"> + </span><span class="hl-8">JSON</span><span class="hl-2">.</span><span class="hl-6">stringify</span><span class="hl-2">(</span><span class="hl-3">result</span><span class="hl-2">));</span><br/><span class="hl-2">  }  </span><br/><span class="hl-2">}).</span><span class="hl-6">then</span><span class="hl-2">(</span><span class="hl-5">function</span><span class="hl-2">() {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;subscribed for notifications&quot;</span><span class="hl-2">);</span><br/><span class="hl-2">});</span>
+</code></pre>
+
+<a href="#stopnotifying" id="stopnotifying" style="color: inherit; text-decoration: none;">
+  <h3>stopNotifying</h3>
+</a>
+<p>Enough is enough. When you&#39;re no longer interested in the values the peripheral is sending you do this:</p>
+<pre><code class="language-typescript"><span class="hl-3">bluetooth</span><span class="hl-2">.</span><span class="hl-6">stopNotifying</span><span class="hl-2">({</span><br/><span class="hl-2">  </span><span class="hl-3">peripheralUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;34234-5453-4453-54545&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-3">serviceUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;180d&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-3">characteristicUUID:</span><span class="hl-2"> </span><span class="hl-4">&#39;3434-45234-34324-2343&#39;</span><br/><span class="hl-2">}).</span><span class="hl-6">then</span><span class="hl-2">(</span><span class="hl-5">function</span><span class="hl-2">() {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;unsubscribed for notifications&quot;</span><span class="hl-2">);</span><br/><span class="hl-2">}, </span><span class="hl-5">function</span><span class="hl-2"> (</span><span class="hl-3">err</span><span class="hl-2">) {</span><br/><span class="hl-2">  </span><span class="hl-3">console</span><span class="hl-2">.</span><span class="hl-6">log</span><span class="hl-2">(</span><span class="hl-4">&quot;unsubscribe error: &quot;</span><span class="hl-2"> + </span><span class="hl-3">err</span><span class="hl-2">);</span><br/><span class="hl-2">});</span>
+</code></pre>
+
+<a href="#examples" id="examples" style="color: inherit; text-decoration: none;">
+  <h3>Examples:</h3>
+</a>
+<ul>
+<li><a href="demo-snippets/vue/Basic.vue">Basic</a><ul>
+<li>A basic example showing that overriding N gestures works, even in modals</li>
+</ul>
+</li>
+</ul>
+<p><a href="#demos-and-development"></a></p>
+<p><a href="#demos-and-development"></a></p>
+
+<a href="#demos-and-development" id="demos-and-development" style="color: inherit; text-decoration: none;">
+  <h2>Demos and Development</h2>
+</a>
+
+<a href="#repo-setup" id="repo-setup" style="color: inherit; text-decoration: none;">
+  <h3>Repo Setup</h3>
+</a>
+<p>The repo uses submodules. If you did not clone with <code> --recursive</code> then you need to call</p>
+<pre><code><span class="hl-3">git</span><span class="hl-2"> </span><span class="hl-3">submodule</span><span class="hl-2"> </span><span class="hl-3">update</span><span class="hl-2"> --</span><span class="hl-3">init</span>
+</code></pre>
+<p>The package manager used to install and link dependencies must be <code>pnpm</code> or <code>yarn</code>. <code>npm</code> wont work.</p>
+<p>To develop and test:
+if you use <code>yarn</code> then run <code>yarn</code>
+if you use <code>pnpm</code> then run <code>pnpm i</code></p>
+<p><strong>Interactive Menu:</strong></p>
+<p>To start the interactive menu, run <code>npm start</code> (or <code>yarn start</code> or <code>pnpm start</code>). This will list all of the commonly used scripts.</p>
+
+<a href="#build" id="build" style="color: inherit; text-decoration: none;">
+  <h3>Build</h3>
+</a>
+<pre><code class="language-bash"><span class="hl-2">npm run build.all</span>
+</code></pre>
+
+<a href="#demos" id="demos" style="color: inherit; text-decoration: none;">
+  <h3>Demos</h3>
+</a>
+<pre><code class="language-bash"><span class="hl-2">npm run demo.[ng|react|svelte|vue].[ios|android]</span><br/><br/><span class="hl-2">npm run demo.svelte.ios </span><span class="hl-0"># Example</span>
+</code></pre>
+<p><a href="#contributing"></a></p>
+<p><a href="#contributing"></a></p>
+
+<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
+  <h2>Contributing</h2>
+</a>
+
+<a href="#update-repo" id="update-repo" style="color: inherit; text-decoration: none;">
+  <h3>Update repo</h3>
+</a>
+<p>You can update the repo files quite easily</p>
+<p>First update the submodules</p>
+<pre><code class="language-bash"><span class="hl-2">npm run update</span>
+</code></pre>
+<p>Then commit the changes
+Then update common files</p>
+<pre><code class="language-bash"><span class="hl-2">npm run sync</span>
+</code></pre>
+<p>Then you can run <code>yarn|pnpm</code>, commit changed files if any</p>
+
+<a href="#update-readme" id="update-readme" style="color: inherit; text-decoration: none;">
+  <h3>Update readme</h3>
+</a>
+<pre><code class="language-bash"><span class="hl-2">npm run readme</span>
+</code></pre>
+
+<a href="#update-doc" id="update-doc" style="color: inherit; text-decoration: none;">
+  <h3>Update doc</h3>
+</a>
+<pre><code class="language-bash"><span class="hl-2">npm run doc</span>
+</code></pre>
+
+<a href="#publish" id="publish" style="color: inherit; text-decoration: none;">
+  <h3>Publish</h3>
+</a>
+<p>The publishing is completely handled by <code>lerna</code> (you can add <code>-- --bump major</code> to force a major release)
+Simply run </p>
+<pre><code class="language-shell"><span class="hl-2">npm run publish</span>
+</code></pre>
+<p><a href="#questions"></a></p>
+<p><a href="#questions"></a></p>
+
+<a href="#questions" id="questions" style="color: inherit; text-decoration: none;">
+  <h2>Questions</h2>
+</a>
+<p>If you have any questions/issues/comments please feel free to create an issue or start a conversation in the <a href="https://nativescript.org/discord">NativeScript Community Discord</a>.</p>
+</div></div>
+<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+<div class="tsd-navigation settings">
+<details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility">
+<h4 class="uppercase">Member Visibility</h4><form>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-private" name="private"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Private</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></form></div>
+<div class="tsd-theme-toggle">
+<h4 class="uppercase">Theme</h4><select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<nav class="tsd-navigation primary">
+<details class="tsd-index-accordion" open><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Modules</h3></summary>
+<div class="tsd-accordion-details">
+<ul>
+<li class="current selected"><a href="modules.html">Connect to and interact with <wbr/>Bluetooth LE peripherals</a>
+<ul></ul></li></ul></div></details></nav>
+<nav class="tsd-navigation secondary menu-sticky"></nav></div></div>
+<div class="container tsd-generator">
+<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div>
+<div class="overlay"></div><script src="assets/main.js"></script></body></html>
