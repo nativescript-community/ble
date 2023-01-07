@@ -767,12 +767,17 @@ function initBluetoothGattCallback() {
          * Callback reporting the result of a characteristic read operation.
          * @param gatt [android.bluetooth.BluetoothGatt] - GATT client invoked readCharacteristic(BluetoothGattCharacteristic)
          * @param characteristic - Characteristic that was read from the associated remote device.
+         * @params value - byte: the value of the characteristic This value cannot be null. This will "status" in Android API level < 33.
          * @param status [number] - GATT_SUCCESS if the read operation was completed successfully.
          */
-        onCharacteristicRead(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, status: number) {
+        onCharacteristicRead(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, value : any, status: number) {
             this.subDelegates.forEach((d) => {
                 if (d.onCharacteristicRead) {
-                    d.onCharacteristicRead(gatt, characteristic, status);
+                    if (sdkVersion < 33) {
+                        d.onCharacteristicRead(gatt, characteristic, value);
+                    } else {
+                        d.onCharacteristicRead(gatt, characteristic, status);
+                    }
                 }
             });
         }
