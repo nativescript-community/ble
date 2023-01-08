@@ -4,10 +4,13 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "start": "BLENO_DEVICE_NAME=echo ts-node index.ts"
+        "start": "BLENO_DEVICE_NAME=echo ts-node index.ts",
+        "start-linux": "BLENO_DEVICE_NAME=echo ts-node index.linux.ts"
     },
     "dependencies": {
-        "@abandonware/bleno": "0.5.1-4"
+        "@abandonware/bleno": "0.5.1-4",
+        "ble-host": "^1.0.3",
+        "hci-socket": "^1.0.0"
     },
     "author": "",
     "license": "ISC",

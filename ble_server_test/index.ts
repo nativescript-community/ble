@@ -193,7 +193,7 @@ bleno.on('stateChange', function (state) {
         // if (bleno.startAdvertisingWithEIRData) {
         //     bleno.startAdvertisingWithEIRData(advertisement[0], advertisement[1]);
         // } else {
-        bleno.startAdvertising(name);
+        bleno.startAdvertising(name, ['ec00']);
         // }
     } else {
         bleno.stopAdvertising();
