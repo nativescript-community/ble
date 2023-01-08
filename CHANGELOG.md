@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.12](https://github.com/nativescript-community/ble/compare/v3.1.11...v3.1.12) (2023-01-08)
+
+
+### Bug Fixes
+
+* **android:** onCharacteristicRead deprecated ([9acfe2a](https://github.com/nativescript-community/ble/commit/9acfe2a969e4453ad1ad099f1430be84995ec533))
+* refactoring to handle deprecated methods on android 13 ([10bb8ec](https://github.com/nativescript-community/ble/commit/10bb8ec934e8d7be4fc7f677ae5de7e4d5ace756))
+
+
+
+
+
 ## [3.1.11](https://github.com/nativescript-community/ble/compare/v3.1.10...v3.1.11) (2022-11-27)
 
 
