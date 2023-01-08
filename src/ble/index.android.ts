@@ -770,14 +770,15 @@ function initBluetoothGattCallback() {
          * @params value - byte: the value of the characteristic This value cannot be null. This will "status" in Android API level < 33.
          * @param status [number] - GATT_SUCCESS if the read operation was completed successfully.
          */
-        onCharacteristicRead(gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, value : any, status: number) {
+        onCharacteristicRead(
+            gatt: android.bluetooth.BluetoothGatt,
+            characteristic: android.bluetooth.BluetoothGattCharacteristic,
+            valueOrStatus: androidNative.Array<number> | number,
+            status?: number
+        ) {
             this.subDelegates.forEach((d) => {
                 if (d.onCharacteristicRead) {
-                    if (sdkVersion < 33) {
-                        d.onCharacteristicRead(gatt, characteristic, value);
-                    } else {
-                        d.onCharacteristicRead(gatt, characteristic, status);
-                    }
+                    d.onCharacteristicRead(gatt, characteristic, valueOrStatus as androidNative.Array<number>, status);
                 }
             });
         }
@@ -1866,7 +1867,12 @@ export class Bluetooth extends BluetoothCommon {
                     this.attachSubDelegate(
                         { methodName, args, resolve, reject },
                         (clearListeners, onError) => ({
-                            onCharacteristicRead: (gatt: android.bluetooth.BluetoothGatt, characteristic: android.bluetooth.BluetoothGattCharacteristic, status: number) => {
+                            onCharacteristicRead: (
+                                gatt: android.bluetooth.BluetoothGatt,
+                                characteristic: android.bluetooth.BluetoothGattCharacteristic,
+                                valueOrStatus: androidNative.Array<number> | number,
+                                status?: number
+                            ) => {
                                 const device = gatt.getDevice();
                                 let UUID: string = null;
                                 if (device == null) {
@@ -1876,13 +1882,15 @@ export class Bluetooth extends BluetoothCommon {
                                 }
                                 const cUUID = uuidToString(characteristic.getUuid());
                                 const sUUID = uuidToString(characteristic.getService().getUuid());
+                                const isReturningValue = sdkVersion >= 33;
+                                const actualStatus = isReturningValue ? status : (valueOrStatus as number);
                                 if (Trace.isEnabled()) {
-                                    CLog(CLogTypes.info, `${methodName} ---- got result peripheralUUID:${pUUID} serviceUUID:${sUUID} characteristicUUID:${cUUID} status:${status}`);
+                                    CLog(CLogTypes.info, `${methodName} ---- got result peripheralUUID:${pUUID} serviceUUID:${sUUID} characteristicUUID:${cUUID} status:${actualStatus}`);
                                 }
                                 if (UUID === pUUID && cUUID === args.characteristicUUID && sUUID === args.serviceUUID) {
                                     timeoutTimer && clearTimeout(timeoutTimer);
-                                    if (status === GATT_SUCCESS) {
-                                        const value = characteristic.getValue();
+                                    if (actualStatus === GATT_SUCCESS) {
+                                        const value = isReturningValue ? (valueOrStatus as androidNative.Array<number>) : characteristic.getValue();
                                         resolve({
                                             android: value,
                                             value: byteArrayToBuffer(value),
@@ -1895,7 +1903,7 @@ export class Bluetooth extends BluetoothCommon {
                                         onError(
                                             new BluetoothError(BluetoothCommon.msg_error_function_call, {
                                                 method: 'readCharacteristic',
-                                                status,
+                                                actualStatus,
                                                 arguments: args
                                             })
                                         );
