@@ -16,7 +16,6 @@
         "start": "./node_modules/.bin/ntl -A -s 15 -o",
         "submodules": "git submodule update --init",
         "sync": "node ./tools/sync.js",
-        "sync.test": "node ./tools/sync.js",
         "tsc": "cpy '**/*.d.ts' '../plugin' --parents --cwd=src && tsc -skipLibCheck -d",
         "update": "node ./tools/update.js",
         "doc": "node tools/builddoc.mjs"
@@ -35,10 +34,15 @@
         "Bluetooth Low Energy"
     ],
     "author": {
-        "name": "Eddy Verbruggen",
-        "email": "eddyverbruggen@gmail.com"
+        "name": "Martin Guillon",
+        "email": "dev@akylas.fr"
     },
     "contributors": [
+        {
+            "name": "BEddy Verbruggen",
+            "email": "eddyverbruggen@gmail.com",
+            "url": "https://github.com/EddyVerbruggen"
+        },
         {
             "name": "Brad Martin",
             "email": "bmartin@nstudio.io",
