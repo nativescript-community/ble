@@ -3,8 +3,6 @@
         "android.bluetooth:BluetoothProfile",
         "android.bluetooth:BluetoothGatt",
         "androidx.core.content:ContextCompat",
-        "java.lang:Class",
-        "java.lang.reflect:Method",
         "android.bluetooth.le:ScanSettings",
         "android.bluetooth:BluetoothDevice",
         "java.nio.charset:Charset",

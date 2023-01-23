@@ -1216,7 +1216,7 @@ export class Bluetooth extends BluetoothCommon {
     public locationPermissionGranted() {
         let hasPermission = sdkVersion < MARSHMALLOW;
         if (!hasPermission) {
-            const ctx = this._getContext();
+            const ctx = Utils.android.getApplicationContext();
             // CLog(CLogTypes.info, 'app context', ctx);
             const neededPermission = sdkVersion < ANDROID10 ? android.Manifest.permission.ACCESS_COARSE_LOCATION : android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -2846,17 +2846,6 @@ export class Bluetooth extends BluetoothCommon {
     private _isEnabled() {
         const adapter = this.adapter;
         return adapter && adapter.isEnabled();
-    }
-
-    private _getContext() {
-        //noinspection JSUnresolvedVariable,JSUnresolvedFunction
-        const ctx = java.lang.Class.forName('android.app.AppGlobals').getMethod('getInitialApplication', null).invoke(null, null);
-        if (ctx) {
-            return ctx;
-        }
-
-        //noinspection JSUnresolvedVariable,JSUnresolvedFunction
-        return java.lang.Class.forName('android.app.ActivityThread').getMethod('currentApplication', null).invoke(null, null);
     }
 
     private _getActivity() {
