@@ -8,6 +8,6 @@
         }
     },
     "dependencies": {
-        "@nativescript-community/ble": "3.1.11"
+        "@nativescript-community/ble": "*"
     }
 }
