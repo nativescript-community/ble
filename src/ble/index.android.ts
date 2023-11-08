@@ -2803,17 +2803,4 @@ export class Bluetooth extends BluetoothCommon {
         const adapter = this.adapter;
         return adapter && adapter.isEnabled();
     }
-
-    private _getActivity() {
-        const activity = andApp.foregroundActivity || andApp.startActivity;
-        if (activity === null) {
-            // Throw this off into the future since an activity is not available....
-            setTimeout(() => {
-                this._getActivity();
-            }, 250);
-            return;
-        } else {
-            return activity;
-        }
-    }
 }
