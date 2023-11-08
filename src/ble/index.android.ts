@@ -1,5 +1,8 @@
 /* eslint-disable no-caller */
-import { AndroidActivityRequestPermissionsEventData, AndroidActivityResultEventData, AndroidApplication, android as andApp } from '@nativescript/core/application';
+import { arrayToNativeArray } from '@nativescript-community/arraybuffers';
+import { Application, Device, Trace, Utils } from '@nativescript/core';
+import { AndroidActivityResultEventData, AndroidApplication } from '@nativescript/core/application';
+import PQueue from 'p-queue';
 import {
     AdvertismentData,
     BleTraceCategory,
@@ -27,9 +30,6 @@ import {
     bluetoothEnabled,
     prepareArgs
 } from './index.common';
-import PQueue from 'p-queue';
-import { Application, Device, Trace, Utils } from '@nativescript/core';
-import { arrayToNativeArray } from '@nativescript-community/arraybuffers';
 let _bluetoothInstance: Bluetooth;
 export function getBluetoothInstance() {
     if (!_bluetoothInstance) {
@@ -1165,7 +1165,7 @@ export class Bluetooth extends BluetoothCommon {
         if (Trace.isEnabled()) {
             CLog(CLogTypes.info, 'Android Bluetooth  registering for state change');
         }
-        andApp.registerBroadcastReceiver(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED, (context: android.content.Context, intent: android.content.Intent) => {
+        Application.android.registerBroadcastReceiver(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED, (context: android.content.Context, intent: android.content.Intent) => {
             const state = intent.getIntExtra(android.bluetooth.BluetoothAdapter.EXTRA_STATE, android.bluetooth.BluetoothAdapter.ERROR);
             if (Trace.isEnabled()) {
                 CLog(CLogTypes.info, 'Android Bluetooth  ACTION_STATE_CHANGED', state, android.bluetooth.BluetoothAdapter.STATE_ON, android.bluetooth.BluetoothAdapter.STATE_OFF);
@@ -1191,7 +1191,7 @@ export class Bluetooth extends BluetoothCommon {
             return;
         }
         this.broadcastRegistered = false;
-        andApp.unregisterBroadcastReceiver(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED);
+        Application.android.unregisterBroadcastReceiver(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED);
     }
     onListenerAdded(eventName: string, count: number) {
         if (Trace.isEnabled()) {
@@ -1233,10 +1233,10 @@ export class Bluetooth extends BluetoothCommon {
             CLog(CLogTypes.info, 'Bluetooth.enableGPS');
         }
         return new Promise((resolve, reject) => {
-            const activity = andApp.foregroundActivity || andApp.startActivity;
+            const activity = Application.android.foregroundActivity || Application.android.startActivity;
             if (!this.isGPSEnabled()) {
                 const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
-                    andApp.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                    Application.android.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
                     if (data.requestCode === 0) {
                         if (this.isGPSEnabled()) {
                             resolve();
@@ -1245,7 +1245,7 @@ export class Bluetooth extends BluetoothCommon {
                         }
                     }
                 };
-                andApp.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                Application.android.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
                 activity.startActivityForResult(new android.content.Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
             } else {
                 resolve();
@@ -1275,7 +1275,7 @@ export class Bluetooth extends BluetoothCommon {
                     if (args.requestCode === ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE) {
                         try {
                             // remove the event listener
-                            andApp.off(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
+                            Application.android.off(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
 
                             // RESULT_OK = -1
                             if (args.resultCode === android.app.Activity.RESULT_OK) {
@@ -1287,23 +1287,23 @@ export class Bluetooth extends BluetoothCommon {
                             if (Trace.isEnabled()) {
                                 CLog(CLogTypes.error, ex);
                             }
-                            andApp.off(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
+                            Application.android.off(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
                             reject(ex);
                             return;
                         }
                     } else {
-                        andApp.off(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
+                        Application.android.off(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
                         resolve(false);
                         return;
                     }
                 };
 
                 // set the onBluetoothEnableResult for the intent
-                andApp.on(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
+                Application.android.on(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
 
                 // create the intent to start the bluetooth enable request
                 const intent = new android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                const activity = andApp.foregroundActivity || andApp.startActivity;
+                const activity = Application.android.foregroundActivity || Application.android.startActivity;
                 if (Trace.isEnabled()) {
                     CLog(CLogTypes.info, methodName, 'startActivityForResult');
                 }
@@ -1358,11 +1358,11 @@ export class Bluetooth extends BluetoothCommon {
     public openBluetoothSettings() {
         const methodName = 'openBluetoothSettings';
         return new Promise<void>((resolve, reject) => {
-            const activity = andApp.foregroundActivity || andApp.startActivity;
+            const activity = Application.android.foregroundActivity || Application.android.startActivity;
             if (!this._isEnabled()) {
                 const that = this;
                 const onActivityResultHandler = function (data: AndroidActivityResultEventData) {
-                    andApp.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                    Application.android.off(Application.android.activityResultEvent, onActivityResultHandler);
                     if (data.requestCode === 0) {
                         if (that._isEnabled()) {
                             resolve();
@@ -1371,7 +1371,7 @@ export class Bluetooth extends BluetoothCommon {
                         }
                     }
                 };
-                andApp.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                Application.android.on(Application.android.activityResultEvent, onActivityResultHandler);
                 activity.startActivityForResult(new android.content.Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS), 0);
             } else {
                 resolve();
