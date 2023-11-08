@@ -1,42 +1,22 @@
 {
     "compilerOptions": {
-        "target": "es2017",
+        "target": "es2020",
         "module": "esnext",
         "declaration": false,
         "noImplicitAny": false,
         "removeComments": false,
-        "watch": false,
         "noLib": false,
         "noEmitHelpers": true,
         "preserveConstEnums": true,
         "emitDecoratorMetadata": true,
-        "suppressImplicitAnyIndexErrors": true,
-        "noImplicitUseStrict": true,
         "experimentalDecorators": true,
-        "lib": [
-            "es6",
-            "dom",
-            "es2015.iterable",
-            "es2017"
-        ],
+        "lib": ["es6", "dom", "es2015.iterable", "es2020"],
         "baseUrl": ".",
         "paths": {
-            "~/*": [
-                "app/*"
-            ],
-            "*": [
-                "./node_modules/tns-core-modules/*",
-                "./node_modules/*"
-            ]
+            "~/*": ["app/*"],
         },
         "moduleResolution": "node"
     },
-    "include": [
-        "app/**/*",
-        "references.d.ts"
-    ],
-    "exclude": [
-        "node_modules",
-        "platforms"
-    ]
+    "include": ["app/**/*", "references.d.ts"],
+    "exclude": ["node_modules", "platforms"]
 }

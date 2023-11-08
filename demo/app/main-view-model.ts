@@ -4,6 +4,8 @@ import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { Prop } from './utils/obs-prop';
 import { Bluetooth, Peripheral, getBluetoothInstance } from '@nativescript-community/ble';
 import { Frame } from '@nativescript/core/ui/frame';
+import { check, request } from '@nativescript-community/perms';
+import { Application } from '@nativescript/core';
 
 export class DemoAppModel extends Observable {
     @Prop() public isLoading = false;
@@ -37,7 +39,7 @@ export class DemoAppModel extends Observable {
 
     public doIsBluetoothEnabled() {
         console.log('doIsBluetoothEnabled tap');
-        this._bluetooth.isBluetoothEnabled().then(enabled => {
+        this._bluetooth.isBluetoothEnabled().then((enabled) => {
             if (enabled === false) {
                 dialogs.alert('Bluetooth is DISABLED.');
             } else {
@@ -47,7 +49,7 @@ export class DemoAppModel extends Observable {
     }
 
     public doEnableBluetooth() {
-        this._bluetooth.enable().then(enabled => {
+        this._bluetooth.enable().then((enabled) => {
             setTimeout(() => {
                 dialogs.alert({
                     title: 'Did the user allow enabling Bluetooth by our app?',
@@ -91,11 +93,11 @@ export class DemoAppModel extends Observable {
 
     // this one 'manually' checks for permissions
     public doScanForHeartrateMontitor() {
-        this._bluetooth.hasLocationPermission().then(granted => {
+        this._bluetooth.hasLocationPermission().then((granted) => {
             if (!granted) {
                 this._bluetooth.requestLocationPermission().then(
                     // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
-                    granted2 => {
+                    (granted2) => {
                         dialogs.alert({
                             title: 'Granted?',
                             message: granted2 ? 'Yep - now invoke that button again' : 'Nope',
@@ -121,11 +123,11 @@ export class DemoAppModel extends Observable {
                         skipPermissionCheck: true // we can skip permissions as we use filters:   https://developer.android.com/guide/topics/connectivity/bluetooth-le
                     })
                     .then(
-                        p => {
+                        (p) => {
                             this.isLoading = false;
                             console.log('p', p);
                         },
-                        err => {
+                        (err) => {
                             this.isLoading = false;
                             dialogs.alert({
                                 title: 'Whoops!',
@@ -140,11 +142,11 @@ export class DemoAppModel extends Observable {
 
     // this one 'manually' checks for permissions
     public doScanForBeacon() {
-        this._bluetooth.hasLocationPermission().then(granted => {
+        this._bluetooth.hasLocationPermission().then((granted) => {
             if (!granted) {
                 this._bluetooth.requestLocationPermission().then(
                     // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
-                    granted2 => {
+                    (granted2) => {
                         dialogs.alert({
                             title: 'Granted?',
                             message: granted2 ? 'Yep - now invoke that button again' : 'Nope',
@@ -170,11 +172,11 @@ export class DemoAppModel extends Observable {
                         skipPermissionCheck: true // we can skip permissions as we use filters:   https://developer.android.com/guide/topics/connectivity/bluetooth-le
                     })
                     .then(
-                        p => {
+                        (p) => {
                             this.isLoading = false;
                             console.log('p', p);
                         },
-                        err => {
+                        (err) => {
                             this.isLoading = false;
                             dialogs.alert({
                                 title: 'Whoops!',
@@ -187,29 +189,44 @@ export class DemoAppModel extends Observable {
         });
     }
 
+
     // this one uses automatic permission handling
-    public doStartScanning() {
-        this.isLoading = true;
-        // reset the array
-        this.peripherals.length = 0;
-        this._bluetooth
-            .startScanning({
+    public async doStartScanning() {
+        try {
+            // this._bluetooth.hasLocationPermission().then((granted) => {
+            // if (!granted) {
+            const r = await request({ bluetoothConnect: {}, bluetoothScan: {} });
+            // this._bluetooth.requestLocationPermission().then(
+            //     // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
+            //     (granted2) => {
+            //         dialogs.alert({
+            //             title: 'Granted?',
+            //             message: granted2 ? 'Yep - now invoke that button again' : 'Nope',
+            //             okButtonText: 'OK!'
+            //         });
+            //     }
+            // );
+            // } else {
+            this.isLoading = true;
+            // reset the array
+            this.peripherals.length = 0;
+            await this._bluetooth.startScanning({
                 seconds: 50, // passing in seconds makes the plugin stop scanning after <seconds> seconds
-                // onDiscovered: peripheral => {
-                //     console.log("peripheral discovered. Not adding it here because we're using a listener.");
-                //     // this.peripherals.push(peripheral);
-                // },
-                skipPermissionCheck: false // we can't skip permissions and we need enabled location as we dont use filters: https://developer.android.com/guide/topics/connectivity/bluetooth-le
-            })
-            .then(() => (this.isLoading = false))
-            .catch(err => {
-                this.isLoading = false;
-                dialogs.alert({
-                    title: 'Whoops!',
-                    message: err ? err : 'Unknown error',
-                    okButtonText: 'OK, got it'
-                });
+                onDiscovered: peripheral => {
+                    console.log("peripheral discovered. Not adding it here because we're using a listener.");
+                },
             });
+            // }
+            // });
+        } catch (error) {
+            dialogs.alert({
+                title: 'Whoops!',
+                message: error ? error : 'Unknown error',
+                okButtonText: 'OK, got it'
+            });
+        } finally {
+            this.isLoading = false;
+        }
     }
 
     public doStopScanning() {
@@ -217,7 +234,7 @@ export class DemoAppModel extends Observable {
             () => {
                 this.isLoading = false;
             },
-            err => {
+            (err) => {
                 dialogs.alert({
                     title: 'Whoops!',
                     message: err,
