@@ -19,6 +19,7 @@ export class BluetoothError extends BaseError {
     arguments?: any; // call argumrents
     method?: string; // call argumrents
     status?: number; // call argumrents
+    nativeException?: any;
     constructor(message: string, properties?: { [k: string]: any }) {
         super(message);
         if (properties) {
@@ -26,7 +27,9 @@ export class BluetoothError extends BaseError {
         }
     }
     toString() {
-        return `[BluetoothError]:${this.message}, ${this.method}, ${this.status}, ${JSON.stringify(this.arguments)}`;
+        return `[BluetoothError]:${this.message} in:${this.method}${this.status ? ` with status:${this.status}` : ''}${
+            this.nativeException ? ` with nativeException:${this.nativeException}` : ''
+        } args: ${JSON.stringify(this.arguments)}`;
     }
 }
 

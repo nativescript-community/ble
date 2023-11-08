@@ -38,7 +38,7 @@ export function getBluetoothInstance() {
     return _bluetoothInstance;
 }
 
-export { BleTraceCategory };
+export { BleTraceCategory, BluetoothError };
 
 const sdkVersion = parseInt(Device.sdkVersion, 10);
 let context: android.content.Context;

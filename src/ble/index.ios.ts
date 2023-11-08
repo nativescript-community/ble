@@ -24,7 +24,7 @@ import {
 } from './index.common';
 import { Trace } from '@nativescript/core';
 
-export { BleTraceCategory };
+export { BleTraceCategory, BluetoothError };
 
 function nativeEncoding(encoding: string) {
     switch (encoding) {

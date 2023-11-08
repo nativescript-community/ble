@@ -2,6 +2,7 @@ import {
     AdvertismentData,
     BleTraceCategory,
     BluetoothCommon,
+    BluetoothError,
     BluetoothOptions,
     CallbackType,
     Characteristic,
@@ -27,6 +28,7 @@ import {
 
 export {
     AdvertismentData,
+    BluetoothError,
     BleTraceCategory,
     CallbackType,
     Characteristic,
