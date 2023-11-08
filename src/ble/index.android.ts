@@ -28,7 +28,7 @@ import {
     prepareArgs
 } from './index.common';
 import PQueue from 'p-queue';
-import { Device, Trace, Utils } from '@nativescript/core';
+import { Application, Device, Trace, Utils } from '@nativescript/core';
 import { arrayToNativeArray } from '@nativescript-community/arraybuffers';
 let _bluetoothInstance: Bluetooth;
 export function getBluetoothInstance() {
@@ -1213,54 +1213,8 @@ export class Bluetooth extends BluetoothCommon {
         this.unregisterBroadcast();
     }
 
-    public locationPermissionGranted() {
-        let hasPermission = sdkVersion < MARSHMALLOW;
-        if (!hasPermission) {
-            const ctx = Utils.android.getApplicationContext();
-            // CLog(CLogTypes.info, 'app context', ctx);
-            const neededPermission = sdkVersion < ANDROID10 ? android.Manifest.permission.ACCESS_COARSE_LOCATION : android.Manifest.permission.ACCESS_FINE_LOCATION;
-
-            hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED === androidx.core.content.ContextCompat.checkSelfPermission(ctx, neededPermission);
-            if (Trace.isEnabled()) {
-                CLog(CLogTypes.info, `coarseLocationPermissionGranted ---- ${neededPermission} permission granted?`, hasPermission);
-            }
-        }
-        return hasPermission;
-    }
-
-    public hasLocationPermission() {
-        return Promise.resolve(this.locationPermissionGranted());
-    }
-
-    public requestLocationPermission(callback?: () => void): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            let permissionCb = (args: AndroidActivityRequestPermissionsEventData) => {
-                if (args.requestCode === ACCESS_LOCATION_PERMISSION_REQUEST_CODE) {
-                    andApp.off(AndroidApplication.activityRequestPermissionsEvent, permissionCb);
-                    permissionCb = null;
-                    for (let i = 0; i < args.permissions.length; i++) {
-                        if (args.grantResults[i] === android.content.pm.PackageManager.PERMISSION_DENIED) {
-                            reject('Permission denied');
-                            return;
-                        }
-                    }
-
-                    if (callback) {
-                        callback();
-                    }
-                    resolve(true);
-                }
-            };
-
-            // grab the permission dialog result
-            andApp.on(AndroidApplication.activityRequestPermissionsEvent, permissionCb);
-            const neededPermission = sdkVersion < ANDROID10 ? android.Manifest.permission.ACCESS_COARSE_LOCATION : android.Manifest.permission.ACCESS_FINE_LOCATION;
-            // invoke the permission dialog
-            androidx.core.app.ActivityCompat.requestPermissions(this._getActivity(), [neededPermission], ACCESS_LOCATION_PERMISSION_REQUEST_CODE);
-        });
-    }
     getAndroidLocationManager(): android.location.LocationManager {
-        return (andApp.context as android.content.Context).getSystemService(android.content.Context.LOCATION_SERVICE);
+        return (Utils.android.getApplicationContext() as android.content.Context).getSystemService(android.content.Context.LOCATION_SERVICE);
     }
     public isGPSEnabled() {
         if (!this.hasLocationPermission()) {
@@ -1470,7 +1424,7 @@ export class Bluetooth extends BluetoothCommon {
     @bluetoothEnabled
     public startScanning(args: StartScanningOptions) {
         const methodName = 'startScanning';
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 const onPermissionGranted = () => {
                     // for (const key in this.connections) {
@@ -1588,14 +1542,16 @@ export class Bluetooth extends BluetoothCommon {
                     }
                 };
 
-                if (args.skipPermissionCheck !== true && !this.locationPermissionGranted()) {
-                    if (Trace.isEnabled()) {
-                        CLog(CLogTypes.info, methodName, '---- Coarse Location Permission not granted on Android device, will request permission.');
+                if (args.skipPermissionCheck !== true) {
+                    const hasPermission = await this.hasLocationPermission();
+                    if (!hasPermission) {
+                        if (Trace.isEnabled()) {
+                            CLog(CLogTypes.info, methodName, '---- Coarse Location Permission not granted on Android device, will request permission.');
+                        }
+                        await this.requestLocationPermission();
                     }
-                    this.requestLocationPermission(onPermissionGranted);
-                } else {
-                    onPermissionGranted();
                 }
+                onPermissionGranted();
             } catch (ex) {
                 if (Trace.isEnabled()) {
                     CLog(CLogTypes.error, methodName, '---- error:', ex);

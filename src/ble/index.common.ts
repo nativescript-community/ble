@@ -1,6 +1,7 @@
 import Observable from '@nativescript-community/observable';
 import { Trace } from '@nativescript/core';
 import { BaseError } from 'make-error';
+import { check, request } from '@nativescript-community/perms';
 
 export const BleTraceCategory = 'NativescriptBle';
 export enum CLogTypes {
@@ -140,12 +141,13 @@ export abstract class BluetoothCommon extends Observable {
     public enableGPS(): Promise<void> {
         return Promise.resolve(); // we dont need to check for GPS in the bluetooth iOS module
     }
-    requestLocationPermission() {
-        return Promise.resolve(true);
+
+    public hasLocationPermission() {
+        return check('location').then((r) => r[1]);
     }
 
-    hasLocationPermission() {
-        return Promise.resolve(true);
+    public async requestLocationPermission() {
+        return request('location').then((r) => r[1]);
     }
 
     /**
