@@ -56,7 +56,7 @@
     },
     "homepage": "https://github.com/nativescript-community/ble",
     "dependencies": {
-        "@nativescript-community/arraybuffers": "^1.1.1",
+        "@nativescript-community/arraybuffers": "^1.1.5",
         "@nativescript-community/observable": "^2.0.11",
         "@nativescript-community/perms": "^2.3.0",
         "@nativescript-community/plugin-seed-tools": "file:tools",

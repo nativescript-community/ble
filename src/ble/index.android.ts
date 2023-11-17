@@ -2050,7 +2050,7 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     private writeValueToChar(characteristic: android.bluetooth.BluetoothGattCharacteristic, value, encoding) {
-        const nArray = arrayToNativeArray(value, true, true);
+        const nArray = arrayToNativeArray(value, true, true, true);
         if (nArray) {
             if (ArrayBuffer.isView(nArray)) {
                 com.nativescript.bluetooth.Bluetooth.writeCharBufferValue(characteristic, nArray.buffer['nativeObject'] || (nArray as any));
