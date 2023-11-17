@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.17](https://github.com/nativescript-community/ble/compare/v3.1.16...v3.1.17) (2023-11-17)
+
+### Bug Fixes
+
+* **android:** error wile sending array to char ([6ffa83f](https://github.com/nativescript-community/ble/commit/6ffa83fc327b1c8a1422a27eb07de68d21a409ca))
+
 ## [3.1.16](https://github.com/nativescript-community/ble/compare/v3.1.15...v3.1.16) (2023-11-08)
 
 ### Bug Fixes
