@@ -3031,10 +3031,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/arraybuffers@npm:^1.1.1":
-  version: 1.1.3
-  resolution: "@nativescript-community/arraybuffers@npm:1.1.3"
-  checksum: 632b301e93abf5d141e44b9b6663691f77c9923f72a1f032221e3dc6497c918414a9151b615919c634c3661f7939c2e43a4a295de297a6400afb1354def0a6dd
+"@nativescript-community/arraybuffers@npm:^1.1.5":
+  version: 1.1.5
+  resolution: "@nativescript-community/arraybuffers@npm:1.1.5"
+  checksum: d7c77861b9fa6ff49eb25c34dbe361612b56c3cb0ff6fe08a8295444a8e23d29934b3b5ce7901e7bb27c50d39274b487d4d7fae513052b0412be12b23aee1f7b
   languageName: node
   linkType: hard
 
@@ -3042,7 +3042,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nativescript-community/ble@workspace:packages/ble"
   dependencies:
-    "@nativescript-community/arraybuffers": ^1.1.1
+    "@nativescript-community/arraybuffers": ^1.1.5
     "@nativescript-community/observable": ^2.0.11
     "@nativescript-community/perms": ^2.3.0
     make-error: 1.3.6
@@ -3066,7 +3066,7 @@ __metadata:
 
 "@nativescript-community/plugin-seed-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@nativescript-community/plugin-seed-tools@file:tools#tools::hash=870177&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@nativescript-community/plugin-seed-tools@file:tools#tools::hash=04c8d6&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@angular/animations": ~16.2.8
     "@angular/common": ~16.2.8
@@ -3131,7 +3131,7 @@ __metadata:
     vue: ~2.6.14
     yargs: ^17.7.2
     zone.js: ~0.14.0
-  checksum: 3a5ff0e83445d994057cdbd364673465ad352ed82104d2f1138abdade44594e5c69e3a2fcfbf649f9985a3edde341afd202498b1435eeeccc9307794cd5fc8ea
+  checksum: 7459de87eb488dc3802a3d6153c5c81aea48cdce26a42283e7cba6d5c38204eeb60b7c5d2629f96e7fd9f1632fd498b256e8f8629c956a0e514bd8b20341d65a
   languageName: node
   linkType: hard
 
@@ -15984,7 +15984,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@nativescript-community/arraybuffers": ^1.1.1
+    "@nativescript-community/arraybuffers": ^1.1.5
     "@nativescript-community/observable": ^2.0.11
     "@nativescript-community/perms": ^2.3.0
     "@nativescript-community/plugin-seed-tools": "file:tools"
