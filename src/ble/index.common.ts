@@ -26,10 +26,15 @@ export class BluetoothError extends BaseError {
             Object.assign(this, properties);
         }
     }
+    
     toString() {
-        return `[BluetoothError]:${this.message} in:${this.method}${this.status ? ` with status:${this.status}` : ''}${
-            this.nativeException ? ` with nativeException:${this.nativeException}` : ''
-        } args: ${JSON.stringify(this.arguments)}`;
+        return `[BluetoothError]:${this.message}${Object.keys(this).map((k) => {
+            if (k === 'message') {
+                return '';
+            }
+            const value = this[k];
+            return `,${k}: ${JSON.stringify(value)}`;
+        })}`;
     }
 }
 
