@@ -8,7 +8,7 @@
     "@nativescript/ios": "8.5.2",
     "@nativescript/types": "8.5.0",
     "@nativescript/webpack": "5.0.16",
-    "typescript": "5.2.0-dev.20230717"
+    "typescript": "5.3.3"
   },
   "main": "app/app"
 }
