@@ -23,8 +23,29 @@ import {
     shortenUuidIfAssignedNumber
 } from './index.common';
 
-export * from './index.common';
-export { Peripheral, ReadResult, Service };
+export {
+    BluetoothError,
+    BleTraceCategory,
+    CallbackType,
+    Characteristic,
+    ConnectOptions,
+    DisconnectOptions,
+    DiscoverCharacteristicsOptions,
+    DiscoverOptions,
+    DiscoverServicesOptions,
+    MatchMode,
+    MatchNum,
+    MtuOptions,
+    Peripheral,
+    ReadOptions,
+    ReadResult,
+    ScanMode,
+    Service,
+    StartNotifyingOptions,
+    StartScanningOptions,
+    StopNotifyingOptions,
+    WriteOptions
+} from './index.common';
 
 function nativeEncoding(encoding: string) {
     switch (encoding) {

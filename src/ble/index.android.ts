@@ -38,7 +38,26 @@ export function getBluetoothInstance() {
     return _bluetoothInstance;
 }
 
-export * from './index.common';
+export {
+    AdvertismentData,
+    BluetoothError,
+    BleTraceCategory,
+    Characteristic,
+    ConnectOptions,
+    DisconnectOptions,
+    DiscoverCharacteristicsOptions,
+    DiscoverOptions,
+    DiscoverServicesOptions,
+    MtuOptions,
+    Peripheral,
+    ReadOptions,
+    ReadResult,
+    Service,
+    StartNotifyingOptions,
+    StartScanningOptions,
+    StopNotifyingOptions,
+    WriteOptions
+} from './index.common';
 
 const sdkVersion = parseInt(Device.sdkVersion, 10);
 let context: android.content.Context;
