@@ -1418,7 +1418,7 @@ export class Bluetooth extends BluetoothCommon {
         });
     }
     scanningReferTimer: {
-        timer?: number;
+        timer?: NodeJS.Timeout;
         resolve?: Function;
     };
 

@@ -820,7 +820,7 @@ export class Bluetooth extends BluetoothCommon {
         return this._isEnabled();
     }
     scanningReferTimer: {
-        timer?: number;
+        timer?: NodeJS.Timeout;
         resolve?: Function;
     };
 
