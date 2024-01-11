@@ -1222,7 +1222,7 @@ export class Bluetooth extends BluetoothCommon {
             // location permission not needed anymore
             return true;
         }
-        return check('location', { coarse: false, precise: true }).then((r) => r[1]);
+        return check('location', { coarse: false, precise: true }).then((r) => r[0] === 'authorized');
     }
 
     async requestLocationPermission() {
@@ -1230,7 +1230,7 @@ export class Bluetooth extends BluetoothCommon {
             // location permission not needed anymore
             return true;
         }
-        return request('location', { coarse: false, precise: true }).then((r) => r[1]);
+        return request('location', { coarse: false, precise: true }).then((r) => r[0] === 'authorized');
     }
     async isGPSEnabled() {
         if (sdkVersion >= 31) {
