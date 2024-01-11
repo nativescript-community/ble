@@ -1,4 +1,5 @@
 {
+  "private": true,
   "dependencies": {
     "@nativescript-community/ble": "*",
     "@nativescript/core": "8.5.7"
