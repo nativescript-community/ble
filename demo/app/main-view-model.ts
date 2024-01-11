@@ -20,6 +20,7 @@ export class DemoAppModel extends Observable {
         // using an event listener instead of the 'onDiscovered' callback of 'startScanning'
         this._bluetooth.on(Bluetooth.device_discovered_event, (eventData: any) => {
             const perip = eventData.data as Peripheral;
+            console.log('Peripheral found:', JSON.stringify(eventData.data));
             let index = -1;
             this.peripherals.some((p, i) => {
                 if (p.UUID === perip.UUID) {
@@ -28,7 +29,6 @@ export class DemoAppModel extends Observable {
                 }
                 return false;
             });
-            console.log('Peripheral found:', JSON.stringify(eventData.data), index);
             if (index === -1) {
                 this.peripherals.push(perip);
             } else {
@@ -94,6 +94,7 @@ export class DemoAppModel extends Observable {
     // this one 'manually' checks for permissions
     public doScanForHeartrateMontitor() {
         this._bluetooth.hasLocationPermission().then((granted) => {
+            console.log('hasLocationPermission', granted);
             if (!granted) {
                 this._bluetooth.requestLocationPermission().then(
                     // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
@@ -189,35 +190,36 @@ export class DemoAppModel extends Observable {
         });
     }
 
-
     // this one uses automatic permission handling
     public async doStartScanning() {
         try {
-            // this._bluetooth.hasLocationPermission().then((granted) => {
-            // if (!granted) {
             const r = await request({ bluetoothConnect: {}, bluetoothScan: {} });
-            // this._bluetooth.requestLocationPermission().then(
-            //     // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
-            //     (granted2) => {
-            //         dialogs.alert({
-            //             title: 'Granted?',
-            //             message: granted2 ? 'Yep - now invoke that button again' : 'Nope',
-            //             okButtonText: 'OK!'
-            //         });
-            //     }
-            // );
-            // } else {
-            this.isLoading = true;
-            // reset the array
-            this.peripherals.length = 0;
-            await this._bluetooth.startScanning({
-                seconds: 50, // passing in seconds makes the plugin stop scanning after <seconds> seconds
-                onDiscovered: peripheral => {
-                    console.log("peripheral discovered. Not adding it here because we're using a listener.");
-                },
+            console.log('r', r);
+            this._bluetooth.hasLocationPermission().then(async (granted) => {
+                console.log('granted', granted);
+                if (!granted) {
+                    this._bluetooth.requestLocationPermission().then(
+                        // doing it like this for demo / testing purposes.. better usage is demonstrated in 'doStartScanning' below
+                        (granted2) => {
+                            dialogs.alert({
+                                title: 'Granted?',
+                                message: granted2 ? 'Yep - now invoke that button again' : 'Nope',
+                                okButtonText: 'OK!'
+                            });
+                        }
+                    );
+                } else {
+                    this.isLoading = true;
+                    // reset the array
+                    this.peripherals.length = 0;
+                    await this._bluetooth.startScanning({
+                        seconds: 50, // passing in seconds makes the plugin stop scanning after <seconds> seconds
+                        onDiscovered: (peripheral) => {
+                            console.log("peripheral discovered. Not adding it here because we're using a listener.");
+                        }
+                    });
+                }
             });
-            // }
-            // });
         } catch (error) {
             dialogs.alert({
                 title: 'Whoops!',

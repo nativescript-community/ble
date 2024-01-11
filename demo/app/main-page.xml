@@ -42,7 +42,7 @@
         <TabViewItem.view>
           <ScrollView>
             <StackLayout class="tab-content">
-              <Image margin="10" src="~/res/telerik-logo.png" />
+              <!-- <Image margin="10" src="~/res/telerik-logo.png" /> -->
               <Label text="Bluetooth plugin demo" class="title"/>
               <Label text="The Bluetooth plugin allows your app to scan for Bluetooth LE devices. Once found you can connect to a peripheral and read values. You can also write values and get notified when a value changes." textWrap="true"/>
             </StackLayout>
