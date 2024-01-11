@@ -51,12 +51,12 @@ bluetooth.isBluetoothEnabled().then(
   }
 );
 ```
-### hasLocationPermission
-__Since plugin version 1.2.0 the `startScanning` function will handle this internally so it's no longer mandatory to add permission checks to your code.__
+### Permissions (Android)
 
-On Android 6 you need to request permission to be able to interact with a Bluetooth peripheral (when the app is in the background) when targeting API level 23+. Even if the `uses-permission` tag for `ACCESS_COARSE_LOCATION` is present in `AndroidManifest.xml`.
+On Android >= 6 and < 12 you need to request permissions to be able to interact with a Bluetooth peripheral (when the app is in the background) when targeting API level 23+. You need `BLUETOOTH` and `ACCESS_FINE_LOCATION`. You should read the doc [here](https://developer.android.com/develop/connectivity/bluetooth/bt-permissions)
 
-Note that for `BLUETOOTH` and `BLUETOOTH_ADMIN` you don't require runtime permission; adding those to `AndroidManifest.xml` suffices (which the plugin does for you).
+On android >= 12 you need new permissions. You should read the doc [here](https://developer.android.com/develop/connectivity/bluetooth/bt-permissions)
+Note that for `BLUETOOTH` and `BLUETOOTH_ADMIN` you don't require runtime permission; adding those to `AndroidManifest.xml` suffices.
 
 Note that `hasLocationPermission ` will return true when:
 * You're running this on iOS, or

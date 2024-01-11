@@ -1,5 +1,5 @@
+import { Trace } from '@nativescript/core';
 import {
-    BleTraceCategory,
     BluetoothCommon,
     BluetoothError,
     BluetoothOptions,
@@ -22,9 +22,9 @@ import {
     prepareArgs,
     shortenUuidIfAssignedNumber
 } from './index.common';
-import { Trace } from '@nativescript/core';
 
-export { BleTraceCategory, BluetoothError };
+export * from './index.common';
+export { Peripheral, ReadResult, Service };
 
 function nativeEncoding(encoding: string) {
     switch (encoding) {
@@ -612,7 +612,6 @@ export function getBluetoothInstance() {
     }
     return _bluetoothInstance;
 }
-export { Peripheral, ReadResult, Service };
 
 export function toArrayBuffer(value) {
     return value ? interop.bufferFromData(value) : null;
@@ -703,7 +702,10 @@ export class Bluetooth extends BluetoothCommon {
 
     private restoreIdentifier: string;
 
-    constructor(restoreIdentifierOrOptions: string | Partial<BluetoothOptions> | null = 'ns_bluetooth', private showPowerAlertPopup = false) {
+    constructor(
+        restoreIdentifierOrOptions: string | Partial<BluetoothOptions> | null = 'ns_bluetooth',
+        private showPowerAlertPopup = false
+    ) {
         super();
         if (typeof restoreIdentifierOrOptions === 'object') {
             if (restoreIdentifierOrOptions.restoreIdentifier === undefined) {
@@ -797,7 +799,7 @@ export class Bluetooth extends BluetoothCommon {
         return this._isEnabled();
     }
     scanningReferTimer: {
-        timer?: NodeJS.Timeout;
+        timer?: number;
         resolve?: Function;
     };
 
@@ -843,6 +845,8 @@ export class Bluetooth extends BluetoothCommon {
                     this.scanningReferTimer.resolve = resolve;
                 } else {
                     resolve();
+                }
+                if (__DEV__) {
                 }
             } catch (ex) {
                 if (Trace.isEnabled()) {

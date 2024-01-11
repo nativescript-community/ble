@@ -1,11 +1,11 @@
 /* eslint-disable no-caller */
 import { arrayToNativeArray } from '@nativescript-community/arraybuffers';
 import { Application, Device, Trace, Utils } from '@nativescript/core';
+import { check, request } from '@nativescript-community/perms';
 import { AndroidActivityResultEventData, AndroidApplication } from '@nativescript/core/application';
 import PQueue from 'p-queue';
 import {
     AdvertismentData,
-    BleTraceCategory,
     BluetoothCommon,
     BluetoothError,
     BluetoothOptions,
@@ -38,7 +38,7 @@ export function getBluetoothInstance() {
     return _bluetoothInstance;
 }
 
-export { BleTraceCategory, BluetoothError };
+export * from './index.common';
 
 const sdkVersion = parseInt(Device.sdkVersion, 10);
 let context: android.content.Context;
@@ -1214,9 +1214,29 @@ export class Bluetooth extends BluetoothCommon {
     }
 
     getAndroidLocationManager(): android.location.LocationManager {
-        return (Utils.android.getApplicationContext() as android.content.Context).getSystemService(android.content.Context.LOCATION_SERVICE);
+        return Utils.android.getApplicationContext().getSystemService(android.content.Context.LOCATION_SERVICE);
     }
-    public isGPSEnabled() {
+
+    async hasLocationPermission() {
+        if (sdkVersion >= 31) {
+            // location permission not needed anymore
+            return true;
+        }
+        return check('location', { coarse: false, precise: true }).then((r) => r[1]);
+    }
+
+    async requestLocationPermission() {
+        if (sdkVersion >= 31) {
+            // location permission not needed anymore
+            return true;
+        }
+        return request('location', { coarse: false, precise: true }).then((r) => r[1]);
+    }
+    async isGPSEnabled() {
+        if (sdkVersion >= 31) {
+            // location permission not needed anymore
+            return true;
+        }
         if (!this.hasLocationPermission()) {
             return this.requestLocationPermission().then(() => this.isGPSEnabled());
         }
@@ -1226,7 +1246,7 @@ export class Bluetooth extends BluetoothCommon {
             CLog(CLogTypes.info, 'isGPSEnabled providers', providers);
             CLog(CLogTypes.info, 'isGPSEnabled: ', result);
         }
-        return Promise.resolve(result);
+        return result;
     }
     public enableGPS(): Promise<void> {
         if (Trace.isEnabled()) {
@@ -1236,7 +1256,7 @@ export class Bluetooth extends BluetoothCommon {
             const activity = Application.android.foregroundActivity || Application.android.startActivity;
             if (!this.isGPSEnabled()) {
                 const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
-                    Application.android.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                    Application.android.off(Application.android.activityResultEvent, onActivityResultHandler);
                     if (data.requestCode === 0) {
                         if (this.isGPSEnabled()) {
                             resolve();
@@ -1245,7 +1265,7 @@ export class Bluetooth extends BluetoothCommon {
                         }
                     }
                 };
-                Application.android.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                Application.android.on(Application.android.activityResultEvent, onActivityResultHandler);
                 activity.startActivityForResult(new android.content.Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
             } else {
                 resolve();
@@ -1275,7 +1295,7 @@ export class Bluetooth extends BluetoothCommon {
                     if (args.requestCode === ACTION_REQUEST_ENABLE_BLUETOOTH_REQUEST_CODE) {
                         try {
                             // remove the event listener
-                            Application.android.off(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
+                            Application.android.off(Application.android.activityResultEvent, onBluetoothEnableResult);
 
                             // RESULT_OK = -1
                             if (args.resultCode === android.app.Activity.RESULT_OK) {
@@ -1287,19 +1307,19 @@ export class Bluetooth extends BluetoothCommon {
                             if (Trace.isEnabled()) {
                                 CLog(CLogTypes.error, ex);
                             }
-                            Application.android.off(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
+                            Application.android.off(Application.android.activityResultEvent, onBluetoothEnableResult);
                             reject(ex);
                             return;
                         }
                     } else {
-                        Application.android.off(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
+                        Application.android.off(Application.android.activityResultEvent, onBluetoothEnableResult);
                         resolve(false);
                         return;
                     }
                 };
 
                 // set the onBluetoothEnableResult for the intent
-                Application.android.on(AndroidApplication.activityResultEvent, onBluetoothEnableResult);
+                Application.android.on(Application.android.activityResultEvent, onBluetoothEnableResult);
 
                 // create the intent to start the bluetooth enable request
                 const intent = new android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -1379,7 +1399,7 @@ export class Bluetooth extends BluetoothCommon {
         });
     }
     scanningReferTimer: {
-        timer?: NodeJS.Timeout;
+        timer?: number;
         resolve?: Function;
     };
 
