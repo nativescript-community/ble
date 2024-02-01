@@ -43,7 +43,7 @@ packages/**/*.d.ts
 bin
 build
 Pods
-!packages/**/platforms
+!packages/platforms
 /packages/**/*.aar
 /demo-snippets/**/*.aar
 *.xcuserdatad
