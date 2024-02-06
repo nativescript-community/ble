@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.19](https://github.com/nativescript-community/ble/compare/v3.1.18...v3.1.19) (2024-02-06)
+
+### Bug Fixes
+
+* **android:** set default encoding to prevent errors ([4ee622f](https://github.com/nativescript-community/ble/commit/4ee622f652171f6e4c35cee29fbb88718df1e6ae))
+
 ## [3.1.18](https://github.com/nativescript-community/ble/compare/v3.1.17...v3.1.18) (2024-01-11)
 
 ### Bug Fixes
