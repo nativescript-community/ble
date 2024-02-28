@@ -2088,7 +2088,7 @@ export class Bluetooth extends BluetoothCommon {
         );
     }
 
-    private writeValueToChar(characteristic: android.bluetooth.BluetoothGattCharacteristic, value, encoding) {
+    private writeValueToChar(characteristic: android.bluetooth.BluetoothGattCharacteristic, value, encoding = 'iso-8859-1') {
         const nArray = arrayToNativeArray(value, true, true, true);
         if (nArray) {
             if (ArrayBuffer.isView(nArray)) {
