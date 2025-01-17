@@ -1025,7 +1025,7 @@ export class Bluetooth extends BluetoothCommon {
                 });
                 let services,
                     mtu = FIXED_IOS_MTU;
-                if (args.autoDiscoverAll === true) {
+                if (args.autoDiscoverAll !== true) {
                     services = (await this.discoverAll({ peripheralUUID: connectingUUID }))?.services;
                 } else if (args.serviceUUIDs) {
                     services = (await this.discoverAll({ peripheralUUID: connectingUUID, serviceUUIDs: args.serviceUUIDs }))?.services;

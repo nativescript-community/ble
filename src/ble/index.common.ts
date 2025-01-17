@@ -368,7 +368,8 @@ export interface ConnectOptions {
     onDisconnected?: (data: { UUID; name: string }) => void;
 
     /**
-     * Discover all services on connection. Default is false for faster connection
+     * Discover all services on connection. Default is true. however connection will be slower
+     * For faster connection disable it and do the discovery with `discoverServices` (you can filter to discover only some services)
      */
     autoDiscoverAll?: boolean;
 

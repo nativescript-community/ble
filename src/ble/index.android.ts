@@ -1,8 +1,8 @@
 /* eslint-disable no-caller */
 import { arrayToNativeArray } from '@nativescript-community/arraybuffers';
+import { Status, check, request } from '@nativescript-community/perms';
 import { Application, Device, Trace, Utils } from '@nativescript/core';
-import { check, request } from '@nativescript-community/perms';
-import { AndroidActivityResultEventData, AndroidApplication } from '@nativescript/core/application';
+import { AndroidActivityResultEventData } from '@nativescript/core/application';
 import PQueue from 'p-queue';
 import {
     AdvertismentData,
@@ -40,8 +40,8 @@ export function getBluetoothInstance() {
 
 export {
     AdvertismentData,
-    BluetoothError,
     BleTraceCategory,
+    BluetoothError,
     Characteristic,
     ConnectOptions,
     DisconnectOptions,
@@ -1241,7 +1241,7 @@ export class Bluetooth extends BluetoothCommon {
             // location permission not needed anymore
             return true;
         }
-        return check('location', { coarse: false, precise: true }).then((r) => r[0] === 'authorized');
+        return check('location', { coarse: false, precise: true }).then((r) => r === Status.Authorized);
     }
 
     async requestLocationPermission() {
@@ -1249,7 +1249,7 @@ export class Bluetooth extends BluetoothCommon {
             // location permission not needed anymore
             return true;
         }
-        return request('location', { coarse: false, precise: true }).then((r) => r[0] === 'authorized');
+        return request('location', { coarse: false, precise: true }).then((r) => r === Status.Authorized);
     }
     async isGPSEnabled() {
         if (sdkVersion >= 31) {
@@ -1741,7 +1741,7 @@ export class Bluetooth extends BluetoothCommon {
                 });
             });
             let services, mtu;
-            if (args.autoDiscoverAll === true) {
+            if (args.autoDiscoverAll !== true) {
                 services = (await this.discoverAll({ peripheralUUID: pUUID }))?.services;
             } else if (args.serviceUUIDs) {
                 services = (await this.discoverServices({ peripheralUUID: pUUID, serviceUUIDs: args.serviceUUIDs }))?.services;
