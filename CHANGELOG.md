@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.20](https://github.com/nativescript-community/ble/compare/v3.1.19...v3.1.20) (2025-01-17)
+
+### Bug Fixes
+
+* `autoDiscoverAll` is not true by default ([ec56527](https://github.com/nativescript-community/ble/commit/ec5652784fcbd5afc613872364afd11d3410ab56))
+
 ## [3.1.19](https://github.com/nativescript-community/ble/compare/v3.1.18...v3.1.19) (2024-02-06)
 
 ### Bug Fixes
