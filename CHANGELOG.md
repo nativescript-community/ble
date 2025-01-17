@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.21](https://github.com/nativescript-community/ble/compare/v3.1.20...v3.1.21) (2025-01-17)
+
+### Bug Fixes
+
+* **ios:** readRssi fix ([8850968](https://github.com/nativescript-community/ble/commit/8850968f58e6f6f689d4639cbe510a2185832e88))
+
 ## [3.1.20](https://github.com/nativescript-community/ble/compare/v3.1.19...v3.1.20) (2025-01-17)
 
 ### Bug Fixes
