@@ -1741,7 +1741,7 @@ export class Bluetooth extends BluetoothCommon {
                 });
             });
             let services, mtu;
-            if (args.autoDiscoverAll !== true) {
+            if (args.autoDiscoverAll !== false) {
                 services = (await this.discoverAll({ peripheralUUID: pUUID }))?.services;
             } else if (args.serviceUUIDs) {
                 services = (await this.discoverServices({ peripheralUUID: pUUID, serviceUUIDs: args.serviceUUIDs }))?.services;
