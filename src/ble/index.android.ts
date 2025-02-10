@@ -1799,7 +1799,7 @@ export class Bluetooth extends BluetoothCommon {
         if (Trace.isEnabled()) {
             CLog(CLogTypes.info, methodName, '---- connection:', pUUID);
         }
-        if (!connection) {
+        if (!connection || connection.state !== 'connected') {
             throw new BluetoothError(BluetoothCommon.msg_peripheral_not_connected, {
                 method: methodName,
                 arguments: args
