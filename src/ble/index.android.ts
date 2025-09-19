@@ -1691,9 +1691,10 @@ export class Bluetooth extends BluetoothCommon {
                 const subD = {
                     onConnectionStateChange: (gatt: android.bluetooth.BluetoothGatt, status: number, newState: number) => {
                         const device = gatt.getDevice();
-                        let UUID: string = null;
+                        let UUID: string;
                         if (device == null) {
                             // happens some time, why ... ?
+                            UUID = 'Unknown';
                         } else {
                             UUID = device.getAddress();
                         }
@@ -1704,7 +1705,12 @@ export class Bluetooth extends BluetoothCommon {
                             if (newState === android.bluetooth.BluetoothProfile.STATE_CONNECTED && status === GATT_SUCCESS) {
                                 resolve();
                             } else {
-                                reject();
+                                reject(
+                                    new BluetoothError(`Failed to connect to peripheral ${UUID}. State: ${newState}, Status: ${status}`, {
+                                        method: methodName,
+                                        arguments: args
+                                    })
+                                );
                             }
                             clearListeners();
                         }
