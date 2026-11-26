@@ -1,7 +1,7 @@
 # NativeScript
 hooks/
 node_modules/
-platforms
+demo*/platforms
 
 # NativeScript Template
 *.js.map
@@ -38,26 +38,22 @@ devices.js
 *.xcframework
 **/*.js.map
 src/**/*.js
-packages/**/*.js
-packages/**/*.d.ts
 bin
 build
 Pods
-!packages/*/platforms
 /packages/**/*.aar
 /packages/**/*.framework
 /packages/**/*.xcframework
 /demo-snippets/**/*.aar
 *.xcuserdatad
 /packages/README.md
-packages/**/*js.map
 packages/**/*js
-packages/angular
+packages/**/*.d.ts
 packages/typings
-packages/**/angular/*.json
+packages/**/angular
 packages/**/*.ngsummary.json
 packages/**/*.metadata.json
 
-.vscode/settings.json
-
 /blueprint.md
+
+*.tsbuildinfo
